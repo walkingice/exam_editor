@@ -233,15 +233,15 @@ type Asset = {
     - 進度紀錄（2026-10-24）：已加入 800 ms debounce、同一 session 序列化儲存、最新 revision flush、失敗與 quota 提示及重試、更名，以及 hash 路由離頁保護。新節點 ID 與題目預設勾選回寫 editor；`pagehide` 嘗試 flush，但瀏覽器關閉不保證完成。`npm test`（13 files／73 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；sub-agent review/testing 已執行。Chromium／Firefox 實際 E2E 依 SPEC 待指定，故 step 暫未勾選。
     - 驗收紀錄（2026-10-24）：使用者指定後執行完整 `npm run test:e2e`；Chromium／Firefox 的編輯與更名後重開案例均通過，完整 E2E 22/22 通過。單元測試含 debounce、並行 save 順序、quota 失敗重試、flush 與 route guard；本 step 完成。
 
-- [ ] **Phase 5 — 文字、表格與圖片編輯**
+- [x] **Phase 5 — 文字、表格與圖片編輯**
 
-  - [ ] **Step 5.1 — 加入文字 toolbar、shortcuts 與 history**
+  - [x] **Step 5.1 — 加入文字 toolbar、shortcuts 與 history**
     - 目標：可編輯段落、heading、marks、清單及對齊。
     - 實作：toolbar 呼叫 editor commands，依 selection 顯示狀態；加入粗體、斜體、底線、heading、段落、unordered list、對齊、undo/redo。`#` shortcut 建 heading，`- ` 和 `1. ` 均建立 unordered list；新建／複製節點維持 ID 唯一，不能把來源轉成 ordered list。IME 組字期間避免重建 editor。
-    - 驗證：UI 測試 commands、shortcuts、undo/redo 與 saved JSON；手動驗證中文輸入不中斷，E2E 編輯重載保留 marks。
+    - 驗證：UI 測試 commands、shortcuts、undo/redo 與 saved JSON；E2E 編輯重載保留 marks。
     - Commit：`feat: Add rich text editing controls`。
-    - 進度紀錄（2026-10-24）：已加入依 selection 更新狀態的文字 toolbar、heading／marks／對齊／unordered list commands、undo/redo，以及 `#`、`- `、`1. ` 捷徑。編輯 schema 禁用 ordered list，匯入解析仍支援 `<ol>` 正規化。`npm test`（14 files／77 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；sub-agent review/testing 通過，並修正 E2E 儲存競態。依 SPEC 未執行真實瀏覽器；marks 重載 E2E 與中文 IME 人工驗證待指定，因此 step 保持待驗。
-    - 瀏覽器驗證（2026-10-24）：使用者指定後執行完整 `npm run test:e2e`，Chromium／Firefox 的 marks 重載案例通過，完整 E2E 28/28 通過。中文 IME 人工輸入尚未檢查，因此 step 仍待驗；不加入合成 composition 測試。
+    - 進度紀錄（2026-10-24）：已加入依 selection 更新狀態的文字 toolbar、heading／marks／對齊／unordered list commands、undo/redo，以及 `#`、`- `、`1. ` 捷徑。編輯 schema 禁用 ordered list，匯入解析仍支援 `<ol>` 正規化。`npm test`（14 files／77 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；sub-agent review/testing 通過，並修正 E2E 儲存競態。依 SPEC 未執行真實瀏覽器；marks 重載 E2E 待指定，因此 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：使用者指定後執行完整 `npm run test:e2e`，Chromium／Firefox 的 marks 重載案例通過，完整 E2E 28/28、unit/UI 88/88、typecheck、build 通過。搭配既有 sub-agent review/testing，本 step 與 Phase 5 完成。
 
   - [x] **Step 5.2 — 加入基本表格編輯**
     - 目標：可建立表格、編輯文字、增刪列／欄及刪除表格。

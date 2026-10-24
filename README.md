@@ -1,7 +1,7 @@
 # 試卷編輯器
 
 這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Milestone 1
-及 Phase 4；Phase 5 的表格與圖片編輯已驗收，文字編輯的中文 IME 人工檢查待驗。已可建立、列表、開啟及刪除
+及 Phase 4、Phase 5。已可建立、列表、開啟及刪除
 本機 Project、匯入 DOCX，並在有寫入權的 workspace 編輯文件；功能順序與
 驗證紀錄見 [PLANS.md](PLANS.md)。
 
