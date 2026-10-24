@@ -2,7 +2,7 @@ import { Editor, type JSONContent } from '@tiptap/core';
 import { afterEach, expect, it } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
 import { editingExtensions } from './schema';
-import { moveQuestion } from './moveQuestion';
+import { moveDocumentItem } from './moveDocumentItem';
 
 const editors: Editor[] = [];
 afterEach(() => { editors.splice(0).forEach((editor) => editor.destroy()); });
@@ -40,10 +40,10 @@ it('moves a complete question forward and backward in one list', () => {
   const instance = editor([{ type: 'bulletList', content: [
     item('a', 'First'), item('b', 'Second'), item('c', 'Third'),
   ] }]);
-  expect(moveQuestion(instance, 'a', { position: positions(instance).c,
+  expect(moveDocumentItem(instance, 'a', { position: positions(instance).c,
     placement: 'after' })).toBe(true);
   expect(ids(instance)).toEqual([['b', 'c', 'a']]);
-  expect(moveQuestion(instance, 'a', { position: positions(instance).b,
+  expect(moveDocumentItem(instance, 'a', { position: positions(instance).b,
     placement: 'before' })).toBe(true);
   expect(ids(instance)).toEqual([['a', 'b', 'c']]);
 });
@@ -56,13 +56,13 @@ it('reorders headings and paragraphs as document items', () => {
       content: [{ type: 'text', text: 'Body' }] },
   ]);
   const paragraphPosition = instance.state.doc.child(0).nodeSize;
-  expect(moveQuestion(instance, 'title', { position: paragraphPosition, placement: 'after' }))
+  expect(moveDocumentItem(instance, 'title', { position: paragraphPosition, placement: 'after' }))
     .toBe(true);
   expect((instance.getJSON() as JSONContent).content?.slice(0, 2).map((node) => node.attrs?.id))
     .toEqual(['body', 'title']);
 });
 
-it('moves a selected subtree with options, an image and table across sections', () => {
+it('moves a selected subtree across other document items', () => {
   const source = item('b', 'Question', [
     { type: 'bulletList', content: [item('option', 'Answer')] },
     { type: 'image', attrs: { assetId: 'photo' } },
@@ -78,7 +78,7 @@ it('moves a selected subtree with options, an image and table across sections', 
     { type: 'bulletList', content: [item('c', 'Other')] },
   ]);
   const original = (instance.getJSON() as JSONContent).content![1].content![0];
-  expect(moveQuestion(instance, 'b', { position: positions(instance).c,
+  expect(moveDocumentItem(instance, 'b', { position: positions(instance).c,
     placement: 'after' })).toBe(true);
   expect(ids(instance)).toEqual([['c', 'b']]);
   expect((instance.getJSON() as JSONContent).content![2].content![1]).toEqual(original);
@@ -88,7 +88,7 @@ it('moves a selected subtree with options, an image and table across sections', 
   expect(ids(instance)).toEqual([['c', 'b']]);
 });
 
-it('creates a list under an empty section and rejects invalid targets', () => {
+it('moves questions around headings and rejects invalid targets', () => {
   const instance = editor([
     { type: 'heading', attrs: { id: 'heading-one', level: 2 },
       content: [{ type: 'text', text: 'One' }] },
@@ -97,17 +97,19 @@ it('creates a list under an empty section and rejects invalid targets', () => {
       content: [{ type: 'text', text: 'Two' }] },
   ]);
   const before = instance.getJSON();
-  expect(moveQuestion(instance, 'missing', { position: 0, placement: 'section' })).toBe(false);
-  expect(moveQuestion(instance, 'a', { position: positions(instance).a,
+  expect(moveDocumentItem(instance, 'missing', { position: 0, placement: 'before' })).toBe(false);
+  const listPosition = instance.state.doc.child(0).nodeSize;
+  expect(moveDocumentItem(instance, 'a', { position: listPosition, placement: 'before' })).toBe(false);
+  expect(moveDocumentItem(instance, 'a', { position: positions(instance).a,
     placement: 'after' })).toBe(false);
-  expect(moveQuestion(instance, 'a', { position: 1, placement: 'section' })).toBe(false);
-  expect(moveQuestion(instance, 'a', { position: -1, placement: 'section' })).toBe(false);
-  expect(moveQuestion(instance, 'a', { position: 100000, placement: 'before' })).toBe(false);
+  expect(moveDocumentItem(instance, 'a', { position: 1, placement: 'before' })).toBe(false);
+  expect(moveDocumentItem(instance, 'a', { position: -1, placement: 'before' })).toBe(false);
+  expect(moveDocumentItem(instance, 'a', { position: 100000, placement: 'before' })).toBe(false);
   expect(instance.getJSON()).toEqual(before);
   const headingPosition = instance.state.doc.child(0).nodeSize
     + instance.state.doc.child(1).nodeSize;
-  expect(moveQuestion(instance, 'a', { position: headingPosition,
-    placement: 'section' })).toBe(true);
+  expect(moveDocumentItem(instance, 'a', { position: headingPosition,
+    placement: 'after' })).toBe(true);
   expect(ids(instance)).toEqual([['a']]);
   expect((instance.getJSON() as JSONContent).content?.slice(0, 3).map((node) => node.type))
     .toEqual(['heading', 'heading', 'bulletList']);
@@ -124,7 +126,7 @@ it('rejects a nested option as a destination', () => {
     if (node.type.name === 'listItem' && node.attrs.id === 'option') nestedPosition = position;
   });
   const before = instance.getJSON();
-  expect(moveQuestion(instance, 'a', { position: nestedPosition,
+  expect(moveDocumentItem(instance, 'a', { position: nestedPosition,
     placement: 'after' })).toBe(false);
   expect(instance.getJSON()).toEqual(before);
 });

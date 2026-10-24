@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { EditorView } from '@tiptap/pm/view';
-import { moveQuestion, type QuestionTarget } from './moveQuestion';
+import { moveDocumentItem, type DocumentItemTarget } from './moveDocumentItem';
 
 export const questionDragType = 'application/x-exam-question';
 
@@ -100,7 +100,7 @@ function documentItem(view: EditorView, element: HTMLElement | null): HTMLElemen
   return null;
 }
 
-function dropTarget(view: EditorView, event: DragEvent): QuestionTarget | null {
+function dropTarget(view: EditorView, event: DragEvent): DocumentItemTarget | null {
   const element = event.target instanceof HTMLElement ? event.target : null;
   const targetElement = documentItem(view, element);
   if (!targetElement) return null;
@@ -174,7 +174,7 @@ export const QuestionControls = Extension.create({
           if (!id || !this.editor.isEditable) return false;
           event.preventDefault();
           const target = dropTarget(view, event);
-          if (target) moveQuestion(this.editor, id, target);
+          if (target) moveDocumentItem(this.editor, id, target);
           return true;
         },
         dragleave: (view, event) => {

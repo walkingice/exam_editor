@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
-export type QuestionTarget = { position: number; placement: 'before' | 'after' | 'section' };
+export type DocumentItemTarget = { position: number; placement: 'before' | 'after' };
 
 type Item = { node: ProseMirrorNode; list: boolean };
 
@@ -20,7 +20,6 @@ function itemIndexAt(doc: ProseMirrorNode, position: number): number {
   let itemIndex = 0;
   for (let index = 0; index < doc.childCount; index += 1) {
     const node = doc.child(index);
-    if (position === offset) return itemIndex;
     if (node.type.name === 'bulletList') {
       let itemOffset = offset + 1;
       for (let child = 0; child < node.childCount; child += 1) {
@@ -30,22 +29,12 @@ function itemIndexAt(doc: ProseMirrorNode, position: number): number {
         itemIndex += 1;
       }
     } else {
-      if (position > offset && position < offset + node.nodeSize) return itemIndex;
+      if (position === offset) return itemIndex;
       itemIndex += 1;
     }
     offset += node.nodeSize;
   }
   return -1;
-}
-
-function isSectionHeading(doc: ProseMirrorNode, position: number): boolean {
-  let offset = 0;
-  for (let index = 0; index < doc.childCount; index += 1) {
-    const node = doc.child(index);
-    if (offset === position) return node.type.name === 'heading';
-    offset += node.nodeSize;
-  }
-  return false;
 }
 
 function groupItems(editor: Editor, items: Item[]): ProseMirrorNode[] {
@@ -63,7 +52,7 @@ function groupItems(editor: Editor, items: Item[]): ProseMirrorNode[] {
   return nodes;
 }
 
-export function moveQuestion(editor: Editor, sourceId: string, target: QuestionTarget): boolean {
+export function moveDocumentItem(editor: Editor, sourceId: string, target: DocumentItemTarget): boolean {
   if (!editor.isEditable) return false;
   const { doc } = editor.state;
   if (!Number.isInteger(target.position) || target.position < 0
@@ -71,7 +60,6 @@ export function moveQuestion(editor: Editor, sourceId: string, target: QuestionT
   const items = flattenItems(doc);
   const sourceIndex = items.findIndex(({ node }) => node.attrs.id === sourceId);
   const targetIndex = itemIndexAt(doc, target.position);
-  if (target.placement === 'section' && !isSectionHeading(doc, target.position)) return false;
   if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
 
   const [source] = items.splice(sourceIndex, 1);

@@ -123,14 +123,14 @@ describe('read-only document', () => {
     expect(editor!.state.selection.from).toBe(selection);
   });
 
-  it('drags a whole question to an empty section with undo and redo', async () => {
+  it('moves a question after a heading with undo and redo', async () => {
     const content = normalizeDocument({ type: 'doc', content: [
-      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'First section' }] },
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'First heading' }] },
       { type: 'bulletList', content: [{ type: 'listItem', content: [
         { type: 'paragraph', content: [{ type: 'text', text: 'Question' }] },
         { type: 'image', attrs: { assetId: 'photo' } },
       ] }] },
-      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Empty section' }] },
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Second heading' }] },
     ] });
     let editor: Editor | undefined;
     const view = render(<ReadOnlyEditor projectId="first" content={content}
@@ -143,7 +143,7 @@ describe('read-only document', () => {
       setData: (type: string, value: string) => { values.set(type, value); },
       getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
     fireEvent.dragStart(handle, { dataTransfer });
-    fireEvent.drop(screen.getByRole('heading', { name: /Empty section/ }), { dataTransfer });
+    fireEvent.drop(screen.getByRole('heading', { name: /Second heading/ }), { dataTransfer });
     expect((editor!.getJSON() as JSONContent).content?.slice(0, 3).map((node) => node.type))
       .toEqual(['heading', 'heading', 'bulletList']);
     expect((editor!.getJSON() as JSONContent).content?.[2].content?.[0]).toEqual(original);
@@ -158,7 +158,7 @@ describe('read-only document', () => {
 
   it('shows the question insertion position while dragging', async () => {
     const content = normalizeDocument({ type: 'doc', content: [
-      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Second section' }] },
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Second heading' }] },
       { type: 'bulletList', content: [
       { type: 'listItem', attrs: { id: 'a' }, content: [
         { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
@@ -178,9 +178,9 @@ describe('read-only document', () => {
     const elementFromPoint = document.elementFromPoint;
     document.elementFromPoint = () => null;
     fireEvent.dragStart(handle, { dataTransfer });
-    fireEvent.dragOver(screen.getByRole('heading', { name: /Second section/ }),
+    fireEvent.dragOver(screen.getByRole('heading', { name: /Second heading/ }),
       { dataTransfer, clientY: 0 });
-    expect(screen.getByRole('heading', { name: /Second section/ }))
+    expect(screen.getByRole('heading', { name: /Second heading/ }))
       .toHaveClass('question-drop-after');
     fireEvent.dragOver(screen.getByText('Second'), { dataTransfer, clientY: 0 });
     document.elementFromPoint = elementFromPoint;
