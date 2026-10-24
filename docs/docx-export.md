@@ -4,7 +4,10 @@
 returns a docx `Document` and deduplicated warning strings. Callers must scope
 `readAsset(assetId)` to the current project. The mapper applies the shared
 output projection before reading assets. It does not write to storage or
-start a download. The download UI belongs to Phase 12.
+start a download. `createDocxDownload` packs that document as a Blob; `ExportDocxButton` captures
+the current source/settings before asynchronous work and downloads it locally.
+Cancellation suppresses delivery but does not interrupt packing. Download URLs
+are released after browser handoff, including click failures.
 
 Text, headings, emphasis, alignment, breaks, lists, and tables remain editable.
 Each separated ordered list starts at the projection's continuous question

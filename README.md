@@ -1,7 +1,7 @@
 # 試卷編輯器
 
-這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Milestone 1
-及 Milestone 2。已可建立、列表、開啟及刪除
+這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Milestone 1–3，並已加入 DOCX 語意匯出與下載；
+Phase 12 的 browser／Office 最終驗收仍待完成。已可建立、列表、開啟及刪除
 本機 Project、匯入 DOCX，並在有寫入權的 workspace 編輯文件；功能順序與
 驗證紀錄見 [PLANS.md](PLANS.md)。
 
@@ -86,7 +86,12 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 匯入警告保存在目前 browser session，關閉 browser 後不會保留；請在匯入後立即校對。
 Word 原始版面、原始分頁不保證保留。公式、文字方塊、圖形、浮動物件可能遺失或改變順序；
 匯入後請對照原稿。六類合成 DOCX 測試資料及預期結果見 [docs/fixtures.md](docs/fixtures.md)。
-DOCX 匯出尚未實作。本機資料不等於永久備份。
+兩個 Tab 均可按「匯出 DOCX」，下載目前內容與設定的 `project-name.docx`，
+包含尚未自動儲存的修改；唯讀分頁匯出目前已載入版本。產生期間可取消下載，
+失敗可重試；取消不會中止已開始的壓縮運算。表格等降級會列於匯出提醒。
+檔名不合法字元會替換為底線。DOCX 保留可編輯文字、圖片與表格，但不包含
+未勾選內容，也不是完整 Project 備份。本機資料不等於永久備份；清除網站資料、
+瀏覽器儲存空間回收或更換裝置可能遺失資料，目前沒有完整備份還原功能。
 
 DOCX 匯入解析器的限制：單一 DOCX 20 MiB、單張圖片 10 MiB／4,000 萬像素、
 圖片總量 30 MiB。圖片僅支援 PNG/JPEG，其他格式會顯示警告。
@@ -97,4 +102,5 @@ DOCX 匯入解析器的限制：單一 DOCX 20 MiB、單張圖片 10 MiB／4,000
 Phase 11 provides an independent semantic DOCX mapper for selected content,
 including editable text, lists, tables, embedded PNG/JPEG images, and page
 formatting. See [mapping behavior and limitations](docs/docx-export.md).
-The download UI and Word/LibreOffice manual acceptance remain in Phase 12.
+The download UI is implemented. Browser download acceptance and actual
+Word/LibreOffice editing remain pending; see [Office verification](docs/office-verification.md).

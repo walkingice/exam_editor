@@ -409,6 +409,7 @@ type Asset = {
     - 實作：用兩套應用程式開啟 golden exports，修改並儲存文字，核對圖片、表格、清單、紙張方向與邊距；記錄應用程式版本、案例及結果。更新 README 所有操作、支援範圍、資料備份限制、已知降級及測試命令。
     - 驗證：兩套軟體均完成 smoke test；若環境缺少任一套，保留此 step 未完成並記錄待人工驗收，不能拿結構測試代替。sub-agent review 對照 SPEC 完成需求覆蓋檢查，全部通過後才勾選 Phase 12 與交付 Milestone 4。
     - Commit：`docs: Record Office compatibility results`。
+    - 待驗紀錄（2026-10-25）：README 已更新下載操作、唯讀快照、取消限制、降級與備份限制；`docs/office-verification.md` 記錄人工矩陣。環境 `/Applications` 未找到 Word／LibreOffice，PATH 亦無 libreoffice／soffice，未執行開檔／修改／儲存。sub-agent 對照 SPEC review 文件與自動測試範圍無 blocker；browser 下載、Office 編輯與既有原生列印驗收仍無完整實測證據，Phase 12／Milestone 4 不勾選。
 
 ## 實作時的官方參考
 
