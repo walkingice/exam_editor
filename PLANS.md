@@ -177,12 +177,14 @@ type Asset = {
 
 - [ ] **Phase 3 — DOCX 匯入與 Milestone 1 驗收**
 
+  - 目前狀態（2026-10-24）：Step 3.1、3.2 已完成；Step 3.3、3.4 的程式、fixtures 與非 browser 驗證已完成，仍待真實 browser 驗收。最新檢查為 `npm test`（12 files／61 tests）、`npm run typecheck`、`npm run build` 通過；`npm run test:e2e -- --list` 列出 Chromium／Firefox 共 18 案，尚未執行。依 SPEC 的規則，使用者明確指定後才可執行真實 browser 測試；Phase 3 與 Milestone 1 因此維持未完成。
+
   - [x] **Step 3.1 — 建立輸入限制與 Mammoth adapter**
     - 目標：將 DOCX 解析成未信任 HTML、圖片 Blobs 與警告，不立即寫入 Project。
     - 實作：建立 importer result 型別、取消訊號與可辨識錯誤；File.arrayBuffer 後呼叫 Mammoth image converter。訂出並集中管理 DOCX 大小、圖片大小／像素與總資產上限，寫入 README；檢查檔案內容與 MIME，不只依副檔名。先支援 PNG/JPEG，其他格式給警告；不自行撰寫 OOXML parser。
     - 驗證：單元測試有效 DOCX、損壞內容、偽裝副檔名、超限圖片、unsupported image、取消、Mammoth 警告；確保失敗不寫 DB。
     - Commit：`feat: Parse DOCX content and image assets`。
-    - 驗證紀錄（2026-10-24）：`npm test`（8 files／40 tests）、`npm run typecheck`、`npm run build:smoke`、`npm run build` 通過。真實 DOCX 文字／PNG 與 JPEG 圖片 header、偽裝副檔名、損壞內容、圖片大小／像素／總量、不支援格式、取消及 Mammoth warning/error 均有測試；adapter 不呼叫 repository。sub-agent review/testing 通過；review 提出的 Mammoth 隱藏圖片錯誤已修正。browser bundle smoke 已含 importer；尚未接入 UI，也未執行真實 browser 測試。
+    - 驗證紀錄（2026-10-24）：`npm test`（8 files／40 tests）、`npm run typecheck`、`npm run build:smoke`、`npm run build` 通過。真實 DOCX 文字／PNG 與 JPEG 圖片 header、偽裝副檔名、損壞內容、圖片大小／像素／總量、不支援格式、取消及 Mammoth warning/error 均有測試；adapter 不呼叫 repository。sub-agent review/testing 通過；review 提出的 Mammoth 隱藏圖片錯誤已修正。browser bundle smoke 已含 importer；UI 串接已於 Step 3.3 完成，真實 browser 測試仍未執行。
 
   - [x] **Step 3.2 — 清理 HTML 並正規化 JSON**
     - 目標：匯入資料符合安全要求及題目模型。
