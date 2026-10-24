@@ -311,12 +311,12 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
       <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
-      {pageSettings && <div className="workspace-actions">
+      {tab === 'preview' && pageSettings && <div className="workspace-actions">
         <button onClick={() => void printExam()} disabled={printing.current}>列印 / PDF</button>
         {printError && <><p role="alert">{printError}</p>
           <button onClick={() => void printExam()}>重試列印</button></>}
       </div>}
-      {lease?.isActive && pageSettings && <PageSettingsForm settings={pageSettings}
+      {tab === 'preview' && lease?.isActive && pageSettings && <PageSettingsForm settings={pageSettings}
         onChange={changePageSettings} />}
       {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
         saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}

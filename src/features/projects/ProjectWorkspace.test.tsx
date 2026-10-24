@@ -132,7 +132,12 @@ it('saves page settings, reports failures, and restores them after reopening', a
   } as unknown as ProjectOwnership;
   const view = render(<ProjectWorkspace projectId="first" repository={repository}
     ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
   await screen.findByLabelText('紙張');
+  expect(screen.getByRole('button', { name: '列印 / PDF' })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('紙張'), { target: { value: 'A4' } });
   await act(async () => { await vi.waitFor(() => expect(save).toHaveBeenCalledOnce()); });
   expect(await screen.findByText('儲存失敗')).toBeInTheDocument();
@@ -141,6 +146,7 @@ it('saves page settings, reports failures, and restores them after reopening', a
   expect(stored.project.pageSettings.paperSize).toBe('A4');
   view.unmount();
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  fireEvent.click(await screen.findByRole('tab', { name: '排版預覽' }));
   expect(await screen.findByLabelText('紙張')).toHaveValue('A4');
 });
 
@@ -161,13 +167,19 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
   const sourceEditor = screen.getByTestId('editor');
+  expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
   const editor = { getJSON: () => current.document.content } as Editor;
   editorProps.current.at(-1)?.onEditor?.(editor);
   fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
   expect(screen.getAllByTestId('editor')).toHaveLength(2);
   expect(sourceEditor).toBeInTheDocument();
   expect(screen.getByRole('tabpanel', { name: '排版預覽' })).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: '頁面設定' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '列印 / PDF' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('tab', { name: '試卷內容' }));
+  expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
   expect(screen.getByTestId('editor')).toBe(sourceEditor);
   expect(repository.save).not.toHaveBeenCalled();
 });
