@@ -6,6 +6,18 @@ import { moveDocumentItem, type DocumentItemTarget } from './moveDocumentItem';
 
 export const questionDragType = 'application/x-exam-question';
 
+export function setDocumentItemDragData(dataTransfer: DataTransfer | null, id: string): void {
+  if (!dataTransfer) return;
+  dataTransfer.setData(questionDragType, id);
+  dataTransfer.effectAllowed = 'move';
+  if (typeof dataTransfer.setDragImage === 'function') {
+    const blankImage = document.createElement('canvas');
+    blankImage.width = 1;
+    blankImage.height = 1;
+    dataTransfer.setDragImage(blankImage, 0, 0);
+  }
+}
+
 function questionAt(view: EditorView, id: string) {
   let offset = 0;
   for (let index = 0; index < view.state.doc.childCount; index += 1) {
@@ -59,8 +71,7 @@ function dragHandle(view: EditorView, id: string, label: string): HTMLButtonElem
   handle.textContent = '↕';
   handle.addEventListener('dragstart', (event) => {
     if (!view.editable) { event.preventDefault(); return; }
-    event.dataTransfer?.setData(questionDragType, id);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    setDocumentItemDragData(event.dataTransfer, id);
   });
   return handle;
 }

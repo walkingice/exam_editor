@@ -9,7 +9,7 @@ import { AssetImage, editingExtensions, examExtensions } from './schema';
 import { EditorToolbar } from './EditorToolbar';
 import { ImageToolbar } from './ImageToolbar';
 import { insertLocalImage } from './insertLocalImage';
-import { questionDragType } from './questionControls';
+import { setDocumentItemDragData } from './questionControls';
 
 function AssetImageView({ node, resolver, editor }: NodeViewProps & { resolver: AssetResolver }) {
   const [resolved, setResolved] = useState<{ assetId: string; handle: AssetHandle } | null>(null);
@@ -36,10 +36,7 @@ function AssetImageView({ node, resolver, editor }: NodeViewProps & { resolver: 
     {editor.isEditable && <span className="document-item-control" contentEditable={false}>
       <button type="button" className="question-drag-handle" draggable
         aria-label={`移動項目 ${dragId}`}
-        onDragStart={(event) => {
-          event.dataTransfer.setData(questionDragType, dragId);
-          event.dataTransfer.effectAllowed = 'move';
-        }}>↕</button>
+        onDragStart={(event) => setDocumentItemDragData(event.dataTransfer, dragId)}>↕</button>
     </span>}
     {resolved?.assetId === assetId
       ? <img src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}

@@ -141,8 +141,10 @@ describe('read-only document', () => {
     const values = new Map<string, string>();
     const dataTransfer = { types: ['application/x-exam-question'],
       setData: (type: string, value: string) => { values.set(type, value); },
-      getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
+      getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '',
+      setDragImage: vi.fn() };
     fireEvent.dragStart(handle, { dataTransfer });
+    expect(dataTransfer.setDragImage).toHaveBeenCalledWith(expect.any(HTMLCanvasElement), 0, 0);
     fireEvent.drop(screen.getByRole('heading', { name: /Second heading/ }), { dataTransfer });
     expect((editor!.getJSON() as JSONContent).content?.slice(0, 3).map((node) => node.type))
       .toEqual(['heading', 'heading', 'bulletList']);

@@ -4,7 +4,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { QuestionControls, questionDragType } from './questionControls';
+import { QuestionControls, setDocumentItemDragData } from './questionControls';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
@@ -92,8 +92,7 @@ const ExamHorizontalRule = HorizontalRule.extend({
       handle.setAttribute('aria-label', `移動項目 ${node.attrs.id}`);
       handle.textContent = '↕';
       handle.addEventListener('dragstart', (event) => {
-        event.dataTransfer?.setData(questionDragType, node.attrs.id);
-        if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+        setDocumentItemDragData(event.dataTransfer, node.attrs.id);
       });
       control.append(handle);
       const rule = document.createElement('hr');
