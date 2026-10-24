@@ -384,6 +384,10 @@ type Asset = {
     - 實作：按下匯出時取得完整來源快照與設定，避免漏掉 debounce 中的最新修改；等待需要的資產，呼叫 mapper、Packer.toBlob 與 browser download。清理下載 object URL，處理檔名不合法字元，避免重複點擊。列出降級警告，不新增後端或上傳資料。
     - 驗證：UI/E2E 改字後立即匯出可見最新內容；檢查檔名、Blob、取消／失敗後可重試、warning 顯示、下載資源釋放；唯讀分頁匯出其目前已載入版本不取得寫入權。
     - Commit：`feat: Download editable exam DOCX files`。
+    - 拆分交付：Step 12.1a 為 Blob 產生、檔名與下載資源清理；Step 12.1b 為 workspace UI、快照、取消與重試。各自 review／測試與提交，browser 驗證完成前原 step 保持待驗。
+      - [x] Step 12.1a — Download service。
+        - 驗證（2026-10-25）：Blob／檔名／下載 URL 清理測試 4/4、typecheck 通過；sub-agent review/testing 通過。取消僅抑制下載，不中止壓縮。
+      - [ ] Step 12.1b — Workspace export UI。
 
   - [ ] **Step 12.2 — Golden samples 與完整回歸測試**
     - 目標：整條匯入、編輯、過濾、列印及匯出流程有自動化證據。
