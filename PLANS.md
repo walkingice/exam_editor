@@ -8,7 +8,7 @@
 - 每個 Phase 依 step 順序執行；依賴先前 Phase 已完成的產物。每個 step 是一個可獨立 review、測試與提交的工作單位，避免把整個 Phase 累積成一個 commit。需要 fixture 的 step 當下建立最小測試資料，不等待 Milestone 驗收才補；驗收 step 負責補齊案例矩陣與整合回歸。
 - 開始前讀 SPEC、目前 Phase 與相關程式；說明修改原因和範圍。程式、註解及 commit message 使用 English。
 - 每個 step 必須完成目標、實作、驗證與 sub-agent review/testing，才能將 `- [ ]` 改為 `- [x]`。在該 step 下補上驗證命令、結果、已知限制及 review 結果；測試失敗或必要人工驗收尚未執行不可勾選完成。
-- 依 SPEC 的瀏覽器驗證規則，只有使用者明確指定時才啟動真實瀏覽器。可完成 browser test 的程式與靜態設定檢查，但未執行的 browser test 必須標記為待驗，不能記成通過；Phase 0 的驗收以不啟動瀏覽器的驗證為準，後續需要真實瀏覽器的產品驗收 step 仍保持未完成直到獲得指定。
+- 依 SPEC 的瀏覽器驗證規則，只有使用者明確指定時才啟動真實瀏覽器。可完成 browser test 的程式與靜態設定檢查，但未執行的 browser test 必須標記為待驗，不能記成通過；Phase 0 的驗收以不啟動瀏覽器的驗證為準。使用者明確要求略過某 Phase 的真實瀏覽器測試時，該 Phase 可依其他驗證結果完成，但須記錄略過範圍與未驗風險，不得宣稱 browser test 通過。
 - 實作與該 step 的 checkbox 更新放在同一 commit；commit hash 如需記錄，在後續進度更新填入，不寫尚不存在的 hash。Phase 僅於全部 steps 完成時勾選。
 - 每個 commit subject 以 type 開頭且不超過 50 字元；body 每行不超過 72 字元。使用多個 `git commit -m` 傳遞 subject、各段 body、agent metadata trailer。多步工作依 AGENTS 規則標記 `[Step 1 - 1/2]` 類型的進度，不執行 `git push`。
 - step 若因實際範圍過大需拆分，先新增有獨立目標、實作與驗證的子 steps，再執行；不得只以「完成部分」勾選原 step。函式盡量小於 50 行；依 AGENTS 規則拆分大型跨檔案變更。
@@ -259,21 +259,25 @@ type Asset = {
     - 進度紀錄（2026-10-24）：已加入 PNG/JPEG 本機插入、Blob-first 寫入、共用圖片限制、Project/session 身分檢查，以及選取圖片後刪除與 undo。repository 在持有寫入權時單獨儲存 Blob，並檢查 Project 圖片總量。`npm test`（15 files／88 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（28 cases）通過；sub-agent review/testing 已執行，刪圖 UI 為 review 後補齊。若 Blob 寫入後 session 立即失效，可能留下未引用資產，待 Phase 7 補做清理。依 SPEC 未執行真實瀏覽器，新增圖片重載 E2E 待指定，因此 step 保持待驗。
     - 驗收紀錄（2026-10-24）：使用者指定後，Chromium／Firefox 的本機圖片插入、Blob 顯示與重載案例均通過；完整 E2E 28/28、unit/UI 88/88、typecheck、build 通過。搭配既有 sub-agent review/testing，本 step 完成；未引用資產仍依 Phase 7 清理。
 
-- [ ] **Phase 6 — 題目勾選與跨大題排序**
+- [x] **Phase 6 — 題目勾選與跨大題排序**
 
-  - [ ] **Step 6.1 — 題目 checkbox 與清單操作**
+  - 驗收決定（2026-10-24）：使用者明確指定略過實際瀏覽器測試。Phase 6 依單元／UI 測試、typecheck、build、E2E 列舉及 sub-agent review/testing 完成；Chromium／Firefox 的勾選、拖曳與重開流程未執行，仍屬未驗證風險，不記為通過。
+
+  - [x] **Step 6.1 — 題目 checkbox 與清單操作**
     - 目標：每個最外層 item 有可持久化的勾選狀態。
     - 實作：用 NodeView 或等價 editor UI 顯示 checkbox，透過 transaction 更新 selected；內嵌選項不顯示題目 checkbox。普通段落可透過清單工具轉成題目；新增題目 selected=true。維持 checkbox 與文字 selection 的互動，加入 history，完整來源仍保留未勾選題目。
     - 驗證：UI 測試新增、取消勾選、undo/redo、巢狀選項不獨立勾選；重載後 ID 與狀態不變。
     - Commit：`feat: Add persistent question selection`。
-    - 進度紀錄（2026-10-24）：最外層題目已顯示 checkbox，transaction 更新 selected；內嵌選項不顯示 checkbox。已加入狀態、ID、undo/redo、編輯前文後切換與 selection 的 UI 測試，以及重新開啟的 E2E 案例。`npm test`（15 files／90 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（30 cases）通過。sub-agent review 發現的舊位置問題已修正並複審通過；testing 獨立通過。依 SPEC 未執行真實瀏覽器，重開持久化 E2E 待指定，因此 step 保持待驗。
+    - 進度紀錄（2026-10-24）：最外層題目已顯示 checkbox，transaction 更新 selected；內嵌選項不顯示 checkbox。已加入狀態、ID、undo/redo、編輯前文後切換與 selection 的 UI 測試，以及重新開啟的 E2E 案例。`npm test`（15 files／90 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（30 cases）通過。sub-agent review 發現的舊位置問題已修正並複審通過；testing 獨立通過。當時尚未獲得略過真實瀏覽器測試的指示，step 保持待驗。
+    - 驗收紀錄（2026-10-24）：依使用者指定略過真實瀏覽器測試，以既有非瀏覽器驗證與 sub-agent review/testing 完成本 step；重開持久化 E2E 未執行，結果仍待驗。
 
-  - [ ] **Step 6.2 — 整題拖曳與跨大題移動**
+  - [x] **Step 6.2 — 整題拖曳與跨大題移動**
     - 目標：一次移動完整題目，不能遺失子內容或改變題目 ID。
     - 實作：建立以 source item ID 與 target position 為輸入的 move command，再接拖曳 handle。以單一 transaction 搬移完整 subtree，保留 selected、圖片、表格與選項；支援同清單、不同大題與空大題的落點。使用 transaction mapping 或等價方式處理刪除後位移，禁止拖入自身子節點；移除空清單但保留 heading。
     - 驗證：command 單元測試前移後移、跨大題、空大題、無效落點、完整 subtree 相等；UI/E2E 拖曳後 undo/redo、重載檢查順序及圖片。
     - Commit：`feat: Move questions across exam sections`。
-    - 進度紀錄（2026-10-24）：已建立以題目 ID 與目標位置為輸入的單一 transaction move command，以及題目拖曳把手；支援清單內前後移、跨大題、空大題，保留 ID、selected、選項、圖片及表格，移除空清單而保留 heading。單元／UI 測試涵蓋完整子樹、非法落點、巢狀選項、undo/redo；已列出跨大題拖曳、圖片與重開的 E2E 案例。`npm test`（16 files／96 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（32 cases）通過。sub-agent review 發現的內嵌選項落點問題已修正並複審通過；testing 獨立通過。依 SPEC 未執行真實瀏覽器，拖曳與重開 E2E 待指定，因此 step 與 Phase 6 保持待驗。
+    - 進度紀錄（2026-10-24）：已建立以題目 ID 與目標位置為輸入的單一 transaction move command，以及題目拖曳把手；支援清單內前後移、跨大題、空大題，保留 ID、selected、選項、圖片及表格，移除空清單而保留 heading。單元／UI 測試涵蓋完整子樹、非法落點、巢狀選項、undo/redo；已列出跨大題拖曳、圖片與重開的 E2E 案例。`npm test`（16 files／96 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（32 cases）通過。sub-agent review 發現的內嵌選項落點問題已修正並複審通過；testing 獨立通過。當時尚未獲得略過真實瀏覽器測試的指示，step 與 Phase 6 保持待驗。
+    - 驗收紀錄（2026-10-24）：依使用者指定略過真實瀏覽器測試，以既有非瀏覽器驗證與 sub-agent review/testing 完成本 step；拖曳與重開 E2E 未執行，結果仍待驗。
 
 - [ ] **Phase 7 — 資產清理與 Milestone 2 驗收**
 
