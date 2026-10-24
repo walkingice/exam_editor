@@ -240,6 +240,7 @@ type Asset = {
     - 實作：toolbar 呼叫 editor commands，依 selection 顯示狀態；加入粗體、斜體、底線、heading、段落、unordered list、對齊、undo/redo。`#` shortcut 建 heading，`- ` 和 `1. ` 均建立 unordered list；新建／複製節點維持 ID 唯一，不能把來源轉成 ordered list。IME 組字期間避免重建 editor。
     - 驗證：UI 測試 commands、shortcuts、undo/redo 與 saved JSON；手動驗證中文輸入不中斷，E2E 編輯重載保留 marks。
     - Commit：`feat: Add rich text editing controls`。
+    - 進度紀錄（2026-10-24）：已加入依 selection 更新狀態的文字 toolbar、heading／marks／對齊／unordered list commands、undo/redo，以及 `#`、`- `、`1. ` 捷徑。編輯 schema 禁用 ordered list，匯入解析仍支援 `<ol>` 正規化。`npm test`（14 files／77 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；sub-agent review/testing 通過，並修正 E2E 儲存競態。依 SPEC 未執行真實瀏覽器；marks 重載 E2E 與中文 IME 人工驗證待指定，因此 step 保持待驗。
 
   - [ ] **Step 5.2 — 加入基本表格編輯**
     - 目標：可建立表格、編輯文字、增刪列／欄及刪除表格。

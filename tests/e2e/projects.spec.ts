@@ -93,3 +93,17 @@ test('saves edits and the project name before reopening', async ({ page }) => {
   await page.getByRole('link', { name: 'Renamed exam' }).click();
   await expect(page.locator('.ProseMirror')).toContainText('Saved text');
 });
+
+test('keeps rich text marks after reloading', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  const editor = page.locator('.ProseMirror');
+  await editor.fill('Marked question');
+  await editor.press('ControlOrMeta+A');
+  await page.getByRole('button', { name: '粗體' }).click();
+  await expect(editor.locator('strong')).toHaveText('Marked question');
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: '未命名試卷' }).click();
+  await page.reload();
+  await expect(editor.locator('strong')).toHaveText('Marked question');
+});

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
@@ -32,6 +32,63 @@ describe('read-only document', () => {
     editor?.commands.insertContent('Edited');
     expect(changed).toHaveBeenCalledWith(editor);
     expect(screen.getByText('Edited')).toBeInTheDocument();
+  });
+
+  it('applies toolbar marks, headings, alignment and history to JSON', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Question' }] }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    editor!.commands.setTextSelection({ from: 1, to: 9 });
+    fireEvent.click(screen.getByRole('button', { name: '粗體' }));
+    expect(editor!.getJSON().content?.[0].content?.[0].marks?.[0].type).toBe('bold');
+    fireEvent.click(screen.getByRole('button', { name: '標題 2' }));
+    fireEvent.click(screen.getByRole('button', { name: '中對齊' }));
+    expect(editor!.getJSON().content?.[0]).toMatchObject({
+      type: 'heading', attrs: { level: 2, textAlign: 'center' },
+    });
+    expect(screen.getByRole('button', { name: '標題 2' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(editor!.getJSON().content?.[0].attrs?.textAlign).not.toBe('center');
+    fireEvent.click(screen.getByRole('button', { name: '重做' }));
+    expect(editor!.getJSON().content?.[0].attrs?.textAlign).toBe('center');
+  });
+
+  it('creates only unordered source lists from toolbar commands', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Question' }] }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    fireEvent.click(screen.getByRole('button', { name: '項目清單' }));
+    expect(editor!.getJSON().content?.[0].type).toBe('bulletList');
+    expect(editor!.schema.nodes.orderedList).toBeUndefined();
+    expect(ensureNodeIds(editor!)).toBe(true);
+    expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.selected).toBe(true);
+  });
+
+  it('maps Markdown input shortcuts to heading and unordered lists', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('試卷文件');
+    for (const [prefix, expected] of [['#', 'heading'], ['-', 'bulletList'],
+      ['1.', 'bulletList']]) {
+      editor!.commands.setContent({ type: 'doc', content: [{ type: 'paragraph',
+        content: [{ type: 'text', text: prefix }] }] });
+      editor!.commands.focus('end');
+      const position = editor!.state.selection.from;
+      expect(editor!.view.someProp('handleTextInput', (handler) =>
+        handler(editor!.view, position, position, ' ', () => editor!.state.tr))).toBe(true);
+      expect(editor!.getJSON().content?.[0].type).toBe(expected);
+    }
   });
 
   it('assigns stable IDs to newly split paragraphs', async () => {
