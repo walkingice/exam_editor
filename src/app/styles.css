@@ -114,28 +114,23 @@ li { margin: 10px 0; }
 .content-panel .exam-document .ProseMirror > ul {
   display: grid;
   gap: 10px;
-  margin: 16px 0;
+  margin: 0 0 10px;
   padding: 0;
   list-style: none;
 }
-.content-panel .exam-document .ProseMirror > :not(ul) {
+.content-panel .exam-document .ProseMirror > :not(ul),
+.content-panel .exam-document .ProseMirror li {
   position: relative;
   box-sizing: border-box;
   margin: 0 0 10px;
-  padding: 12px 14px 12px 56px;
+  padding: 12px 14px 12px 72px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   background: #fff;
 }
 .content-panel .exam-document .ProseMirror > :not(ul):last-child { margin-bottom: 0; }
 .content-panel .exam-document .ProseMirror li {
-  position: relative;
-  box-sizing: border-box;
   margin: 0;
-  padding: 12px 14px 12px 78px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #fff;
 }
 .document-drop-indicator {
   position: fixed;
@@ -153,16 +148,7 @@ li { margin: 10px 0; }
   background: #1769d2;
   content: '';
 }
-.content-panel .exam-document .ProseMirror li > .question-control {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-.content-panel .document-item-control label { transform: translateX(-40px); }
+.content-panel .document-item-control label { display: flex; align-items: center; }
 .content-panel .document-item-control {
   position: absolute;
   top: 12px;
@@ -185,7 +171,6 @@ li { margin: 10px 0; }
   background: transparent;
   font-size: 0;
 }
-.content-panel .document-item-control .question-drag-handle { margin-left: -36px; }
 .content-panel .question-drag-handle::before {
   position: absolute;
   top: 5px;
