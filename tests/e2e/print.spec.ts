@@ -104,3 +104,20 @@ test('switches preview columns while keeping headings across the page', async ({
   await expect(preview).toHaveCSS('writing-mode', 'horizontal-tb');
   await expect(preview.locator('h1')).toHaveCSS('column-span', 'all');
 });
+
+test('prints a locally inserted image after it loads', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await page.getByLabel('插入圖片').setInputFiles('src/test/fixtures/red.jpg');
+  await expect(page.getByRole('img', { name: 'red.jpg' })).toHaveJSProperty('naturalWidth', 1);
+  await page.getByRole('tab', { name: '排版預覽' }).click();
+  await page.evaluate(() => {
+    window.print = () => {
+      const image = document.querySelector<HTMLImageElement>('#exam-print-root img');
+      document.body.dataset.printedImageWidth = String(image?.naturalWidth);
+    };
+  });
+  await page.getByRole('button', { name: '列印 / PDF' }).click();
+  await expect(page.locator('body')).toHaveAttribute('data-printed-image-width', '1');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});

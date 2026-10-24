@@ -264,3 +264,64 @@ it('exports a readonly tab loaded version without requesting write access again'
   expect(repository.save).not.toHaveBeenCalled();
   expect(repository.beginSession).not.toHaveBeenCalled();
 });
+
+
+it('waits for the print editor to initialize before opening print', async () => {
+  const current = bundle('first');
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+  const fonts = Object.getOwnPropertyDescriptor(document, 'fonts');
+  Object.defineProperty(document, 'fonts', { configurable: true, value: { ready: Promise.resolve() } });
+  try {
+    render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+    fireEvent.click(await screen.findByRole('tab', { name: '排版預覽' }));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '列印 / PDF' })); });
+    expect(document.querySelector('#exam-print-root')).toBeInTheDocument();
+    expect(print).not.toHaveBeenCalled();
+    await act(async () => { editorProps.current.at(-1)?.onEditor?.({} as Editor); });
+    expect(print).toHaveBeenCalledOnce();
+  } finally {
+    print.mockRestore();
+    if (fonts) Object.defineProperty(document, 'fonts', fonts);
+    else Reflect.deleteProperty(document, 'fonts');
+  }
+});
+
+it('recreates the print editor after an image failure and allows retry', async () => {
+  const current = bundle('first');
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  const print = vi.spyOn(window, 'print').mockImplementation(() => {});
+  const fonts = Object.getOwnPropertyDescriptor(document, 'fonts');
+  Object.defineProperty(document, 'fonts', { configurable: true, value: { ready: Promise.resolve() } });
+  try {
+    render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+    fireEvent.click(await screen.findByRole('tab', { name: '排版預覽' }));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '列印 / PDF' })); });
+    const firstRoot = document.querySelector('#exam-print-root')!;
+    const missing = document.createElement('span');
+    missing.setAttribute('aria-label', '缺少圖片');
+    firstRoot.append(missing);
+    await act(async () => { editorProps.current.at(-1)?.onEditor?.({} as Editor); });
+    expect(screen.getByRole('alert')).toHaveTextContent('列印圖片載入失敗');
+    expect(firstRoot).not.toBeInTheDocument();
+    expect(print).not.toHaveBeenCalled();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '重試列印' })); });
+    expect(document.querySelector('#exam-print-root')).toBeInTheDocument();
+    expect(print).not.toHaveBeenCalled();
+    await act(async () => { editorProps.current.at(-1)?.onEditor?.({} as Editor); });
+    expect(print).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  } finally {
+    print.mockRestore();
+    if (fonts) Object.defineProperty(document, 'fonts', fonts);
+    else Reflect.deleteProperty(document, 'fonts');
+  }
+});

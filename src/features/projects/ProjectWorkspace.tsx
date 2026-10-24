@@ -69,6 +69,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [printSnapshot, setPrintSnapshot] = useState<{ content: JSONContent; settings: PageSettings } | null>(null);
   const [printError, setPrintError] = useState('');
   const printRoot = useRef<HTMLDivElement>(null);
+  const [printEditorReady, setPrintEditorReady] = useState(false);
   const printing = useRef(false);
   const saving = useRef<EditingSession | null>(null);
   const assetResolver = useMemo(() => new AssetResolver(
@@ -250,6 +251,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     if (!pageSettings || printing.current) return;
     printing.current = true;
     setPrintError('');
+    setPrintEditorReady(false);
     try {
       await saving.current?.flush();
       const source = session.current?.editor?.getJSON() ?? bundle?.document.content;
@@ -263,7 +265,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   }
 
   useEffect(() => {
-    if (!printSnapshot || !printRoot.current) return;
+    if (!printSnapshot || !printEditorReady || !printRoot.current) return;
     let active = true;
     void waitForPrintAssets(printRoot.current, document.fonts).then(() => {
       if (!active) return;
@@ -273,10 +275,11 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     }).catch((cause: unknown) => {
       if (!active) return;
       setPrintError(errorMessage(cause));
+      setPrintSnapshot(null);
       printing.current = false;
     });
     return () => { active = false; };
-  }, [printSnapshot]);
+  }, [printSnapshot, printEditorReady]);
 
   const previewContent = useMemo(() => {
     const source = session.current?.editor?.getJSON() ?? bundle?.document.content;
@@ -365,7 +368,8 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         <style>{createPrintCss(printSnapshot.settings)}</style>
         <div id="exam-print-root" ref={printRoot} aria-hidden="true">
           <ReadOnlyEditor projectId={projectId} content={printSnapshot.content}
-            assetResolver={assetResolver} repository={repository} preview />
+            assetResolver={assetResolver} repository={repository} preview
+            onEditor={() => setPrintEditorReady(true)} />
         </div>
       </>}
     </>}
