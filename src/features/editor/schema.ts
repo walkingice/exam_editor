@@ -32,6 +32,19 @@ const ExamAttributes = Extension.create({
           },
         },
       },
+      {
+        types: ['paragraph', 'heading'],
+        attributes: {
+          spacingAfterMm: {
+            default: 0,
+            parseHTML: (element) => Number(element.getAttribute('data-spacing-after-mm') ?? 0),
+            renderHTML: ({ spacingAfterMm }) => ({
+              'data-spacing-after-mm': spacingAfterMm,
+              style: `margin-bottom: ${spacingAfterMm}mm`,
+            }),
+          },
+        },
+      },
     ];
   },
 });
@@ -45,6 +58,17 @@ export const AssetImage = Image.extend({
         default: null,
         parseHTML: (element) => element.getAttribute('data-asset-id'),
         renderHTML: ({ assetId }) => assetId ? { 'data-asset-id': assetId } : {},
+      },
+      widthMm: {
+        default: null,
+        parseHTML: (element) => {
+          const value = element.getAttribute('data-width-mm');
+          return value === null ? null : Number(value);
+        },
+        renderHTML: ({ widthMm }) => widthMm == null ? {} : {
+          'data-width-mm': widthMm,
+          style: `width: ${widthMm}mm`,
+        },
       },
     };
   },

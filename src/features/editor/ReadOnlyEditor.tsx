@@ -5,7 +5,7 @@ import type { Editor } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { ProjectRepository } from '../../data/repository';
 import { AssetResolver, type AssetHandle } from '../../shared/assets/AssetResolver';
-import { AssetImage, editingExtensions } from './schema';
+import { AssetImage, editingExtensions, examExtensions } from './schema';
 import { EditorToolbar } from './EditorToolbar';
 import { ImageToolbar } from './ImageToolbar';
 import { insertLocalImage } from './insertLocalImage';
@@ -30,34 +30,38 @@ function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetRes
     return () => { active = false; current?.release(); };
   }, [assetId, resolver]);
 
-  return <NodeViewWrapper as="div" className="exam-image">
+  return <NodeViewWrapper as="div" className="exam-image" data-node-id={node.attrs.id}>
     {resolved?.assetId === assetId
-      ? <img src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'} />
+      ? <img src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}
+        style={node.attrs.widthMm == null ? undefined : { width: `${node.attrs.widthMm}mm` }} />
       : errorAssetId === assetId ? <span role="img" aria-label="缺少圖片">找不到圖片：{assetId}</span>
         : <span>圖片載入中…</span>}
   </NodeViewWrapper>;
 }
 
 export function ReadOnlyEditor({ projectId, content, repository, editable = false, onChange, onEditor,
-  canInsertImage }: {
+  canInsertImage, preview = false, assetResolver }: {
   projectId: string; content: JSONContent; repository: ProjectRepository;
   editable?: boolean;
   onChange?: (editor: Editor) => void;
   onEditor?: (editor: Editor) => void;
   canInsertImage?: (editor: Editor) => boolean;
+  preview?: boolean;
+  assetResolver?: AssetResolver;
 }) {
   const callbacks = useRef({ onChange, onEditor, canInsertImage });
   callbacks.current = { onChange, onEditor, canInsertImage };
   const active = useRef(false);
-  const resolver = useMemo(() => new AssetResolver(
+  const ownedResolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
   ), [projectId, repository]);
-  const extensions = useMemo(() => editingExtensions.map((extension) => extension.name === 'image'
+  const resolver = assetResolver ?? ownedResolver;
+  const extensions = useMemo(() => (preview ? examExtensions : editingExtensions).map((extension) => extension.name === 'image'
     ? AssetImage.extend({
       addNodeView() {
         return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} />);
       },
-    }) : extension), [resolver]);
+    }) : extension), [preview, resolver]);
   const editor = useEditor({ extensions, content, editable, immediatelyRender: false,
     onUpdate: ({ editor: current }) => callbacks.current.onChange?.(current),
     onCreate: ({ editor: current }) => callbacks.current.onEditor?.(current),
@@ -72,7 +76,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.commands.setContent(content, { emitUpdate: false });
   }, [content, editor]);
-  useEffect(() => () => resolver.dispose(), [resolver]);
+  useEffect(() => () => ownedResolver.dispose(), [ownedResolver]);
 
   return <>
     {editable && editor && <EditorToolbar editor={editor} />}

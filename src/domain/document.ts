@@ -85,6 +85,15 @@ function checkNode(
   if (node.type === 'image' && (typeof attrs.assetId !== 'string' || !attrs.assetId || attrs.src)) {
     throw new Error('Image requires a persistent asset ID');
   }
+  if (['paragraph', 'heading'].includes(node.type) && attrs.spacingAfterMm !== undefined
+    && (!Number.isFinite(attrs.spacingAfterMm) || attrs.spacingAfterMm < 0
+      || attrs.spacingAfterMm > 30)) {
+    throw new Error('Invalid paragraph spacing');
+  }
+  if (node.type === 'image' && attrs.widthMm != null
+    && (!Number.isFinite(attrs.widthMm) || attrs.widthMm <= 0 || attrs.widthMm > 379)) {
+    throw new Error('Invalid image width');
+  }
   node.content?.forEach((child) => checkNode(
     child, node.type === 'doc', node.type === 'bulletList' && parentIsDoc, used,
   ));

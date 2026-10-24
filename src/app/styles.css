@@ -28,3 +28,8 @@ li { margin: 10px 0; }
 .question-control { display: inline-block; margin-right: 6px; }
 .question-control input { vertical-align: middle; }
 .question-drag-handle { cursor: grab; padding: 0 4px; margin-left: 4px; }
+.preview-scroll { overflow-x: auto; padding: 16px 0; }
+.preview-paper { box-sizing: border-box; max-width: none; margin: 0 auto;
+  background: #fff; box-shadow: 0 2px 12px #17233a24; }
+.preview-paper .exam-document { min-height: 0; padding: 0; border: 0;
+  border-radius: 0; line-height: inherit; }

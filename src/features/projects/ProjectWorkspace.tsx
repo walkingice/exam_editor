@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ProjectOwnership, WriteAccessError, type ProjectLease } from '../../data/ownership';
 import { ProjectRepository, type ProjectBundle } from '../../data/repository';
 import { onProjectDeleted } from '../../data/projectEvents';
@@ -6,16 +6,40 @@ import { ReadOnlyEditor } from '../editor/ReadOnlyEditor';
 import { readImportWarnings } from '../import-docx/importNotices';
 import { normalizeDocument } from '../../domain/document';
 import type { Editor } from '@tiptap/core';
+import type { JSONContent } from '@tiptap/core';
 import { EditingSession, type SaveState } from '../editor/EditingSession';
 import { ensureNodeIds } from '../editor/ensureNodeIds';
 import { PageSettingsForm } from './PageSettingsForm';
 import type { PageSettings } from '../../domain/types';
+import { projectOutput } from '../../domain/outputProjection';
+import { pageDimensions } from '../../domain/pageSettings';
+import { AssetResolver } from '../../shared/assets/AssetResolver';
+import { PreviewFormatToolbar } from '../layout/PreviewFormatToolbar';
+import { updateSourceFormat, type FormatChange } from '../layout/updateSourceFormat';
 
 type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
 
 function errorMessage(cause: unknown): string {
   return cause && typeof cause === 'object' && 'message' in cause
     && typeof cause.message === 'string' ? cause.message : '儲存失敗';
+}
+
+function findEditorNode(editor: Editor | null | undefined, id: string | null) {
+  if (!editor || !id) return null;
+  let found: { type: string; attrs: Record<string, unknown> } | null = null;
+  editor.state.doc.descendants((node) => {
+    if (node.attrs.id === id) {
+      found = { type: node.type.name, attrs: node.attrs };
+      return false;
+    }
+    return true;
+  });
+  return found as { type: string; attrs: Record<string, unknown> } | null;
+}
+
+function includesNodeId(node: JSONContent | null, id: string | null): boolean {
+  return !!node && !!id && (node.attrs?.id === id
+    || !!node.content?.some((child) => includesNodeId(child, id)));
 }
 
 export function ProjectWorkspace({ projectId, repository, ownership, registerGuard }: {
@@ -35,7 +59,15 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [name, setName] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [pageSettings, setPageSettings] = useState<PageSettings | null>(null);
+  const [tab, setTab] = useState<'content' | 'preview'>('content');
+  const [previewRevision, setPreviewRevision] = useState(0);
+  const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
+  const [formatError, setFormatError] = useState('');
   const saving = useRef<EditingSession | null>(null);
+  const assetResolver = useMemo(() => new AssetResolver(
+    projectId, (id, assetId) => repository.getAsset(id, assetId),
+  ), [projectId, repository]);
+  useEffect(() => () => assetResolver.dispose(), [assetResolver]);
 
   useLayoutEffect(() => {
     registerGuard?.(async () => {
@@ -164,6 +196,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       const content = normalizeDocument(editor.getJSON());
       saving.current?.updateContent(content);
       current.revision += 1;
+      setPreviewRevision(current.revision);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '文件內容無效');
     }
@@ -195,6 +228,25 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     } catch (cause) { setSaveError(errorMessage(cause)); }
   }
 
+  function changePreviewFormat(change: FormatChange) {
+    const editor = session.current?.editor;
+    if (!editor || !selectedPreviewId || !pageSettings || !activeLease.current?.isActive) return;
+    if (!includesNodeId(previewContent, selectedPreviewId)) {
+      setFormatError('預覽中的節點已變更，請重新選取');
+      return;
+    }
+    try { updateSourceFormat(editor, selectedPreviewId, change, pageSettings); setFormatError(''); }
+    catch (cause) { setFormatError(errorMessage(cause)); }
+  }
+
+  const previewContent = useMemo(() => {
+    const source = session.current?.editor?.getJSON() ?? bundle?.document.content;
+    return source && pageSettings ? projectOutput(source, pageSettings.outputListStyle) : null;
+  }, [bundle, pageSettings, previewRevision, tab]);
+  const page = pageSettings ? pageDimensions(pageSettings) : null;
+  const selectedNode = includesNodeId(previewContent, selectedPreviewId)
+    ? findEditorNode(session.current?.editor, selectedPreviewId) : null;
+
   return <main>
     <a href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
     {status === 'loading' && <p>載入中…</p>}
@@ -213,7 +265,13 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
-      <h2>試卷內容</h2>
+      <div role="tablist" aria-label="Workspace tabs">
+        <button role="tab" aria-selected={tab === 'content'} onClick={() => setTab('content')}>
+          試卷內容</button>
+        <button role="tab" aria-selected={tab === 'preview'} onClick={() => setTab('preview')}>
+          排版預覽</button>
+      </div>
+      <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
       {lease?.isActive && pageSettings && <PageSettingsForm settings={pageSettings}
         onChange={changePageSettings} />}
       {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
@@ -221,12 +279,34 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {saveError && <><p role="alert">{saveError}</p>
         {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
           重試儲存</button>}</>}
+      <div role="tabpanel" hidden={tab !== 'content'}>
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
+        assetResolver={assetResolver}
         editable={!!lease?.isActive} onEditor={(editor) => {
           if (session.current?.projectId === projectId) session.current.editor = editor;
         }} onChange={recordChange} canInsertImage={(editor) =>
           session.current?.projectId === projectId && session.current.editor === editor
           && !!activeLease.current?.isActive} />
+      </div>
+      {tab === 'preview' && previewContent && pageSettings && page &&
+        <div role="tabpanel" aria-label="排版預覽" className="preview-scroll">
+          {formatError && <p role="alert">{formatError}</p>}
+          {selectedNode && lease?.isActive && <PreviewFormatToolbar
+            key={selectedPreviewId} type={selectedNode.type} attrs={selectedNode.attrs}
+            maxWidthMm={page.contentWidthMm} onChange={changePreviewFormat} />}
+          <div className="preview-paper" style={{ width: `${page.widthMm}mm`,
+            minHeight: `${page.heightMm}mm`, padding: `${pageSettings.marginsMm.top}mm ${pageSettings.marginsMm.right}mm ${pageSettings.marginsMm.bottom}mm ${pageSettings.marginsMm.left}mm`,
+            fontSize: `${pageSettings.defaultFontSizePt}pt`, lineHeight: pageSettings.lineHeight }}
+            onClick={(event) => {
+              const element = event.target instanceof Element ? event.target : null;
+              const node = element?.closest('[data-node-id]');
+              if (node) setSelectedPreviewId(node.getAttribute('data-node-id'));
+            }}>
+            <ReadOnlyEditor projectId={projectId} content={previewContent}
+              assetResolver={assetResolver}
+              repository={repository} preview />
+          </div>
+        </div>}
     </>}
   </main>;
 }
