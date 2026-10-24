@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { Editor } from '@tiptap/core';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ProjectLease, type ProjectOwnership } from '../../data/ownership';
@@ -30,7 +30,8 @@ afterEach(() => { cleanup(); vi.useRealTimers(); editorProps.current.length = 0;
 
 it('ignores a callback from a project closed before switching', async () => {
   const repository = { get: vi.fn(async (id: string) => bundle(id)),
-    save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+    beginSession: vi.fn(async (id: string) => bundle(id)),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
   const ownership = { acquireLatest: vi.fn(async (id: string,
     read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
   } as unknown as ProjectOwnership;
@@ -50,4 +51,68 @@ it('ignores a callback from a project closed before switching', async () => {
     await vi.advanceTimersByTimeAsync(801);
   });
   expect(repository.save).not.toHaveBeenCalled();
+});
+
+it('flushes on BFCache entry while retaining assets for the live history', async () => {
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+  fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  await act(async () => {
+    const event = new Event('pagehide') as PageTransitionEvent;
+    Object.defineProperty(event, 'persisted', { value: true });
+    window.dispatchEvent(event);
+  });
+  await waitFor(() => expect(repository.save).toHaveBeenCalledOnce());
+  expect(repository.finishSession).not.toHaveBeenCalled();
+});
+
+it('keeps cleanup pending when the closing flush fails', async () => {
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}),
+    save: vi.fn(async () => { throw new Error('Storage failed'); }) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+  fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  await act(async () => { window.dispatchEvent(new Event('pagehide')); });
+  await waitFor(() => expect(repository.save).toHaveBeenCalledOnce());
+  expect(repository.finishSession).not.toHaveBeenCalled();
+});
+
+it('preserves an unsaved BFCache session after its lease expires', async () => {
+  const lease = new ProjectLease('first');
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}),
+    save: vi.fn(async () => { throw new Error('Storage failed'); }) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (_id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease, value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Unsaved' } });
+  fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  await act(async () => { window.dispatchEvent(new Event('pagehide')); });
+  await waitFor(() => expect(repository.save).toHaveBeenCalledOnce());
+  lease.invalidate();
+  await act(async () => {
+    const event = new Event('pageshow') as PageTransitionEvent;
+    Object.defineProperty(event, 'persisted', { value: true });
+    window.dispatchEvent(event);
+  });
+  expect(repository.beginSession).toHaveBeenCalledOnce();
+  expect(screen.getByRole('heading', { name: 'Unsaved' })).toBeInTheDocument();
+  expect(screen.getByText(/請先複製內容/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '重新取得寫入權' })).toBeNull();
 });

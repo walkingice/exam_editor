@@ -16,6 +16,8 @@ const repository = {
     return [...records.values()].map(({ project }) => project);
   }),
   get: vi.fn(async (id: string) => records.get(id) ?? null),
+  beginSession: vi.fn(async (id: string) => repository.get(id)),
+  finishSession: vi.fn(async () => {}),
   create: vi.fn(async (bundle: ProjectBundle) => { records.set(bundle.project.id, bundle); }),
   save: vi.fn(async (bundle: ProjectBundle) => { records.set(bundle.project.id, bundle); }),
   delete: vi.fn(async (id: string) => { records.delete(id); }),
