@@ -2,6 +2,7 @@ import type { JSONContent } from '@tiptap/core';
 import { normalizeDocument } from '../../domain/document';
 import type { ProjectBundle } from '../../data/repository';
 import type { ProjectRepository } from '../../data/repository';
+import { validatePageSettings, type PageSettings } from '../../domain/types';
 
 export type SaveState = 'saved' | 'dirty' | 'saving' | 'error';
 
@@ -36,6 +37,14 @@ export class EditingSession {
     if (this.closed) return;
     if (!name.trim()) throw new Error('試卷名稱不能為空');
     this.bundle = { ...this.bundle, project: { ...this.bundle.project, name: name.trim() } };
+    this.changed();
+  }
+
+  updatePageSettings(settings: PageSettings): void {
+    if (this.closed) return;
+    validatePageSettings(settings);
+    this.bundle = { ...this.bundle, project: { ...this.bundle.project,
+      pageSettings: structuredClone(settings) } };
     this.changed();
   }
 

@@ -8,6 +8,8 @@ import { normalizeDocument } from '../../domain/document';
 import type { Editor } from '@tiptap/core';
 import { EditingSession, type SaveState } from '../editor/EditingSession';
 import { ensureNodeIds } from '../editor/ensureNodeIds';
+import { PageSettingsForm } from './PageSettingsForm';
+import type { PageSettings } from '../../domain/types';
 
 type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
 
@@ -32,6 +34,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [saveError, setSaveError] = useState('');
   const [name, setName] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [pageSettings, setPageSettings] = useState<PageSettings | null>(null);
   const saving = useRef<EditingSession | null>(null);
 
   useLayoutEffect(() => {
@@ -89,6 +92,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       setSaveState('saved');
       setName(next?.project.name ?? '');
       setDisplayName(next?.project.name ?? '');
+      setPageSettings(next?.project.pageSettings ?? null);
       setLease(activeLease.current);
       setBundle(next);
       setStatus(next ? 'ready' : 'missing');
@@ -184,6 +188,13 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     }
   }
 
+  function changePageSettings(settings: PageSettings) {
+    try {
+      saving.current?.updatePageSettings(settings);
+      if (saving.current) setPageSettings(settings);
+    } catch (cause) { setSaveError(errorMessage(cause)); }
+  }
+
   return <main>
     <a href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
     {status === 'loading' && <p>載入中…</p>}
@@ -203,6 +214,8 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
       <h2>試卷內容</h2>
+      {lease?.isActive && pageSettings && <PageSettingsForm settings={pageSettings}
+        onChange={changePageSettings} />}
       {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
         saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
       {saveError && <><p role="alert">{saveError}</p>
