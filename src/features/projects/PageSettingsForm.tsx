@@ -32,26 +32,47 @@ export function PageSettingsForm({ settings, onChange }: {
       }} /> </label>;
   }
 
-  return <section aria-label="頁面設定">
+  return <section aria-label="頁面設定" className="page-settings">
     <h2>頁面設定</h2>
-    <label>紙張 <select value={settings.paperSize} onChange={(event) =>
-      commit({ ...settings, paperSize: event.target.value as PageSettings['paperSize'] })}>
-      <option value="TW_B4">台灣 B4</option><option value="A4">A4</option>
-    </select></label>
-    <label>方向 <select value={settings.orientation} onChange={(event) =>
-      commit({ ...settings, orientation: event.target.value as PageSettings['orientation'] })}>
-      <option value="portrait">直向</option><option value="landscape">橫向</option>
-    </select></label>
-    {(['top', 'right', 'bottom', 'left'] as const).map((key) => numeric(key,
-      { top: '上邊距 (mm)', right: '右邊距 (mm)', bottom: '下邊距 (mm)', left: '左邊距 (mm)' }[key],
-      settings.marginsMm[key], 0, 100, '0.5'))}
-    {numeric('defaultFontSizePt', '字級 (pt)', settings.defaultFontSizePt, 6, 72, '0.5')}
-    {numeric('lineHeight', '行距', settings.lineHeight, 0.5, 4, '0.1')}
-    <label>輸出清單 <select value={settings.outputListStyle} onChange={(event) =>
-      commit({ ...settings, outputListStyle: event.target.value as PageSettings['outputListStyle'] })}>
-      <option value="ordered">編號</option><option value="unordered">項目符號</option>
-    </select></label>
-    <p>內容區域：{dimensions.contentWidthMm} × {dimensions.contentHeightMm} mm</p>
-    {error && <p role="alert">{error}</p>}
+    <div className="page-settings-grid">
+      <fieldset className="settings-group">
+        <legend>紙張</legend>
+        <label>紙張 <select value={settings.paperSize} onChange={(event) =>
+          commit({ ...settings, paperSize: event.target.value as PageSettings['paperSize'] })}>
+          <option value="TW_B4">台灣 B4</option><option value="A4">A4</option>
+        </select></label>
+        <label>方向 <select value={settings.orientation} onChange={(event) =>
+          commit({ ...settings, orientation: event.target.value as PageSettings['orientation'] })}>
+          <option value="portrait">直向</option><option value="landscape">橫向</option>
+        </select></label>
+      </fieldset>
+      <fieldset className="settings-group">
+        <legend>邊界（mm）</legend>
+        <div className="settings-fields settings-margins">
+          {(['top', 'right', 'bottom', 'left'] as const).map((key) => numeric(key,
+            { top: '上邊距 (mm)', right: '右邊距 (mm)',
+              bottom: '下邊距 (mm)', left: '左邊距 (mm)' }[key],
+            settings.marginsMm[key], 0, 100, '0.5'))}
+        </div>
+      </fieldset>
+      <fieldset className="settings-group">
+        <legend>文字</legend>
+        <div className="settings-fields">
+          {numeric('defaultFontSizePt', '字級 (pt)', settings.defaultFontSizePt, 6, 72, '0.5')}
+          {numeric('lineHeight', '行距', settings.lineHeight, 0.5, 4, '0.1')}
+        </div>
+      </fieldset>
+      <fieldset className="settings-group">
+        <legend>輸出清單</legend>
+        <label>樣式 <select value={settings.outputListStyle} onChange={(event) =>
+          commit({ ...settings, outputListStyle: event.target.value as PageSettings['outputListStyle'] })}>
+          <option value="ordered">編號</option><option value="unordered">項目符號</option>
+        </select></label>
+      </fieldset>
+    </div>
+    <div className="settings-summary">
+      <p>內容區域：{dimensions.contentWidthMm} × {dimensions.contentHeightMm} mm</p>
+      {error && <p role="alert">{error}</p>}
+    </div>
   </section>;
 }
