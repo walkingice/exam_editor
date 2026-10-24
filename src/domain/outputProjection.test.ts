@@ -78,3 +78,12 @@ it('filters unselected document items as well as questions for print', () => {
   ] });
   expect(projectOutput(source, 'unordered').content?.map((node) => node.type)).toEqual(['paragraph']);
 });
+
+it('prints older items without a selection attribute', () => {
+  const legacy = { type: 'doc', content: [
+    { type: 'heading', attrs: { id: 'heading-1', level: 2 } },
+    { type: 'paragraph', attrs: { id: 'paragraph-1' } },
+  ] };
+  expect(projectOutput(legacy, 'ordered').content?.map((node) => node.type))
+    .toEqual(['heading', 'paragraph']);
+});

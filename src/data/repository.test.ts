@@ -38,6 +38,19 @@ afterEach(async () => {
 });
 
 describe('project repository', () => {
+  it('opens a document saved before item selection existed', async () => {
+    const repository = createRepository();
+    const current = bundle();
+    await repository.create(current);
+    const legacy = structuredClone(current.document);
+    delete legacy.content.content![0].attrs!.selected;
+    await databases.at(-1)!.documents.put(legacy);
+    expect((await repository.get(current.project.id))?.document.content.content?.[0].attrs?.selected)
+      .toBeUndefined();
+    expect((await repository.beginSession(current.project.id))?.document.content.content?.[0].attrs?.id)
+      .toBe(legacy.content.content?.[0].attrs?.id);
+  });
+
   it('reopens a saved session with sections, options, a table and unselected image', async () => {
     const repository = createRepository();
     const current = bundle();

@@ -60,6 +60,22 @@ describe('exam document schema', () => {
     expect(content.content?.[0].content?.[0].attrs?.selected).toBe(true);
   });
 
+  it('accepts older document items without a selection attribute', () => {
+    const legacy = { type: 'doc', content: [
+      { type: 'heading', attrs: { id: 'heading-1', level: 2 } },
+      { type: 'paragraph', attrs: { id: 'paragraph-1' } },
+    ] };
+    expect(() => validateDocument(legacy)).not.toThrow();
+    expect(normalizeDocument(legacy).content?.map((item) => item.attrs?.selected))
+      .toEqual([true, true]);
+    expect(() => validateDocument({ type: 'doc', content: [
+      { type: 'paragraph', attrs: { id: 'invalid', selected: 'yes' } },
+    ] })).toThrow('Invalid item selection');
+    expect(() => normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', attrs: { selected: 'yes' } },
+    ] })).toThrow('Invalid item selection');
+  });
+
   it('rejects unsupported and malformed document content', () => {
     expect(() => normalizeDocument({ type: 'doc', content: [{ type: 'unknown' }] })).toThrow();
     expect(() => normalizeDocument({ type: 'doc', content: [{ type: 'image' }] })).toThrow();
