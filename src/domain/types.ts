@@ -84,8 +84,10 @@ export function validateExamDocument(document: ExamDocument): void {
 }
 
 export function validateAsset(asset: Asset): void {
+  const blob = asset.blob;
   if (!asset.id || !asset.projectId || !['image/png', 'image/jpeg'].includes(asset.mimeType)
-    || !(asset.blob instanceof Blob) || asset.blob.type !== asset.mimeType) {
+    || typeof blob?.arrayBuffer !== 'function' || !Number.isFinite(blob.size)
+    || blob.type !== asset.mimeType) {
     throw new Error('Invalid asset');
   }
 }
