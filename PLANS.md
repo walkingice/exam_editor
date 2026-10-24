@@ -157,6 +157,7 @@ type Asset = {
     - 實作：建立 `data/` ownership service，依 projectId 使用 browser 支援的互斥機制（優先評估 Web Locks）；所有 repository mutation 包含刪除與資產清理皆驗證寫入權。失去權限就停止寫入；重新取得後重讀資料。若環境不支援可靠互斥，明確禁止寫入並提示，不以單純 localStorage flag 假裝有鎖。
     - 驗證：此時尚無 Project UI，使用僅供測試的 browser harness 暴露 repository／ownership 操作，以兩個同 origin pages 驗證只一個 writer、第二分頁不可刪除、關閉 owner 後重新取得並讀到最新資料；單元測試失去權限時拒絕 mutation。harness 不納入 production build。
     - Commit：`feat: Enforce single-tab project writes`。
+    - 進度紀錄（2026-10-24）：Web Locks ownership service、repository mutation guard、測試 harness 與兩分頁 Playwright 案例已實作。`npm test`（4 files／18 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Vite harness HTML 與模組的本機 HTTP 回應成功。sub-agent review/testing 均通過，失權後續寫入拒絕的問題已補回歸測試。真實 Chromium／Firefox 兩分頁測試依 SPEC 待使用者明確指定，故 step 與 Phase 1 保持未完成。若既有 Dexie 交易進行中同時遭外部強制收回 Web Lock，該交易仍可能完成；目前未使用 `steal`。
 
 - [ ] **Phase 2 — Project 首頁與唯讀 workspace**
 
