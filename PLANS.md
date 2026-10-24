@@ -145,11 +145,12 @@ type Asset = {
     - Commit：`feat: Define exam document schema`。
     - 驗證紀錄（2026-10-24）：`npm test`（2 files／8 tests）、`npm run typecheck`、`npm run build` 通過。測試涵蓋空文件、混合表格／圖片、巢狀選項、ID 修復與重複正規化、非法節點、邊距，以及 `<ol>` 匯入後預設勾選。sub-agent review/testing 均通過；review 發現的 `<ol>` 屬性與預設勾選問題已修正。編輯階段仍須避免建立有序來源清單，並於儲存前正規化；本 step 無 browser 驗證要求。
 
-  - [ ] **Step 1.2 — 建立 Dexie repository 與 migration**
+  - [x] **Step 1.2 — 建立 Dexie repository 與 migration**
     - 目標：以交易方式建立、讀取、更新、刪除完整 Project。
     - 實作：建立 stores、索引與 repository 介面；Project metadata、JSON 與資產寫入同一交易，刪除也一併處理。準備 database version 與 JSON schemaVersion 的升級入口；不支援的未來版本顯示錯誤，不覆寫原資料。Promise 完成後才回報成功。
     - 驗證：repository 單元測試 CRUD、交易中途失敗 rollback、刪除連帶資產、migration 舊 fixture、未知版本拒絕；測試資料庫每次獨立清空。
     - Commit：`feat: Add transactional project storage`。
+    - 驗證紀錄（2026-10-24）：`npm test`（3 files／14 tests）、`npm run typecheck`、`npm run build` 通過。使用 fake-indexeddb 獨立資料庫測試 CRUD、建立及更新失敗 rollback、刪除連帶資產、version 1 fixture migration、未來版本拒絕讀取／修改／刪除。sub-agent review/testing 均通過；尚無 UI，未執行 browser 驗證。
 
   - [ ] **Step 1.3 — 建立單一分頁寫入權**
     - 目標：從首次提供 CRUD 起就避免同 Project 被多個分頁同時修改。
