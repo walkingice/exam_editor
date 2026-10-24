@@ -159,25 +159,27 @@ type Asset = {
     - Commit：`feat: Enforce single-tab project writes`。
     - 驗證紀錄（2026-10-24）：Web Locks ownership service、repository mutation guard、測試 harness 與兩分頁 Playwright 案例已實作。`npm test`（4 files／18 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Vite harness HTML 與模組的本機 HTTP 回應成功。sub-agent review/testing 均通過，失權後續寫入拒絕的問題已補回歸測試。使用者回報安裝 browser binaries 並通過 Step 1.3 的 Playwright 測試；本機 `test-results/.last-run.json` 記錄 `status: passed`、`failedTests: []`。此回合未重跑瀏覽器測試。若既有 Dexie 交易進行中同時遭外部強制收回 Web Lock，該交易仍可能完成；目前未使用 `steal`。
 
-- [ ] **Phase 2 — Project 首頁與唯讀 workspace**
+- [x] **Phase 2 — Project 首頁與唯讀 workspace**
 
-  - [ ] **Step 2.1 — 建立首頁與 Project 路由**
+  - [x] **Step 2.1 — 建立首頁與 Project 路由**
     - 目標：使用者可建立空白文件、列表、開啟及刪除 Project。
     - 實作：在 `app/` 建首頁與 projectId 路由，靜態部署可直接載入；在 `features/projects/` 串接 repository，顯示 loading、empty、error 狀態。Project 不存在時顯示可返回首頁的訊息；刪除後關閉相關 workspace。新增時寫入完整預設文件與頁面設定。
     - 驗證：UI 測試 CRUD 與錯誤狀態；E2E 建立、刷新、重新開啟、刪除，以及直接進入有效／不存在的路由；再以真實 UI 驗證雙分頁中非 owner 無法刪除，接手後讀取最新資料。
     - Commit：`feat: Add project home and navigation`。
     - 進度紀錄（2026-10-24）：首頁、hash Project 路由、空白文件建立、列表、刪除、唯讀／接手狀態及跨分頁刪除通知已實作。`npm test`（5 files／23 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Chromium／Firefox 各列出建立、重載、直接開啟、刪除、雙分頁阻擋與接手案例。sub-agent testing 獨立通過非 browser 檢查；review 發現的通知、載入與鎖釋放競態已修正。依 SPEC 尚未啟動真實瀏覽器；E2E 未通過前本 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：使用者指定後執行 `npm run test:e2e`；Chromium／Firefox 的建立、重載、重新開啟、刪除、直接路由、雙分頁阻擋與接手案例均通過。搭配既有 UI 測試、sub-agent review/testing，本 step 完成。
 
-  - [ ] **Step 2.2 — 建立唯讀 editor 與 Asset Resolver**
+  - [x] **Step 2.2 — 建立唯讀 editor 與 Asset Resolver**
     - 目標：完整 JSON 的文字、表格及圖片可在重開後顯示。
     - 實作：共用 Step 1.1 schema，以唯讀 Tiptap 呈現；圖片節點僅存 assetId，resolver 向 repository 讀 Blob 並管理 object URL。卸載、換 Project 與無人使用時釋放 URL；找不到圖片顯示 placeholder 和錯誤，不破壞文字。此時不加入文字編輯 toolbar。
     - 驗證：測試 Blob lookup、URL 建立／釋放、切換 Project 不串圖、缺圖提示；E2E 用儲存 fixture 確認 reload 後圖片存在。
     - Commit：`feat: Render stored exam documents`。
     - 進度紀錄（2026-10-24）：已使用共用 Tiptap schema 唯讀顯示文字、表格及圖片；Blob resolver 依 Project 查詢並於卸載或切換時釋放 object URL，缺圖顯示 placeholder。`npm test`（7 files／30 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；已列出儲存圖片重載案例。sub-agent testing 獨立通過非 browser 檢查；review 發現同 Project 重讀未更新內容與舊圖片短暫顯示問題，均已修正。依 SPEC 尚未啟動真實瀏覽器；E2E 未通過前本 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：首次完整 E2E 的 Chromium／Firefox 圖片案例失敗；發現 React StrictMode effect 重跑後 resolver 停用。已修正重新啟用與舊 lookup 失效，補 UI／resolver 回歸測試。失敗的 4 案重跑全過，完整 `npm run test:e2e` 18/18 通過；`npm test` 12 files／63 tests、`npm run typecheck`、`npm run build` 通過。sub-agent review/testing 通過；本 step 完成。
 
-- [ ] **Phase 3 — DOCX 匯入與 Milestone 1 驗收**
+- [x] **Phase 3 — DOCX 匯入與 Milestone 1 驗收**
 
-  - 目前狀態（2026-10-24）：Step 3.1、3.2 已完成；Step 3.3、3.4 的程式、fixtures 與非 browser 驗證已完成，仍待真實 browser 驗收。最新檢查為 `npm test`（12 files／61 tests）、`npm run typecheck`、`npm run build` 通過；`npm run test:e2e -- --list` 列出 Chromium／Firefox 共 18 案，尚未執行。依 SPEC 的規則，使用者明確指定後才可執行真實 browser 測試；Phase 3 與 Milestone 1 因此維持未完成。
+  - 驗收狀態（2026-10-24）：使用者指定後執行 Chromium／Firefox 真實 browser E2E，修正 StrictMode 圖片問題後完整 18/18 通過。`npm test`（12 files／63 tests）、`npm run typecheck`、`npm run build` 通過；Milestone 1 完成，workspace 仍為唯讀。匯入警告只保留在目前 browser session，見 README。
 
   - [x] **Step 3.1 — 建立輸入限制與 Mammoth adapter**
     - 目標：將 DOCX 解析成未信任 HTML、圖片 Blobs 與警告，不立即寫入 Project。
@@ -193,19 +195,21 @@ type Asset = {
     - Commit：`feat: Sanitize and normalize DOCX imports`。
     - 驗證紀錄（2026-10-24）：`npm test`（9 files／46 tests）、`npm run typecheck`、`npm run build` 通過。測試涵蓋 script、事件、URL、偽造資產引用、ordered／巢狀清單、中文、marks、表格圖片順序、合併儲存格、對齊與重複匯入語意。sub-agent review/testing 通過；review 提出的偽造 attribute 與段落內圖片警告已修正。尚未執行真實 browser 驗證。
 
-  - [ ] **Step 3.3 — 串接交易匯入 UI**
+  - [x] **Step 3.3 — 串接交易匯入 UI**
     - 目標：匯入成功才顯示完整 Project，取消或失敗不留下殘缺資料。
     - 實作：首頁檔案選擇器串接 adapter、sanitizer、normalizer；轉換期間顯示等待與取消。只在全部轉換成功且未取消後提交 Project、JSON、Blobs 交易；若先存暫存資產，必須 rollback 清除。完成後開啟「試卷內容」，呈現警告與人工校對提示；不可把取消當成功。
     - 驗證：UI/E2E 測試成功、重複操作防護、轉換中取消、儲存失敗、quota error；檢查失敗後首頁與 DB 都沒有半成品。
     - Commit：`feat: Add transactional DOCX import flow`。
     - 進度紀錄（2026-10-24）：首頁匯入、轉換中取消、交易儲存、警告及人工校對提醒已接通；離開首頁會中止轉換，儲存時不能取消。`npm test`（11 files／55 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過，E2E 清單含 Chromium／Firefox 成功匯入重載與損壞檔案。unit/UI 測試涵蓋取消、重複操作、quota 與交易 rollback；sub-agent review/testing 通過。依 SPEC 未執行真實 browser，E2E 與產品驗收待驗，本 step 保持未完成。關閉 browser 後 sessionStorage 警告不保留，見 README。
+    - 驗收紀錄（2026-10-24）：Chromium／Firefox 的成功匯入、重載、關閉分頁後重開、損壞檔案不建 Project 均通過。unit/UI 測試涵蓋取消、重複操作、quota 與交易 rollback；完整 E2E 18/18、unit/UI 63/63 通過。本 step 完成；sessionStorage 警告不跨 browser session 保留。
 
-  - [ ] **Step 3.4 — 建立 fixtures 並驗收 Milestone 1**
+  - [x] **Step 3.4 — 建立 fixtures 並驗收 Milestone 1**
     - 目標：有可重複的真實輸入與明確限制紀錄。
     - 實作：建立六類 DOCX fixtures：中文題目、混合 marks、至少兩張 PNG/JPEG 與大圖、合併儲存格／多欄表格、多頁內容、公式／文字方塊／圖形。每個 fixture 附來源或產生方式、預期保留內容與降級結果，不使用真實學生資料。補 README 匯入／本機儲存操作與已知限制。
     - 驗證：匯入中文、標題、表格、兩張圖，重載與關閉重開仍存在；損壞 DOCX 不白畫面、不產生空 Project。不支援元素有提示或限制紀錄。執行 unit/UI/E2E、typecheck、build 並記錄結果；本階段仍為唯讀。
     - Commit：`test: Verify persistent DOCX import workflow`。
     - 進度紀錄（2026-10-24）：六類合成 DOCX fixtures、可重產生腳本、預期保留／降級文件與解析測試已加入；明確啟用 Mammoth underline mapping。`npm test`（12 files／61 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Chromium／Firefox 各列出中文題目、表格、兩張圖片與重載案例。尚未執行真實 browser 驗收，Milestone 1 與本 step 保持未完成；實際 E2E 結果待指定後記錄。
+    - 驗收紀錄（2026-10-24）：六類 DOCX fixture 解析測試通過；Chromium／Firefox 實際匯入中文題目、合併表格、PNG/JPEG 並重載圖片。損壞 DOCX 顯示錯誤且不建立 Project；公式等不支援內容有 Mammoth 警告或 `docs/fixtures.md` 限制紀錄。完整 E2E 18/18、unit/UI 63/63、typecheck、build 通過；本 step 與 Milestone 1 完成。
 
 ## Milestone 2 — 編輯試卷內容
 

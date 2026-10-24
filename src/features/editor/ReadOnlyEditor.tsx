@@ -14,6 +14,7 @@ function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetRes
   useEffect(() => {
     let active = true;
     let current: AssetHandle | null = null;
+    resolver.activate();
     setResolved(null);
     setErrorAssetId(null);
     void resolver.acquire(assetId).then((result) => {

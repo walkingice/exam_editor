@@ -39,4 +39,17 @@ describe('asset resolver', () => {
     expect(await second.acquire('image-1')).toBeNull();
     expect(lookup).toHaveBeenCalledWith('first', 'image-1');
   });
+
+  it('ignores a lookup started before disposal and reactivation', async () => {
+    let finish!: (value: Asset) => void;
+    const lookup = vi.fn(() => new Promise<Asset>((resolve) => { finish = resolve; }));
+    const urls = { createObjectURL: vi.fn(() => 'blob:stale'), revokeObjectURL: vi.fn() };
+    const resolver = new AssetResolver('first', lookup, urls);
+    const pending = resolver.acquire('image-1');
+    resolver.dispose();
+    resolver.activate();
+    finish(asset('first', 'image-1'));
+    expect(await pending).toBeNull();
+    expect(urls.createObjectURL).not.toHaveBeenCalled();
+  });
 });

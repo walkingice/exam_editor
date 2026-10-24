@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
 import type { ProjectRepository } from '../../data/repository';
@@ -49,6 +50,22 @@ describe('read-only document', () => {
     expect(await screen.findByRole('img', { name: 'Photo' })).toHaveAttribute('src', 'blob:test-image');
     view.unmount();
     expect(revoke).toHaveBeenCalledWith('blob:test-image');
+  });
+
+  it('loads an image when StrictMode replays effects', async () => {
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:strict-image' });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'image', attrs: { assetId: 'present', alt: 'Strict image' } },
+    ] });
+    const repository = { getAsset: vi.fn(async () => ({
+      id: 'present', projectId: 'first', mimeType: 'image/png',
+      blob: new Blob(['image'], { type: 'image/png' }),
+    })) } as unknown as ProjectRepository;
+    render(<StrictMode><ReadOnlyEditor projectId="first" content={content}
+      repository={repository} /></StrictMode>);
+    expect(await screen.findByRole('img', { name: 'Strict image' }))
+      .toHaveAttribute('src', 'blob:strict-image');
   });
 
   it('releases the first project image before showing another project', async () => {
