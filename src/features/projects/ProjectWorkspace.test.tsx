@@ -6,6 +6,13 @@ import type { ProjectBundle, ProjectRepository } from '../../data/repository';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS } from '../../domain/types';
 import { normalizeDocument } from '../../domain/document';
 import { ProjectWorkspace } from './ProjectWorkspace';
+import { createDocxDownload, downloadBlob } from '../export-docx/downloadDocument';
+
+vi.mock('../export-docx/downloadDocument', async (original) => ({
+  ...await original<typeof import('../export-docx/downloadDocument')>(),
+  createDocxDownload: vi.fn(async () => ({ blob: new Blob(), warnings: [] })),
+  downloadBlob: vi.fn(),
+}));
 
 const editorProps = vi.hoisted(() => ({
   current: [] as Array<{ onChange?: (editor: Editor) => void;
@@ -182,4 +189,44 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
   expect(screen.getByTestId('editor')).toBe(sourceEditor);
   expect(repository.save).not.toHaveBeenCalled();
+});
+
+
+it('exports the latest editor content before its debounced save', async () => {
+  vi.mocked(createDocxDownload).mockClear();
+  const current = bundle('first');
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}),
+    getAsset: vi.fn(async () => null) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+    content: [{ type: 'text', text: 'Latest unsaved edit' }] }] });
+  const editor = { getJSON: () => content } as Editor;
+  editorProps.current.at(-1)?.onEditor?.(editor);
+  fireEvent.click(screen.getByRole('button', { name: '匯出 DOCX' }));
+  await waitFor(() => expect(createDocxDownload).toHaveBeenCalledOnce());
+  expect(vi.mocked(createDocxDownload).mock.calls[0][0]).toEqual(content);
+  expect(repository.save).not.toHaveBeenCalled();
+});
+
+it('exports a readonly tab loaded version without requesting write access again', async () => {
+  vi.mocked(createDocxDownload).mockClear();
+  vi.mocked(downloadBlob).mockClear();
+  const current = bundle('first');
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(),
+    finishSession: vi.fn(async () => {}), save: vi.fn(), getAsset: vi.fn(async () => null),
+  } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async () => null) } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  fireEvent.click(screen.getByRole('button', { name: '匯出 DOCX' }));
+  await waitFor(() => expect(downloadBlob).toHaveBeenCalledOnce());
+  expect(vi.mocked(createDocxDownload).mock.calls[0][0]).toEqual(current.document.content);
+  expect(ownership.acquireLatest).toHaveBeenCalledOnce();
+  expect(repository.save).not.toHaveBeenCalled();
+  expect(repository.beginSession).not.toHaveBeenCalled();
 });

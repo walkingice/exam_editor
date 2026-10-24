@@ -18,6 +18,8 @@ import { PreviewFormatToolbar } from '../layout/PreviewFormatToolbar';
 import { updateSourceFormat, type FormatChange } from '../layout/updateSourceFormat';
 import { createPrintCss, waitForPrintAssets } from '../layout/printDocument';
 
+import { ExportDocxButton } from '../export-docx/ExportDocxButton';
+
 type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
 
 function errorMessage(cause: unknown): string {
@@ -310,6 +312,10 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
+      {pageSettings && <ExportDocxButton key={projectId} snapshot={() => ({
+        content: session.current?.editor?.getJSON() ?? bundle.document.content,
+        settings: pageSettings, name: displayName,
+      })} readAsset={async (assetId) => (await repository.getAsset(projectId, assetId)) ?? undefined} />}
       <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
       {tab === 'preview' && pageSettings && <div className="workspace-actions">
         <button onClick={() => void printExam()} disabled={printing.current}>列印 / PDF</button>

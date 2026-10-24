@@ -389,7 +389,8 @@ type Asset = {
         - 驗證（2026-10-25）：Blob／檔名／下載 URL 清理測試 4/4、typecheck 通過；sub-agent review/testing 通過。取消僅抑制下載，不中止壓縮。
       - [x] Step 12.1b — Export UI。
         - 驗證（2026-10-25）：UI tests 4/4 涵蓋快照、重複點擊、取消後重試、失敗、warning 及卸載；sub-agent review/testing 通過。
-      - [ ] Step 12.1c — Workspace snapshot integration。
+      - [x] Step 12.1c — Workspace snapshot integration。
+        - 驗證（2026-10-25）：workspace tests 確認未儲存 editor JSON 與唯讀已載入版本均可匯出，不要求儲存或重新取得寫入權。sub-agent review/testing 全套 unit/UI 166/166、typecheck、build 通過；僅既有 bundle size warning。Step 12.1 的實際 browser 下載仍待驗，原 step 不勾選。
 
   - [ ] **Step 12.2 — Golden samples 與完整回歸測試**
     - 目標：整條匯入、編輯、過濾、列印及匯出流程有自動化證據。
