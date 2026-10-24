@@ -323,7 +323,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {saveError && <><p role="alert">{saveError}</p>
         {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
           重試儲存</button>}</>}
-      <div role="tabpanel" hidden={tab !== 'content'}>
+      <div role="tabpanel" hidden={tab !== 'content'} className="content-panel">
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
         assetResolver={assetResolver}
         editable={!!lease?.isActive} onEditor={(editor) => {

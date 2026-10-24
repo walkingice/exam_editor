@@ -95,6 +95,55 @@ li { margin: 10px 0; }
 .question-control { display: inline-block; margin-right: 6px; }
 .question-control input { vertical-align: middle; }
 .question-drag-handle { cursor: grab; padding: 0 4px; margin-left: 4px; }
+.content-panel .exam-document .ProseMirror > ul {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.content-panel .exam-document .ProseMirror li {
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px 12px 78px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+.content-panel .exam-document .ProseMirror li > .question-control {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.content-panel .question-control input { width: 16px; height: 16px; margin: 0; }
+.content-panel .question-drag-handle {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d7dee8;
+  border-radius: 4px;
+  color: #43536a;
+  background: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
+.content-panel .question-drag-handle:hover { border-color: #8292a8; }
+.content-panel .question-drag-handle:active { cursor: grabbing; }
+.content-panel .exam-document .ProseMirror li > p:first-of-type { margin-top: 0; }
+.content-panel .exam-document .ProseMirror li > p:last-of-type { margin-bottom: 0; }
+.content-panel .exam-document .ProseMirror li > ul {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0 0 0 18px;
+  list-style: none;
+}
 .preview-scroll { overflow-x: auto; padding: 16px 0; }
 .preview-paper { box-sizing: border-box; max-width: none; margin: 0 auto;
   background: #fff; box-shadow: 0 2px 12px #17233a24; }
