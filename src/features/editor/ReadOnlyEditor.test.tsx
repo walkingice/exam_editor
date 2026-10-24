@@ -143,7 +143,7 @@ describe('read-only document', () => {
       setData: (type: string, value: string) => { values.set(type, value); },
       getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
     fireEvent.dragStart(handle, { dataTransfer });
-    fireEvent.drop(screen.getByRole('heading', { name: 'Empty section' }), { dataTransfer });
+    fireEvent.drop(screen.getByRole('heading', { name: /Empty section/ }), { dataTransfer });
     expect((editor!.getJSON() as JSONContent).content?.slice(0, 3).map((node) => node.type))
       .toEqual(['heading', 'heading', 'bulletList']);
     expect((editor!.getJSON() as JSONContent).content?.[2].content?.[0]).toEqual(original);
@@ -178,13 +178,41 @@ describe('read-only document', () => {
     const elementFromPoint = document.elementFromPoint;
     document.elementFromPoint = () => null;
     fireEvent.dragStart(handle, { dataTransfer });
-    fireEvent.dragOver(screen.getByRole('heading', { name: 'Second section' }),
+    fireEvent.dragOver(screen.getByRole('heading', { name: /Second section/ }),
       { dataTransfer, clientY: 0 });
-    expect(screen.getByRole('heading', { name: 'Second section' }))
-      .toHaveClass('question-drop-section');
+    expect(screen.getByRole('heading', { name: /Second section/ }))
+      .toHaveClass('question-drop-after');
     fireEvent.dragOver(screen.getByText('Second'), { dataTransfer, clientY: 0 });
     document.elementFromPoint = elementFromPoint;
     expect(screen.getByText('Second').closest('li')).toHaveClass('question-drop-after');
+  });
+
+  it('uses a table as the drop target from inside a cell', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Title' }] },
+      { type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Cell text' }] }] }] }] },
+      { type: 'image', attrs: { assetId: 'picture' } },
+      { type: 'blockquote', content: [{ type: 'paragraph',
+        content: [{ type: 'text', text: 'Quoted text' }] }] },
+      { type: 'codeBlock', content: [{ type: 'text', text: 'Code' }] },
+      { type: 'horizontalRule' },
+    ] });
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable />);
+    const handle = (await screen.findByRole('heading', { name: /Title/ }))
+      .querySelector('button[aria-label^="移動項目"]')!;
+    expect(screen.getAllByRole('button', { name: /移動項目/ })).toHaveLength(6);
+    const values = new Map<string, string>();
+    const dataTransfer = { types: ['application/x-exam-question'],
+      setData: (type: string, value: string) => { values.set(type, value); },
+      getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
+    const elementFromPoint = document.elementFromPoint;
+    document.elementFromPoint = () => null;
+    fireEvent.dragStart(handle, { dataTransfer });
+    fireEvent.dragOver(screen.getByText('Cell text'), { dataTransfer, clientY: 0 });
+    document.elementFromPoint = elementFromPoint;
+    expect(screen.getByText('Cell text').closest('table')).toHaveClass('question-drop-after');
   });
 
   it('treats a nested option drop as a drop on its outer question', async () => {

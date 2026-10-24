@@ -48,6 +48,20 @@ it('moves a complete question forward and backward in one list', () => {
   expect(ids(instance)).toEqual([['a', 'b', 'c']]);
 });
 
+it('reorders headings and paragraphs as document items', () => {
+  const instance = editor([
+    { type: 'heading', attrs: { id: 'title', level: 2 },
+      content: [{ type: 'text', text: 'Title' }] },
+    { type: 'paragraph', attrs: { id: 'body' },
+      content: [{ type: 'text', text: 'Body' }] },
+  ]);
+  const paragraphPosition = instance.state.doc.child(0).nodeSize;
+  expect(moveQuestion(instance, 'title', { position: paragraphPosition, placement: 'after' }))
+    .toBe(true);
+  expect((instance.getJSON() as JSONContent).content?.slice(0, 2).map((node) => node.attrs?.id))
+    .toEqual(['body', 'title']);
+});
+
 it('moves a selected subtree with options, an image and table across sections', () => {
   const source = item('b', 'Question', [
     { type: 'bulletList', content: [item('option', 'Answer')] },

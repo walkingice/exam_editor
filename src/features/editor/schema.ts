@@ -3,14 +3,16 @@ import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
-import { QuestionControls } from './questionControls';
+import HorizontalRule from '@tiptap/extension-horizontal-rule';
+import { QuestionControls, questionDragType } from './questionControls';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
   addGlobalAttributes() {
     return [
       {
-        types: ['paragraph', 'heading', 'listItem', 'table', 'image'],
+        types: ['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
+          'codeBlock', 'horizontalRule'],
         attributes: {
           id: {
             default: null,
@@ -74,6 +76,33 @@ export const AssetImage = Image.extend({
   },
 });
 
+const ExamHorizontalRule = HorizontalRule.extend({
+  addNodeView() {
+    return ({ node }) => {
+      const dom = document.createElement('div');
+      dom.className = 'exam-horizontal-rule';
+      dom.setAttribute('data-node-id', node.attrs.id);
+      const control = document.createElement('span');
+      control.className = 'document-item-control';
+      control.contentEditable = 'false';
+      const handle = document.createElement('button');
+      handle.type = 'button';
+      handle.className = 'question-drag-handle';
+      handle.draggable = true;
+      handle.setAttribute('aria-label', `移動項目 ${node.attrs.id}`);
+      handle.textContent = '↕';
+      handle.addEventListener('dragstart', (event) => {
+        event.dataTransfer?.setData(questionDragType, node.attrs.id);
+        if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+      });
+      control.append(handle);
+      const rule = document.createElement('hr');
+      dom.append(control, rule);
+      return { dom };
+    };
+  },
+});
+
 export const examExtensions = [
   StarterKit,
   ExamAttributes,
@@ -95,7 +124,8 @@ const SourceListShortcut = Extension.create({
 });
 
 export const editingExtensions = [
-  StarterKit.configure({ orderedList: false }),
+  StarterKit.configure({ orderedList: false, horizontalRule: false }),
+  ExamHorizontalRule,
   ExamAttributes,
   AssetImage,
   Table,

@@ -1,44 +1,66 @@
 import type { Editor } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 
-export type QuestionTarget =
-  | { position: number; placement: 'before' | 'after' }
-  | { position: number; placement: 'section' };
+export type QuestionTarget = { position: number; placement: 'before' | 'after' | 'section' };
 
-type QuestionLocation = {
-  position: number;
-  listPosition: number;
-  list: ProseMirrorNode;
-  item: ProseMirrorNode;
-};
+type Item = { node: ProseMirrorNode; list: boolean };
 
-function findQuestion(doc: ProseMirrorNode, id: string): QuestionLocation | null {
-  let listPosition = 0;
-  for (let index = 0; index < doc.childCount; index += 1) {
-    const list = doc.child(index);
-    if (list.type.name === 'bulletList') {
-      let itemOffset = 0;
-      for (let itemIndex = 0; itemIndex < list.childCount; itemIndex += 1) {
-        const item = list.child(itemIndex);
-        if (item.attrs.id === id) {
-          return { position: listPosition + 1 + itemOffset, listPosition, list, item };
-        }
-        itemOffset += item.nodeSize;
-      }
-    }
-    listPosition += list.nodeSize;
-  }
-  return null;
+function flattenItems(doc: ProseMirrorNode): Item[] {
+  const items: Item[] = [];
+  doc.forEach((node) => {
+    if (node.type.name === 'bulletList') {
+      node.forEach((item) => items.push({ node: item, list: true }));
+    } else items.push({ node, list: false });
+  });
+  return items;
 }
 
-function topLevelAt(doc: ProseMirrorNode, position: number) {
+function itemIndexAt(doc: ProseMirrorNode, position: number): number {
+  let offset = 0;
+  let itemIndex = 0;
+  for (let index = 0; index < doc.childCount; index += 1) {
+    const node = doc.child(index);
+    if (position === offset) return itemIndex;
+    if (node.type.name === 'bulletList') {
+      let itemOffset = offset + 1;
+      for (let child = 0; child < node.childCount; child += 1) {
+        const item = node.child(child);
+        if (position === itemOffset) return itemIndex;
+        itemOffset += item.nodeSize;
+        itemIndex += 1;
+      }
+    } else {
+      if (position > offset && position < offset + node.nodeSize) return itemIndex;
+      itemIndex += 1;
+    }
+    offset += node.nodeSize;
+  }
+  return -1;
+}
+
+function isSectionHeading(doc: ProseMirrorNode, position: number): boolean {
   let offset = 0;
   for (let index = 0; index < doc.childCount; index += 1) {
     const node = doc.child(index);
-    if (offset === position) return { node, index };
+    if (offset === position) return node.type.name === 'heading';
     offset += node.nodeSize;
   }
-  return null;
+  return false;
+}
+
+function groupItems(editor: Editor, items: Item[]): ProseMirrorNode[] {
+  const nodes: ProseMirrorNode[] = [];
+  let questions: ProseMirrorNode[] = [];
+  const flushQuestions = () => {
+    if (questions.length) nodes.push(editor.schema.nodes.bulletList.create(null, questions));
+    questions = [];
+  };
+  items.forEach(({ node, list }) => {
+    if (list) questions.push(node);
+    else { flushQuestions(); nodes.push(node); }
+  });
+  flushQuestions();
+  return nodes;
 }
 
 export function moveQuestion(editor: Editor, sourceId: string, target: QuestionTarget): boolean {
@@ -46,34 +68,19 @@ export function moveQuestion(editor: Editor, sourceId: string, target: QuestionT
   const { doc } = editor.state;
   if (!Number.isInteger(target.position) || target.position < 0
     || target.position >= doc.content.size) return false;
-  const source = findQuestion(doc, sourceId);
-  if (!source) return false;
-  const targetItem = target.placement === 'section' ? null : doc.nodeAt(target.position);
-  const targetList = target.placement === 'section' ? null
-    : doc.resolve(target.position).parent;
-  if (target.placement !== 'section' && (targetItem?.type.name !== 'listItem'
-    || targetList?.type.name !== 'bulletList'
-    || doc.resolve(target.position).depth !== 1 || targetItem.attrs.id === sourceId)) return false;
-  const section = target.placement === 'section' ? topLevelAt(doc, target.position) : null;
-  if (target.placement === 'section' && section?.node.type.name !== 'heading') return false;
+  const items = flattenItems(doc);
+  const sourceIndex = items.findIndex(({ node }) => node.attrs.id === sourceId);
+  const targetIndex = itemIndexAt(doc, target.position);
+  if (target.placement === 'section' && !isSectionHeading(doc, target.position)) return false;
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
 
-  const targetPosition = target.placement === 'section'
-    ? target.position + section!.node.nodeSize
-    : target.position + (target.placement === 'after' ? targetItem!.nodeSize : 0);
-  const transaction = editor.state.tr;
-  const removeList = source.list.childCount === 1;
-  transaction.delete(removeList ? source.listPosition : source.position,
-    removeList ? source.listPosition + source.list.nodeSize : source.position + source.item.nodeSize);
-  const mapped = transaction.mapping.map(targetPosition, 1);
-  if (target.placement === 'section') {
-    const next = transaction.doc.nodeAt(mapped);
-    if (next?.type.name === 'bulletList') transaction.insert(mapped + 1, source.item);
-    else transaction.insert(mapped, editor.schema.nodes.bulletList.create(null, source.item));
-  } else {
-    const $destination = transaction.doc.resolve(mapped);
-    if ($destination.parent.type.name !== 'bulletList') return false;
-    transaction.insert(mapped, source.item);
-  }
+  const [source] = items.splice(sourceIndex, 1);
+  const adjustedTarget = targetIndex - (sourceIndex < targetIndex ? 1 : 0);
+  const destination = target.placement === 'before' ? adjustedTarget : adjustedTarget + 1;
+  items.splice(Math.max(0, Math.min(destination, items.length)), 0, source);
+
+  const transaction = editor.state.tr.replaceWith(0, doc.content.size,
+    groupItems(editor, items));
   transaction.doc.check();
   editor.view.dispatch(transaction.scrollIntoView());
   return true;

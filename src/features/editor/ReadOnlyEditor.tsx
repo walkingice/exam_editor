@@ -9,8 +9,9 @@ import { AssetImage, editingExtensions, examExtensions } from './schema';
 import { EditorToolbar } from './EditorToolbar';
 import { ImageToolbar } from './ImageToolbar';
 import { insertLocalImage } from './insertLocalImage';
+import { questionDragType } from './questionControls';
 
-function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetResolver }) {
+function AssetImageView({ node, resolver, editor }: NodeViewProps & { resolver: AssetResolver }) {
   const [resolved, setResolved] = useState<{ assetId: string; handle: AssetHandle } | null>(null);
   const [errorAssetId, setErrorAssetId] = useState<string | null>(null);
   const assetId = node.attrs.assetId as string;
@@ -30,7 +31,16 @@ function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetRes
     return () => { active = false; current?.release(); };
   }, [assetId, resolver]);
 
-  return <NodeViewWrapper as="div" className="exam-image" data-node-id={node.attrs.id}>
+  const dragId = node.attrs.id as string;
+  return <NodeViewWrapper as="div" className="exam-image" data-node-id={dragId}>
+    {editor.isEditable && <span className="document-item-control" contentEditable={false}>
+      <button type="button" className="question-drag-handle" draggable
+        aria-label={`移動項目 ${dragId}`}
+        onDragStart={(event) => {
+          event.dataTransfer.setData(questionDragType, dragId);
+          event.dataTransfer.effectAllowed = 'move';
+        }}>↕</button>
+    </span>}
     {resolved?.assetId === assetId
       ? <img src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}
         style={node.attrs.widthMm == null ? undefined : { width: `${node.attrs.widthMm}mm` }} />

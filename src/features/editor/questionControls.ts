@@ -4,7 +4,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { EditorView } from '@tiptap/pm/view';
 import { moveQuestion, type QuestionTarget } from './moveQuestion';
 
-const dragType = 'application/x-exam-question';
+export const questionDragType = 'application/x-exam-question';
 
 function questionAt(view: EditorView, id: string) {
   let offset = 0;
@@ -43,73 +43,88 @@ function questionControl(view: EditorView, id: string): HTMLElement {
       { ...question.attrs, selected: input.checked }));
   });
   label.append(input);
-  const handle = document.createElement('button');
-  handle.type = 'button';
-  handle.className = 'question-drag-handle';
-  handle.draggable = true;
-  handle.disabled = !view.editable;
-  handle.setAttribute('aria-label', `移動題目 ${id}`);
-  handle.textContent = '↕';
-  handle.addEventListener('dragstart', (event) => {
-    if (!view.editable || !questionAt(view, id)) { event.preventDefault(); return; }
-    event.dataTransfer?.setData(dragType, id);
-    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-  });
+  const handle = dragHandle(view, id, `移動題目 ${id}`);
   control.append(label);
   if (view.editable) control.append(handle);
   return control;
 }
 
-function dropTarget(view: EditorView, event: DragEvent): QuestionTarget | null {
-  const element = event.target instanceof HTMLElement ? event.target : null;
-  let item = element?.closest('li');
-  while (item && item.parentElement?.parentElement !== view.dom) {
-    item = item.parentElement?.closest('li') ?? null;
-  }
-  if (item?.parentElement?.parentElement === view.dom) {
-    const id = item.getAttribute('data-node-id');
-    const question = id && questionAt(view, id);
-    if (!question) return null;
-    const placement = event.clientY < item.getBoundingClientRect().top + item.clientHeight / 2
-      ? 'before' : 'after';
-    return { position: question.position, placement };
-  }
-  const heading = element?.closest('h1, h2, h3');
-  if (heading?.parentElement !== view.dom) return null;
-  const id = heading.getAttribute('data-node-id');
-  let position = 0;
+function dragHandle(view: EditorView, id: string, label: string): HTMLButtonElement {
+  const handle = document.createElement('button');
+  handle.type = 'button';
+  handle.className = 'question-drag-handle';
+  handle.draggable = true;
+  handle.disabled = !view.editable;
+  handle.setAttribute('aria-label', label);
+  handle.textContent = '↕';
+  handle.addEventListener('dragstart', (event) => {
+    if (!view.editable) { event.preventDefault(); return; }
+    event.dataTransfer?.setData(questionDragType, id);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  });
+  return handle;
+}
+
+function itemControl(view: EditorView, id: string): HTMLElement {
+  const control = document.createElement('span');
+  control.className = 'document-item-control';
+  control.contentEditable = 'false';
+  if (view.editable) control.append(dragHandle(view, id, `移動項目 ${id}`));
+  return control;
+}
+
+function itemPosition(view: EditorView, id: string): number | null {
+  let offset = 0;
   for (let index = 0; index < view.state.doc.childCount; index += 1) {
     const node = view.state.doc.child(index);
-    if (node.type.name === 'heading' && node.attrs.id === id) {
-      return { position, placement: 'section' };
-    }
-    position += node.nodeSize;
+    if (node.type.name === 'bulletList') {
+      let itemOffset = offset + 1;
+      for (let itemIndex = 0; itemIndex < node.childCount; itemIndex += 1) {
+        const item = node.child(itemIndex);
+        if (item.attrs.id === id) return itemOffset;
+        itemOffset += item.nodeSize;
+      }
+    } else if (node.attrs.id === id) return offset;
+    offset += node.nodeSize;
   }
   return null;
+}
+
+function documentItem(view: EditorView, element: HTMLElement | null): HTMLElement | null {
+  let current = element;
+  while (current && current !== view.dom) {
+    const id = current.getAttribute('data-node-id');
+    if (id && itemPosition(view, id) !== null) return current;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+function dropTarget(view: EditorView, event: DragEvent): QuestionTarget | null {
+  const element = event.target instanceof HTMLElement ? event.target : null;
+  const targetElement = documentItem(view, element);
+  if (!targetElement) return null;
+  const id = targetElement.getAttribute('data-node-id');
+  const position = id ? itemPosition(view, id) : null;
+  if (position === null) return null;
+  const placement = event.clientY < targetElement.getBoundingClientRect().top
+    + targetElement.clientHeight / 2 ? 'before' : 'after';
+  return { position, placement };
 }
 
 function updateDropIndicator(view: EditorView, event: DragEvent): void {
   clearDropIndicator(view);
   const element = event.target instanceof HTMLElement ? event.target : null;
   const target = dropTarget(view, event);
-  if (target?.placement === 'section') {
-    element?.closest('h1, h2, h3')?.classList.add('question-drop-section');
-    return;
-  }
-  let item = element?.closest('li');
-  while (item && item.parentElement?.parentElement !== view.dom) {
-    item = item.parentElement?.closest('li') ?? null;
-  }
-  if (!item || item.parentElement?.parentElement !== view.dom) return;
-  const placement = event.clientY < item.getBoundingClientRect().top + item.clientHeight / 2
-    ? 'before' : 'after';
-  item.classList.add(`question-drop-${placement}`);
+  const targetElement = documentItem(view, element);
+  if (!target || !targetElement || !view.dom.contains(targetElement)) return;
+  targetElement.classList.add(`question-drop-${target.placement}`);
 }
 
 function clearDropIndicator(view: EditorView): void {
-  view.dom.querySelectorAll('.question-drop-before, .question-drop-after, .question-drop-section')
+  view.dom.querySelectorAll('.question-drop-before, .question-drop-after')
     .forEach((element) => element.classList.remove(
-      'question-drop-before', 'question-drop-after', 'question-drop-section'));
+      'question-drop-before', 'question-drop-after'));
 }
 
 export const QuestionControls = Extension.create({
@@ -119,22 +134,31 @@ export const QuestionControls = Extension.create({
       decorations: (state) => {
         const widgets: Decoration[] = [];
         state.doc.forEach((node, offset) => {
-          if (node.type.name !== 'bulletList') return;
-          node.forEach((item, itemOffset) => {
-            const id = item.attrs.id as string;
-            widgets.push(Decoration.widget(offset + 2 + itemOffset,
-              (view) => questionControl(view, id), {
-                key: `question-${id}-${item.attrs.selected}-${this.editor.isEditable}`,
+          if (node.type.name === 'bulletList') {
+            node.forEach((item, itemOffset) => {
+              const id = item.attrs.id as string;
+              widgets.push(Decoration.widget(offset + 2 + itemOffset,
+                (view) => questionControl(view, id), {
+                  key: `question-${id}-${item.attrs.selected}-${this.editor.isEditable}`,
+                  side: -1,
+                  stopEvent: () => true,
+                }));
+            });
+          } else if (node.attrs.id && !['image', 'horizontalRule'].includes(node.type.name)) {
+            const id = node.attrs.id as string;
+            widgets.push(Decoration.widget(offset + 1,
+              (view) => itemControl(view, id), {
+                key: `item-${id}-${this.editor.isEditable}`,
                 side: -1,
                 stopEvent: () => true,
               }));
-          });
+          }
         });
         return DecorationSet.create(state.doc, widgets);
       },
       handleDOMEvents: {
         dragover: (view, event) => {
-          if (!this.editor.isEditable || !event.dataTransfer?.types.includes(dragType)
+          if (!this.editor.isEditable || !event.dataTransfer?.types.includes(questionDragType)
             || !dropTarget(view, event)) {
             clearDropIndicator(view);
             return false;
@@ -146,7 +170,7 @@ export const QuestionControls = Extension.create({
         },
         drop: (view, event) => {
           clearDropIndicator(view);
-          const id = event.dataTransfer?.getData(dragType);
+          const id = event.dataTransfer?.getData(questionDragType);
           if (!id || !this.editor.isEditable) return false;
           event.preventDefault();
           const target = dropTarget(view, event);

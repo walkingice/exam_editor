@@ -1,7 +1,8 @@
 import type { JSONContent } from '@tiptap/core';
 import { examSchema } from '../features/editor/schema';
 
-const idTypes = new Set(['paragraph', 'heading', 'listItem', 'table', 'image']);
+const idTypes = new Set(['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
+  'codeBlock', 'horizontalRule']);
 const nodeTypes = new Set(Object.keys(examSchema.nodes));
 const markTypes = new Set(Object.keys(examSchema.marks));
 
