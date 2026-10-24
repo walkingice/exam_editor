@@ -157,6 +157,15 @@ li { margin: 10px 0; }
 .content-panel .exam-document .ProseMirror li {
   margin: 0 !important;
 }
+.content-panel .exam-document .ProseMirror li::before {
+  content: '\2022';
+  position: absolute;
+  top: 12px;
+  left: 56px;
+  width: 10px;
+  text-align: center;
+  pointer-events: none;
+}
 .document-drop-indicator {
   position: fixed;
   z-index: 1000;
