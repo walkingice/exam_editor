@@ -115,11 +115,12 @@ type Asset = {
     - Commit：`chore: Install core document dependencies`。
     - 驗證紀錄（2026-10-24）：`npm ci`、`npm run typecheck`、`npm run build`、`npm run build:smoke` 通過；smoke bundle 含 320 個 modules，無 Node-only external 標記。套件版本與授權見 `docs/dependencies.md`；sub-agent testing 獨立核對通過，review 無阻礙並修正 `use client` 警告敘述。真實瀏覽器執行依 SPEC 待指定。
 
-  - [ ] **Step 0.3 — 建立單元與 UI 測試環境**
+  - [x] **Step 0.3 — 建立單元與 UI 測試環境**
     - 目標：開發者可以執行一次性測試與 watch mode。
     - 實作：安裝 Vitest、React Testing Library、DOM 測試環境與 assertions；後續 IndexedDB 單元測試使用測試替身。加入 `test`（一次性執行）、`test:watch` scripts、共用 setup；寫 Hello World render 測試，不測微小樣式值。
     - 驗證：`npm test`、`npm run typecheck` 通過；暫時改錯預期文字確認測試會失敗，再還原。不得提交故意失敗的測試。
     - Commit：`test: Configure unit and UI testing`。
+    - 驗證紀錄（2026-10-24）：`npm test`（1 file／1 test）、`npm run typecheck`、`npm run build` 通過；暫時將預期文字改成 `Wrong text` 時測試如預期失敗，還原後通過。sub-agent review/testing 均通過，未啟動瀏覽器。
 
   - [ ] **Step 0.4 — 建立 browser smoke test**
     - 目標：可以自動啟動網站並在 Chromium、Firefox 驗證基本頁面。
