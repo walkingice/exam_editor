@@ -3,6 +3,7 @@ import { generateJSON } from '@tiptap/core';
 import { examExtensions } from '../features/editor/schema';
 import { normalizeDocument, validateDocument } from './document';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS, validatePageSettings } from './types';
+import { pageDimensions } from './pageSettings';
 
 describe('exam document schema', () => {
   it('creates a valid empty document with default page settings', () => {
@@ -73,5 +74,33 @@ describe('exam document schema', () => {
       ...DEFAULT_PAGE_SETTINGS,
       marginsMm: { ...DEFAULT_PAGE_SETTINGS.marginsMm, left: 250 },
     })).toThrow();
+  });
+
+  it('calculates both paper sizes and orientations', () => {
+    expect(pageDimensions(DEFAULT_PAGE_SETTINGS)).toEqual({
+      widthMm: 265, heightMm: 379, contentWidthMm: 235, contentHeightMm: 349,
+    });
+    expect(pageDimensions({ ...DEFAULT_PAGE_SETTINGS, orientation: 'landscape' })).toEqual({
+      widthMm: 379, heightMm: 265, contentWidthMm: 349, contentHeightMm: 235,
+    });
+    expect(pageDimensions({ ...DEFAULT_PAGE_SETTINGS, paperSize: 'A4' })).toEqual({
+      widthMm: 210, heightMm: 297, contentWidthMm: 180, contentHeightMm: 267,
+    });
+    expect(pageDimensions({ ...DEFAULT_PAGE_SETTINGS, paperSize: 'A4',
+      orientation: 'landscape' })).toEqual({
+      widthMm: 297, heightMm: 210, contentWidthMm: 267, contentHeightMm: 180,
+    });
+  });
+
+  it('rejects non-finite and out-of-range typography values', () => {
+    for (const value of [Number.NaN, Number.POSITIVE_INFINITY, 0, 5, 73]) {
+      expect(() => validatePageSettings({ ...DEFAULT_PAGE_SETTINGS,
+        defaultFontSizePt: value })).toThrow();
+    }
+    for (const value of [Number.NaN, 0, 0.4, 4.1]) {
+      expect(() => validatePageSettings({ ...DEFAULT_PAGE_SETTINGS, lineHeight: value })).toThrow();
+    }
+    expect(() => validatePageSettings({ ...DEFAULT_PAGE_SETTINGS,
+      marginsMm: { ...DEFAULT_PAGE_SETTINGS.marginsMm, top: -1 } })).toThrow();
   });
 });

@@ -1,5 +1,6 @@
 import type { JSONContent } from '@tiptap/core';
 import { normalizeDocument, validateDocument } from './document';
+import { PAGE_INPUT_LIMITS, PAPER_DIMENSIONS_MM, pageDimensions } from './pageSettings';
 
 export const DOCUMENT_SCHEMA_VERSION = 1;
 
@@ -49,21 +50,24 @@ export const DEFAULT_PAGE_SETTINGS: PageSettings = {
 };
 
 export function validatePageSettings(settings: PageSettings): void {
-  const dimensions = settings.paperSize === 'TW_B4' ? [265, 379]
-    : settings.paperSize === 'A4' ? [210, 297] : null;
-  if (!dimensions || !['portrait', 'landscape'].includes(settings.orientation)
+  if (!settings || !PAPER_DIMENSIONS_MM[settings.paperSize]
+    || !['portrait', 'landscape'].includes(settings.orientation)
     || !['ordered', 'unordered'].includes(settings.outputListStyle)) {
     throw new Error('Unsupported page setting');
   }
-  const [width, height] = settings.orientation === 'portrait'
-    ? dimensions : [dimensions[1], dimensions[0]];
-  const { top, right, bottom, left } = settings.marginsMm;
-  if ([top, right, bottom, left].some((value) => !Number.isFinite(value) || value < 0)
-    || left + right >= width || top + bottom >= height
-    || !Number.isFinite(settings.defaultFontSizePt) || settings.defaultFontSizePt <= 0
-    || !Number.isFinite(settings.lineHeight) || settings.lineHeight <= 0) {
+  const margins = settings.marginsMm;
+  if (!margins || [margins.top, margins.right, margins.bottom, margins.left]
+    .some((value) => !Number.isFinite(value) || value < 0 || value > PAGE_INPUT_LIMITS.marginMm)
+    || !Number.isFinite(settings.defaultFontSizePt)
+    || settings.defaultFontSizePt < PAGE_INPUT_LIMITS.fontSizePt[0]
+    || settings.defaultFontSizePt > PAGE_INPUT_LIMITS.fontSizePt[1]
+    || !Number.isFinite(settings.lineHeight)
+    || settings.lineHeight < PAGE_INPUT_LIMITS.lineHeight[0]
+    || settings.lineHeight > PAGE_INPUT_LIMITS.lineHeight[1]) {
     throw new Error('Invalid page dimensions or typography');
   }
+  const { contentWidthMm, contentHeightMm } = pageDimensions(settings);
+  if (contentWidthMm <= 0 || contentHeightMm <= 0) throw new Error('Invalid page dimensions');
 }
 
 export function validateProject(project: Project): void {
