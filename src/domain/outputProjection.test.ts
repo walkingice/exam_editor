@@ -3,7 +3,7 @@ import { normalizeDocument } from './document';
 import { collectAssetIds } from './assetReferences';
 import { projectOutput } from './outputProjection';
 
-it('filters top-level questions and numbers them continuously across items', () => {
+it('filters top-level questions and restarts numbering after ordinary items', () => {
   const source = normalizeDocument({ type: 'doc', content: [
     { type: 'heading', content: [{ type: 'text', text: 'Part one' }] },
     { type: 'bulletList', content: [
@@ -29,7 +29,7 @@ it('filters top-level questions and numbers them continuously across items', () 
     'heading', 'orderedList', 'heading', 'paragraph', 'orderedList',
   ]);
   expect(result.content?.[1].attrs?.start).toBe(1);
-  expect(result.content?.[4].attrs?.start).toBe(2);
+  expect(result.content?.[4].attrs?.start).toBe(1);
   expect(result.content?.[1].content?.[0].attrs?.id).toBe(source.content?.[1].content?.[0].attrs?.id);
   expect(result.content?.[1].content?.[0].content?.[1].type).toBe('bulletList');
   expect(collectAssetIds(result)).toEqual(new Set(['kept']));
@@ -66,7 +66,20 @@ it('retains all selected questions in their current document order', () => {
   expect(output.content?.[3].content?.map((item) => item.content?.[0].content?.[0].text))
     .toEqual(['Second']);
   expect(output.content?.[1].attrs?.start).toBe(1);
-  expect(output.content?.[3].attrs?.start).toBe(3);
+  expect(output.content?.[3].attrs?.start).toBe(1);
+});
+
+it('continues adjacent lists but restarts after an excluded ordinary item', () => {
+  const list = { type: 'bulletList', content: [
+    { type: 'listItem', content: [{ type: 'paragraph' }] },
+    { type: 'listItem', attrs: { selected: false }, content: [{ type: 'paragraph' }] },
+    { type: 'listItem', content: [{ type: 'paragraph' }] },
+  ] };
+  const source = normalizeDocument({ type: 'doc', content: [
+    list, list, { type: 'paragraph', attrs: { selected: false } }, list,
+  ] });
+  const output = projectOutput(source, 'ordered');
+  expect(output.content?.map((node) => node.attrs?.start)).toEqual([1, 3, 1]);
 });
 
 it('filters unselected document items as well as questions for print', () => {

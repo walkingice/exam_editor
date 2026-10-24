@@ -10,6 +10,7 @@ export function projectOutput(source: JSONContent, style: OutputListStyle): JSON
   return {
     ...copy(source),
     content: source.content?.flatMap((node) => {
+      if (node.type !== 'bulletList') nextNumber = 1;
       if (node.type !== 'bulletList' && node.attrs?.selected === false) return [];
       if (node.type !== 'bulletList') return [copy(node)];
       const selected = node.content?.filter((item) => item.attrs?.selected === true) ?? [];

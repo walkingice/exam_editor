@@ -14,7 +14,7 @@ describe('DOCX text mapping', () => {
     expect(source).toEqual(before);
   });
 
-  it('continues numbering across headings, filters subtrees, and keeps nested bullets', async () => {
+  it('restarts numbering after headings, filters subtrees, and keeps nested bullets', async () => {
     const first = question('第一題');
     first.content!.push({ type: 'bulletList', content: [question('選項')] });
     const source = { type: 'doc', content: [{ type: 'bulletList', content: [first, question('排除', false)] },
@@ -23,7 +23,10 @@ describe('DOCX text mapping', () => {
     const { xml, numbering } = await unpack(source);
     expect(xml.indexOf('第一題')).toBeLessThan(xml.indexOf('第二大題'));
     expect(xml).not.toContain('排除');
-    expect(numbering).toContain('<w:start w:val="2"');
+    const decimalLevels = numbering.match(/<w:lvl\b[^>]*>.*?<\/w:lvl>/g)!
+      .filter((level) => level.includes('w:val="decimal"'));
+    expect(decimalLevels).toHaveLength(2);
+    for (const level of decimalLevels) expect(level).toContain('<w:start w:val="1"');
     expect(numbering).toContain('w:val="bullet"');
     expect(xml).toContain('<w:ilvl w:val="1"');
     expect(numbering).toContain('w:left="1440"');

@@ -10,8 +10,8 @@ Cancellation suppresses delivery but does not interrupt packing. Download URLs
 are released after browser handoff, including click failures.
 
 Text, headings, emphasis, alignment, breaks, lists, and tables remain editable.
-Each separated ordered list starts at the projection's continuous question
-number. Nested options remain bullets, with nesting capped at nine levels
+Ordered lists restart at 1 after any non-list source item, including excluded
+items. Adjacent lists continue numbering. Nested options remain bullets, with nesting capped at nine levels
 (the OOXML limit); deeper lists produce a warning. Links retain their visible
 text with a warning. Blockquote and code-block styling falls back to ordinary
 paragraphs with a warning; horizontal rules become paragraph borders.
