@@ -348,6 +348,7 @@ type Asset = {
     - 實作：使用多頁 fixture 記錄 Chromium 與 Firefox 的紙張、方向、中文、圖片、表格跨頁人工檢查步驟與結果；加入 print CSS smoke tests。README 說明瀏覽器紙張／縮放可能覆寫設定、預覽不是逐頁結果，以及 PDF 透過原生列印儲存。
     - 驗證：兩紙張 × 兩方向都有檢查證據，無整頁裁切或 UI 混入。實際開啟兩 browser 列印預覽，必要時人工確認；Playwright media emulation 不等於原生列印已驗收。全不勾選仍保留一般標題／說明；執行相關測試、typecheck、build。
     - Commit：`test: Verify browser print layouts`。
+    - 進度紀錄（2026-10-24）：已加入四種紙張／方向的 CSS 尺寸 smoke tests、Chromium／Firefox 兩個 Tab 的 print-media E2E，以及 README 列印限制和 `docs/print-verification.md` 人工檢查矩陣。`npm test`（21 files／124 tests）、`npm run typecheck`、`npm run build`、列印 E2E（Chromium／Firefox 4/4）通過；build 有既有 bundle size warning。原生列印預覽矩陣尚未實際檢查，因此 step 與 Phase 10 保持未完成；media emulation 不代表原生列印驗收。
 
 ## Milestone 4 — 匯出 DOCX
 
