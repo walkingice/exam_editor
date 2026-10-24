@@ -41,6 +41,9 @@ describe('project repository', () => {
     const first = bundle();
     await repository.create(first);
     expect((await repository.get(first.project.id))?.assets).toHaveLength(1);
+    expect((await repository.getAsset(first.project.id, `asset-${first.project.id}`))?.id)
+      .toBe(`asset-${first.project.id}`);
+    expect(await repository.getAsset('another', `asset-${first.project.id}`)).toBeNull();
     await repository.create(bundle('project-2'));
     first.project.name = 'Updated';
     first.project.updatedAt = 200;

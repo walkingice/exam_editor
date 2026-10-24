@@ -2,6 +2,7 @@ import { ExamDatabase } from '../data/database';
 import { ProjectOwnership } from '../data/ownership';
 import { ProjectRepository } from '../data/repository';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS } from '../domain/types';
+import { normalizeDocument } from '../domain/document';
 
 const ownership = new ProjectOwnership();
 const repository = new ProjectRepository(new ExamDatabase(), ownership);
@@ -21,6 +22,23 @@ const harness = {
         pageSettings: structuredClone(DEFAULT_PAGE_SETTINGS), schemaVersion: 1,
       },
       document: createEmptyDocument(projectId), assets: [],
+    });
+  },
+  async createWithImage(projectId: string) {
+    const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLytQAAAABJRU5ErkJggg==';
+    const bytes = Uint8Array.from(atob(png), (character) => character.charCodeAt(0));
+    const now = Date.now();
+    await repository.create({
+      project: { id: projectId, name: 'Image fixture', createdAt: now, updatedAt: now,
+        pageSettings: structuredClone(DEFAULT_PAGE_SETTINGS), schemaVersion: 1 },
+      document: { projectId, schemaVersion: 1, content: normalizeDocument({
+        type: 'doc', content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'Stored image' }] },
+          { type: 'image', attrs: { assetId: `image-${projectId}`, alt: 'Fixture image' } },
+        ],
+      }) },
+      assets: [{ id: `image-${projectId}`, projectId, mimeType: 'image/png',
+        blob: new Blob([bytes], { type: 'image/png' }) }],
     });
   },
   async rename(projectId: string, name: string) {

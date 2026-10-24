@@ -173,6 +173,7 @@ type Asset = {
     - 實作：共用 Step 1.1 schema，以唯讀 Tiptap 呈現；圖片節點僅存 assetId，resolver 向 repository 讀 Blob 並管理 object URL。卸載、換 Project 與無人使用時釋放 URL；找不到圖片顯示 placeholder 和錯誤，不破壞文字。此時不加入文字編輯 toolbar。
     - 驗證：測試 Blob lookup、URL 建立／釋放、切換 Project 不串圖、缺圖提示；E2E 用儲存 fixture 確認 reload 後圖片存在。
     - Commit：`feat: Render stored exam documents`。
+    - 進度紀錄（2026-10-24）：已使用共用 Tiptap schema 唯讀顯示文字、表格及圖片；Blob resolver 依 Project 查詢並於卸載或切換時釋放 object URL，缺圖顯示 placeholder。`npm test`（7 files／30 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；已列出儲存圖片重載案例。sub-agent testing 獨立通過非 browser 檢查；review 發現同 Project 重讀未更新內容與舊圖片短暫顯示問題，均已修正。依 SPEC 尚未啟動真實瀏覽器；E2E 未通過前本 step 保持待驗。
 
 - [ ] **Phase 3 — DOCX 匯入與 Milestone 1 驗收**
 

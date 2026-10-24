@@ -49,3 +49,21 @@ test('opens the latest project after a writer hands off', async ({ context, page
   await page.getByRole('button', { name: '重新取得寫入權' }).click();
   await expect(page.getByRole('heading', { name: 'Latest' })).toBeVisible();
 });
+
+test('renders a stored image after reloading the workspace', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const id = `image-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.createWithImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
+  await setup.close();
+  await page.goto(`/#/projects/${id}`);
+  await expect(page.getByText('Stored image')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toHaveJSProperty('naturalWidth', 1);
+  await page.reload();
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toHaveJSProperty('naturalWidth', 1);
+});

@@ -1,7 +1,8 @@
 # 試卷編輯器
 
 這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Phase 1，
-Phase 2 正在實作。已可建立、列表、開啟及刪除本機空白 Project；功能順序與
+Phase 2 正在實作。已可建立、列表、開啟及刪除本機空白 Project，
+workspace 可唯讀顯示已儲存文件；功能順序與
 驗證紀錄見 [PLANS.md](PLANS.md)。
 
 ## 環境與安裝
@@ -60,6 +61,8 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 - `src/app/`：應用程式入口與 hash 路由。
 - `src/data/`：IndexedDB 儲存及單分頁寫入權。
 - `src/features/projects/`：Project 首頁與 workspace。
+- `src/features/editor/`：共用 schema 與唯讀文件顯示。
+- `src/shared/assets/`：圖片 Blob 的 object URL 生命週期。
 - `src/test/`：測試 setup 與文件依賴的 build smoke 模組。
 - `tests/e2e/`：待執行的 Playwright smoke test。
 - `docs/`：套件與授權紀錄。
