@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { DEFAULT_PAGE_SETTINGS } from '../../domain/types';
-import { createPrintCss, waitForPrintAssets } from './printDocument';
+import { countPrintImages, createPrintCss, waitForPrintAssets } from './printDocument';
 
 it('generates physical page dimensions and applies margins only in @page', () => {
   const settings = { ...DEFAULT_PAGE_SETTINGS, paperSize: 'TW_B4' as const,
@@ -60,4 +60,48 @@ it('prints two columns with spanning headers and a divider', () => {
   expect(css).toContain('column-rule: 1px solid #777');
   expect(css).toContain('.ProseMirror > h1, #exam-print-root .ProseMirror > h2 { column-span: all; }');
   expect(createPrintCss({ ...DEFAULT_PAGE_SETTINGS, columns: undefined })).toContain('column-count: 1');
+});
+
+
+it('counts nested document images', () => {
+  expect(countPrintImages({ type: 'doc', content: [
+    { type: 'image' }, { type: 'blockquote', content: [{ type: 'image' }] },
+  ] })).toBe(2);
+});
+
+it('waits for every image node view instead of checking raw placeholder images', async () => {
+  const root = document.createElement('div');
+  root.innerHTML = '<img><img class="ProseMirror-separator">';
+  let printed = false;
+  const waiting = waitForPrintAssets(root, { ready: Promise.resolve() } as unknown as FontFaceSet, 2)
+    .then(() => { printed = true; });
+  const appendImage = () => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'exam-image';
+    const image = document.createElement('img');
+    Object.defineProperty(image, 'complete', { value: true });
+    Object.defineProperty(image, 'naturalWidth', { value: 1 });
+    wrapper.append(image);
+    root.append(wrapper);
+  };
+  await Promise.resolve();
+  expect(printed).toBe(false);
+  appendImage();
+  await Promise.resolve();
+  expect(printed).toBe(false);
+  appendImage();
+  await waiting;
+  expect(printed).toBe(true);
+});
+
+
+it('still rejects a broken document image while ignoring editor helper images', async () => {
+  const root = document.createElement('div');
+  root.innerHTML = '<img class="ProseMirror-separator"><div class="exam-image"><img></div>';
+  const image = root.querySelector('.exam-image img')!;
+  Object.defineProperty(image, 'complete', { value: true });
+  Object.defineProperty(image, 'naturalWidth', { value: 0 });
+  await expect(waitForPrintAssets(root,
+    { ready: Promise.resolve() } as unknown as FontFaceSet, 1))
+    .rejects.toThrow('列印圖片載入失敗');
 });

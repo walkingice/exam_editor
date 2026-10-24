@@ -1,3 +1,4 @@
+import type { JSONContent } from '@tiptap/core';
 import type { PageSettings } from '../../domain/types';
 import { pageDimensions } from '../../domain/pageSettings';
 
@@ -27,10 +28,17 @@ export function createPrintCss(settings: PageSettings): string {
     + '#exam-print-root tr, #exam-print-root img { break-inside: avoid; } }';
 }
 
-export async function waitForPrintAssets(root: HTMLElement, fonts: FontFaceSet): Promise<void> {
-  await Promise.all([fonts.ready, waitForImageNodes(root)]);
+export function countPrintImages(content: JSONContent): number {
+  return (content.type === 'image' ? 1 : 0)
+    + (content.content ?? []).reduce((total, child) => total + countPrintImages(child), 0);
+}
+
+export async function waitForPrintAssets(root: HTMLElement, fonts: FontFaceSet,
+  expectedImageCount?: number): Promise<void> {
+  await Promise.all([fonts.ready, waitForImageNodes(root, expectedImageCount)]);
   if (root.querySelector('[aria-label="缺少圖片"]')) throw new Error('列印圖片載入失敗，請檢查圖片後重試。');
-  const images = [...root.querySelectorAll('img')];
+  const selector = expectedImageCount === undefined ? 'img:not(.ProseMirror-separator)' : '.exam-image img';
+  const images = [...root.querySelectorAll<HTMLImageElement>(selector)];
   await Promise.all(images.map(async (image) => {
     if (!image.complete) await new Promise<void>((resolve, reject) => {
       image.addEventListener('load', () => resolve(), { once: true });
@@ -41,9 +49,12 @@ export async function waitForPrintAssets(root: HTMLElement, fonts: FontFaceSet):
   }));
 }
 
-function waitForImageNodes(root: HTMLElement): Promise<void> {
-  const hasPendingImages = () => [...root.querySelectorAll('.exam-image')]
-    .some((container) => container.querySelector('span:not([aria-label="缺少圖片"])'));
+function waitForImageNodes(root: HTMLElement, expectedImageCount?: number): Promise<void> {
+  const hasPendingImages = () => {
+    const containers = [...root.querySelectorAll('.exam-image')];
+    return (expectedImageCount !== undefined && containers.length !== expectedImageCount)
+      || containers.some((container) => !container.querySelector('img, [aria-label="缺少圖片"]'));
+  };
   if (!hasPendingImages()) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const observer = new MutationObserver(() => {

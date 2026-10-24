@@ -16,7 +16,7 @@ import { pageDimensions } from '../../domain/pageSettings';
 import { AssetResolver } from '../../shared/assets/AssetResolver';
 import { PreviewFormatToolbar } from '../layout/PreviewFormatToolbar';
 import { updateSourceFormat, type FormatChange } from '../layout/updateSourceFormat';
-import { createPrintCss, waitForPrintAssets } from '../layout/printDocument';
+import { countPrintImages, createPrintCss, waitForPrintAssets } from '../layout/printDocument';
 
 import { ExportDocxButton } from '../export-docx/ExportDocxButton';
 
@@ -267,7 +267,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   useEffect(() => {
     if (!printSnapshot || !printEditorReady || !printRoot.current) return;
     let active = true;
-    void waitForPrintAssets(printRoot.current, document.fonts).then(() => {
+    void waitForPrintAssets(printRoot.current, document.fonts, countPrintImages(printSnapshot.content)).then(() => {
       if (!active) return;
       window.print();
       setPrintSnapshot(null);
