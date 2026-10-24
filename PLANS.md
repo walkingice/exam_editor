@@ -358,8 +358,8 @@ type Asset = {
 
   - [ ] **Step 11.1 — 文字、標題與清單 mapping**
     - 目標：不靠畫面截圖即可產生可編輯文字。
-    - 實作：建立獨立於 React 的 exporter，輸入完整 JSON/pageSettings，先呼叫共用 projection。拆成小 mapper：heading、paragraph、text marks、list；將 bold/italic/underline、alignment 等映射成 docx.js 元件。每個題目清單使用適當獨立 numbering 定義或 restart，巢狀選項維持 bullets。未知樣式保留文字並回報 warning。
-    - 驗證：單元測試中文、多種 marks、連續編號、跨大題 restart、unordered 與未勾選內容排除；生成文件的語意結構可讀，不以不穩定的整包 ZIP bytes snapshot 驗證。
+    - 實作：建立獨立於 React 的 exporter，輸入完整 JSON/pageSettings，先呼叫共用 projection。拆成小 mapper：heading、paragraph、text marks、list；將 bold/italic/underline、alignment 等映射成 docx.js 元件。Ordered list 依 projection 的 start 延續題號，標題樣式不重設題號；巢狀選項維持 bullets。未知樣式保留文字並回報 warning。
+    - 驗證：單元測試中文、多種 marks、跨分離清單的連續編號、unordered 與未勾選內容排除；生成文件的語意結構可讀，不以不穩定的整包 ZIP bytes snapshot 驗證。
     - Commit：`feat: Map exam text and lists to DOCX`。
 
   - [ ] **Step 11.2 — 表格與嵌入圖片 mapping**

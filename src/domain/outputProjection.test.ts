@@ -3,7 +3,7 @@ import { normalizeDocument } from './document';
 import { collectAssetIds } from './assetReferences';
 import { projectOutput } from './outputProjection';
 
-it('filters only top-level questions and renumbers each surviving list', () => {
+it('filters top-level questions and numbers them continuously across items', () => {
   const source = normalizeDocument({ type: 'doc', content: [
     { type: 'heading', content: [{ type: 'text', text: 'Part one' }] },
     { type: 'bulletList', content: [
@@ -29,7 +29,7 @@ it('filters only top-level questions and renumbers each surviving list', () => {
     'heading', 'orderedList', 'heading', 'paragraph', 'orderedList',
   ]);
   expect(result.content?.[1].attrs?.start).toBe(1);
-  expect(result.content?.[4].attrs?.start).toBe(1);
+  expect(result.content?.[4].attrs?.start).toBe(2);
   expect(result.content?.[1].content?.[0].attrs?.id).toBe(source.content?.[1].content?.[0].attrs?.id);
   expect(result.content?.[1].content?.[0].content?.[1].type).toBe('bulletList');
   expect(collectAssetIds(result)).toEqual(new Set(['kept']));
@@ -48,7 +48,7 @@ it('keeps headings and ordinary paragraphs when all questions are excluded', () 
     .toEqual(['heading', 'paragraph']);
 });
 
-it('retains all selected questions in their current section order', () => {
+it('retains all selected questions in their current document order', () => {
   const source = normalizeDocument({ type: 'doc', content: [
     { type: 'heading', content: [{ type: 'text', text: 'Part A' }] },
     { type: 'bulletList', content: [
@@ -66,5 +66,5 @@ it('retains all selected questions in their current section order', () => {
   expect(output.content?.[3].content?.map((item) => item.content?.[0].content?.[0].text))
     .toEqual(['Second']);
   expect(output.content?.[1].attrs?.start).toBe(1);
-  expect(output.content?.[3].attrs?.start).toBe(1);
+  expect(output.content?.[3].attrs?.start).toBe(3);
 });
