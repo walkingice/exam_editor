@@ -154,16 +154,21 @@ li { margin: 10px 0; }
   background: #fff;
 }
 .content-panel .exam-document .ProseMirror > :not(ul):last-child { margin-bottom: 0 !important; }
+.content-panel .exam-document .ProseMirror ul {
+  counter-reset: content-item;
+}
 .content-panel .exam-document .ProseMirror li {
   margin: 0 !important;
+  padding-left: 96px;
+  counter-increment: content-item;
 }
 .content-panel .exam-document .ProseMirror li::before {
-  content: '\2022';
+  content: counter(content-item) '.';
   position: absolute;
   top: 12px;
   left: 56px;
-  width: 10px;
-  text-align: center;
+  width: 32px;
+  text-align: right;
   pointer-events: none;
 }
 .document-drop-indicator {
