@@ -1,4 +1,5 @@
 import { Extension } from '@tiptap/core';
+import type { Editor } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { EditorView } from '@tiptap/pm/view';
@@ -73,6 +74,7 @@ function dragHandle(view: EditorView, id: string, label: string): HTMLButtonElem
     if (!view.editable) { event.preventDefault(); return; }
     setDocumentItemDragData(event.dataTransfer, id);
   });
+  handle.addEventListener('dragend', clearDocumentItemDropIndicator);
   return handle;
 }
 
@@ -111,37 +113,85 @@ function documentItem(view: EditorView, element: HTMLElement | null): HTMLElemen
   return null;
 }
 
-function dropTarget(view: EditorView, event: DragEvent): DocumentItemTarget | null {
-  const element = event.target instanceof HTMLElement ? event.target : null;
-  const targetElement = documentItem(view, element);
-  if (!targetElement) return null;
-  const id = targetElement.getAttribute('data-node-id');
-  const position = id ? itemPosition(view, id) : null;
-  if (position === null) return null;
-  const placement = event.clientY < targetElement.getBoundingClientRect().top
-    + targetElement.clientHeight / 2 ? 'before' : 'after';
-  return { position, placement };
+type DropLocation = DocumentItemTarget & { element: HTMLElement };
+
+function nearestItemBoundary(view: EditorView, clientY: number): DropLocation | null {
+  const items = Array.from(view.dom.querySelectorAll<HTMLElement>('[data-node-id]'))
+    .flatMap((element) => {
+      const id = element.getAttribute('data-node-id');
+      const position = id ? itemPosition(view, id) : null;
+      return position === null ? [] : [{ element, position }];
+    });
+  let nearest: DropLocation | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  items.forEach(({ element, position }) => {
+    const bounds = element.getBoundingClientRect();
+    const beforeDistance = Math.abs(clientY - bounds.top);
+    if (beforeDistance < nearestDistance) {
+      nearest = { element, position, placement: 'before' };
+      nearestDistance = beforeDistance;
+    }
+    const afterDistance = Math.abs(clientY - bounds.bottom);
+    if (afterDistance < nearestDistance) {
+      nearest = { element, position, placement: 'after' };
+      nearestDistance = afterDistance;
+    }
+  });
+  return nearest;
 }
 
-function updateDropIndicator(view: EditorView, event: DragEvent): void {
-  clearDropIndicator(view);
+function dropTarget(view: EditorView, event: DragEvent): DropLocation | null {
   const element = event.target instanceof HTMLElement ? event.target : null;
+  const targetElement = documentItem(view, element);
+  if (targetElement) {
+    const id = targetElement.getAttribute('data-node-id');
+    const position = id ? itemPosition(view, id) : null;
+    if (position === null) return null;
+    const bounds = targetElement.getBoundingClientRect();
+    const placement = event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after';
+    return { element: targetElement, position, placement };
+  }
+  return nearestItemBoundary(view, event.clientY);
+}
+
+function updateDropIndicator(view: EditorView, event: DragEvent, editor: Editor): void {
+  clearDocumentItemDropIndicator();
   const target = dropTarget(view, event);
-  const targetElement = documentItem(view, element);
-  if (!target || !targetElement || !view.dom.contains(targetElement)) return;
-  targetElement.classList.add(`question-drop-${target.placement}`);
+  if (!target || !view.dom.contains(target.element)) return;
+  const bounds = target.element.getBoundingClientRect();
+  const gap = 5;
+  const y = target.placement === 'before' ? bounds.top - gap : bounds.bottom + gap;
+  const marker = document.createElement('div');
+  marker.className = 'document-drop-indicator';
+  marker.setAttribute('aria-hidden', 'true');
+  marker.style.left = `${bounds.left}px`;
+  marker.style.top = `${y - 5}px`;
+  marker.style.width = `${bounds.width}px`;
+  marker.addEventListener('dragover', (dragEvent) => {
+    if (!editor.isEditable || !dragEvent.dataTransfer?.types.includes(questionDragType)) return;
+    dragEvent.preventDefault();
+    dragEvent.dataTransfer.dropEffect = 'move';
+  });
+  marker.addEventListener('drop', (dropEvent) => {
+    const id = dropEvent.dataTransfer?.getData(questionDragType);
+    if (!id || !editor.isEditable) return;
+    dropEvent.preventDefault();
+    moveDocumentItem(editor, id, { position: target.position, placement: target.placement });
+    clearDocumentItemDropIndicator();
+  });
+  document.body.append(marker);
 }
 
-function clearDropIndicator(view: EditorView): void {
-  view.dom.querySelectorAll('.question-drop-before, .question-drop-after')
-    .forEach((element) => element.classList.remove(
-      'question-drop-before', 'question-drop-after'));
+export function clearDocumentItemDropIndicator(): void {
+  document.querySelectorAll('.document-drop-indicator').forEach((marker) => marker.remove());
 }
 
 export const QuestionControls = Extension.create({
   name: 'questionControls',
   addProseMirrorPlugins() {
-    return [new Plugin({ props: {
+    return [new Plugin({
+      view: () => ({ destroy: clearDocumentItemDropIndicator }),
+      props: {
       decorations: (state) => {
         const widgets: Decoration[] = [];
         state.doc.forEach((node, offset) => {
@@ -171,26 +221,28 @@ export const QuestionControls = Extension.create({
         dragover: (view, event) => {
           if (!this.editor.isEditable || !event.dataTransfer?.types.includes(questionDragType)
             || !dropTarget(view, event)) {
-            clearDropIndicator(view);
+            clearDocumentItemDropIndicator();
             return false;
           }
           event.preventDefault();
           event.dataTransfer.dropEffect = 'move';
-          updateDropIndicator(view, event);
+          updateDropIndicator(view, event, this.editor);
           return true;
         },
         drop: (view, event) => {
-          clearDropIndicator(view);
+          clearDocumentItemDropIndicator();
           const id = event.dataTransfer?.getData(questionDragType);
           if (!id || !this.editor.isEditable) return false;
           event.preventDefault();
           const target = dropTarget(view, event);
-          if (target) moveDocumentItem(this.editor, id, target);
+          if (target) moveDocumentItem(this.editor, id, {
+            position: target.position, placement: target.placement,
+          });
           return true;
         },
         dragleave: (view, event) => {
           if (!(event.relatedTarget instanceof Node) || !view.dom.contains(event.relatedTarget)) {
-            clearDropIndicator(view);
+            clearDocumentItemDropIndicator();
           }
           return false;
         },

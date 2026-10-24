@@ -137,20 +137,22 @@ li { margin: 10px 0; }
   border-radius: 6px;
   background: #fff;
 }
-.content-panel .exam-document .ProseMirror .question-drop-before::before,
-.content-panel .exam-document .ProseMirror .question-drop-after::after {
+.document-drop-indicator {
+  position: fixed;
+  z-index: 1000;
+  height: 10px;
+  pointer-events: auto;
+}
+.document-drop-indicator::before {
   position: absolute;
-  z-index: 2;
+  top: 3.5px;
   right: 0;
   left: 0;
   height: 3px;
   border-radius: 4px;
   background: #1769d2;
   content: '';
-  pointer-events: none;
 }
-.content-panel .exam-document .ProseMirror .question-drop-before::before { top: -7px; }
-.content-panel .exam-document .ProseMirror .question-drop-after::after { bottom: -7px; }
 .content-panel .exam-document .ProseMirror li > .question-control {
   position: absolute;
   top: 12px;

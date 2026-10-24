@@ -182,11 +182,47 @@ describe('read-only document', () => {
     fireEvent.dragStart(handle, { dataTransfer });
     fireEvent.dragOver(screen.getByRole('heading', { name: /Second heading/ }),
       { dataTransfer, clientY: 0 });
-    expect(screen.getByRole('heading', { name: /Second heading/ }))
-      .toHaveClass('question-drop-after');
+    expect(document.querySelector('.document-drop-indicator')?.parentElement).toBe(document.body);
     fireEvent.dragOver(screen.getByText('Second'), { dataTransfer, clientY: 0 });
     document.elementFromPoint = elementFromPoint;
-    expect(screen.getByText('Second').closest('li')).toHaveClass('question-drop-after');
+    expect(document.querySelector('.document-drop-indicator')?.parentElement).toBe(document.body);
+    fireEvent.dragEnd(handle);
+    expect(document.querySelector('.document-drop-indicator')).toBeNull();
+  });
+
+  it('accepts a drop in the gap between document items', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'bulletList', content:
+      ['First', 'Second', 'Third'].map((text, index) => ({ type: 'listItem',
+        attrs: { id: `q${index}` }, content: [{ type: 'paragraph',
+          content: [{ type: 'text', text }] }] })),
+    }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findAllByRole('button', { name: /移動題目/ });
+    const items = screen.getAllByRole('listitem');
+    items.forEach((item, index) => {
+      vi.spyOn(item, 'getBoundingClientRect').mockReturnValue(
+        new DOMRect(0, index * 30, 400, 20));
+    });
+    const values = new Map<string, string>();
+    const dataTransfer = { types: ['application/x-exam-question'],
+      setData: (type: string, value: string) => { values.set(type, value); },
+      getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
+    const elementFromPoint = document.elementFromPoint;
+    document.elementFromPoint = () => null;
+    const firstHandle = screen.getByRole('button', { name: '移動題目 q0' });
+    fireEvent.dragStart(firstHandle, { dataTransfer });
+    fireEvent.dragOver(items[1], { dataTransfer, clientY: 55 });
+    const marker = document.querySelector('.document-drop-indicator');
+    expect(marker).not.toBeNull();
+    fireEvent.dragOver(marker!, { dataTransfer, clientY: 55 });
+    fireEvent.drop(marker!, { dataTransfer, clientY: 55 });
+    document.elementFromPoint = elementFromPoint;
+    expect((editor!.getJSON() as JSONContent).content?.[0].content?.map((node) => node.attrs?.id))
+      .toEqual(['q1', 'q0', 'q2']);
+    expect(document.querySelector('.document-drop-indicator')).toBeNull();
   });
 
   it('uses a table as the drop target from inside a cell', async () => {
@@ -214,7 +250,7 @@ describe('read-only document', () => {
     fireEvent.dragStart(handle, { dataTransfer });
     fireEvent.dragOver(screen.getByText('Cell text'), { dataTransfer, clientY: 0 });
     document.elementFromPoint = elementFromPoint;
-    expect(screen.getByText('Cell text').closest('table')).toHaveClass('question-drop-after');
+    expect(document.querySelector('.document-drop-indicator')?.parentElement).toBe(document.body);
   });
 
   it('treats a nested option drop as a drop on its outer question', async () => {

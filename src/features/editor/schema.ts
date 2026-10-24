@@ -4,7 +4,8 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { QuestionControls, setDocumentItemDragData } from './questionControls';
+import { clearDocumentItemDropIndicator, QuestionControls, setDocumentItemDragData }
+  from './questionControls';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
@@ -94,6 +95,7 @@ const ExamHorizontalRule = HorizontalRule.extend({
       handle.addEventListener('dragstart', (event) => {
         setDocumentItemDragData(event.dataTransfer, node.attrs.id);
       });
+      handle.addEventListener('dragend', clearDocumentItemDropIndicator);
       control.append(handle);
       const rule = document.createElement('hr');
       dom.append(control, rule);
