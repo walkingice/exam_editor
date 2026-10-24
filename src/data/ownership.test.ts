@@ -86,6 +86,16 @@ describe('project write ownership', () => {
     expect(lease?.isActive).toBe(false);
   });
 
+  it('reacquires after a local lease begins releasing', async () => {
+    const ownership = new ProjectOwnership(new FakeLocks() as unknown as LockManager);
+    const first = await ownership.acquire('project-1');
+    const releasing = first!.release();
+    const second = await ownership.acquire('project-1');
+    expect(second?.isActive).toBe(true);
+    await releasing;
+    await second?.release();
+  });
+
   it('refuses later mutations after the browser revokes a granted lock', async () => {
     const locks = new LostLocks();
     const ownership = new ProjectOwnership(locks as unknown as LockManager);

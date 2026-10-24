@@ -1,0 +1,51 @@
+import { expect, test } from '@playwright/test';
+import type {} from '../../src/test/ownership-harness';
+
+test('creates, reloads, reopens, and deletes a project', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
+  const projectUrl = page.url();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: '未命名試卷' }).click();
+  await expect(page).toHaveURL(projectUrl);
+  await page.goto(projectUrl);
+  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: '刪除 未命名試卷' }).click();
+  await expect(page.getByText('還沒有試卷。建立一份空白試卷開始。')).toBeVisible();
+  await page.goto(projectUrl);
+  await expect(page.getByText('找不到這份試卷。')).toBeVisible();
+});
+
+test('prevents another tab from deleting until ownership changes', async ({ context, page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
+  const second = await context.newPage();
+  await second.goto('/');
+  second.on('dialog', (dialog) => dialog.accept());
+  await second.getByRole('button', { name: '刪除 未命名試卷' }).click();
+  await expect(second.getByRole('alert')).toContainText('另一個分頁正在使用此 Project');
+  await page.close();
+  await second.getByRole('button', { name: '刪除 未命名試卷' }).click();
+  await expect(second.getByText('還沒有試卷。建立一份空白試卷開始。')).toBeVisible();
+});
+
+test('opens the latest project after a writer hands off', async ({ context, page }) => {
+  const owner = await context.newPage();
+  const id = `handoff-${crypto.randomUUID()}`;
+  await owner.goto('/tests/harness/');
+  await owner.waitForFunction(() => !!window.ownershipHarness);
+  await owner.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await owner.evaluate((projectId) => window.ownershipHarness.create(projectId), id);
+  await page.goto(`/#/projects/${id}`);
+  await expect(page.getByText(/目前為唯讀/)).toBeVisible();
+  await owner.evaluate((projectId) => window.ownershipHarness.rename(projectId, 'Latest'), id);
+  await owner.close();
+  await page.getByRole('button', { name: '重新取得寫入權' }).click();
+  await expect(page.getByRole('heading', { name: 'Latest' })).toBeVisible();
+});

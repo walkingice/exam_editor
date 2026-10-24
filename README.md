@@ -1,8 +1,8 @@
 # 試卷編輯器
 
-這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Phase 0：
-已建立 React + TypeScript + Vite 的 Hello World 與測試基礎。功能順序及驗證紀錄見
-[PLANS.md](PLANS.md)；正式產品功能尚未實作。
+這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Phase 1，
+Phase 2 正在實作。已可建立、列表、開啟及刪除本機空白 Project；功能順序與
+驗證紀錄見 [PLANS.md](PLANS.md)。
 
 ## 環境與安裝
 
@@ -29,7 +29,7 @@ npm run preview
 ```
 
 `dev` 預設服務於 `http://localhost:5173`，`preview` 預設服務於
-`http://localhost:4173`。兩者的首頁預期呈現 Hello World；實際 browser 畫面待驗。
+`http://localhost:4173`。首頁顯示本機 Project 列表；實際 browser 畫面待驗。
 `test:watch` 持續執行，結束時按 `Ctrl+C`；`npm test` 是一次性測試。
 `build:smoke` 檢查文件依賴可被 Vite 打包成 browser bundle，結果寫入已忽略的
 `dist-smoke/`。套件版本與授權見 [docs/dependencies.md](docs/dependencies.md)。
@@ -57,10 +57,11 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 
 ## 目錄與目前限制
 
-- `src/app/`：應用程式入口與目前的 Hello World。
+- `src/app/`：應用程式入口與 hash 路由。
+- `src/data/`：IndexedDB 儲存及單分頁寫入權。
+- `src/features/projects/`：Project 首頁與 workspace。
 - `src/test/`：測試 setup 與文件依賴的 build smoke 模組。
 - `tests/e2e/`：待執行的 Playwright smoke test。
 - `docs/`：套件與授權紀錄。
 
-Project、DOCX 匯入／匯出、編輯、IndexedDB 本機儲存、預覽與列印都尚未實作。
-目前不會儲存任何試卷資料；未來的本機資料也不等於永久備份。
+DOCX 匯入／匯出、編輯、預覽與列印尚未實作。本機資料不等於永久備份。

@@ -166,6 +166,7 @@ type Asset = {
     - 實作：在 `app/` 建首頁與 projectId 路由，靜態部署可直接載入；在 `features/projects/` 串接 repository，顯示 loading、empty、error 狀態。Project 不存在時顯示可返回首頁的訊息；刪除後關閉相關 workspace。新增時寫入完整預設文件與頁面設定。
     - 驗證：UI 測試 CRUD 與錯誤狀態；E2E 建立、刷新、重新開啟、刪除，以及直接進入有效／不存在的路由；再以真實 UI 驗證雙分頁中非 owner 無法刪除，接手後讀取最新資料。
     - Commit：`feat: Add project home and navigation`。
+    - 進度紀錄（2026-10-24）：首頁、hash Project 路由、空白文件建立、列表、刪除、唯讀／接手狀態及跨分頁刪除通知已實作。`npm test`（5 files／23 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Chromium／Firefox 各列出建立、重載、直接開啟、刪除、雙分頁阻擋與接手案例。sub-agent testing 獨立通過非 browser 檢查；review 發現的通知、載入與鎖釋放競態已修正。依 SPEC 尚未啟動真實瀏覽器；E2E 未通過前本 step 保持待驗。
 
   - [ ] **Step 2.2 — 建立唯讀 editor 與 Asset Resolver**
     - 目標：完整 JSON 的文字、表格及圖片可在重開後顯示。
