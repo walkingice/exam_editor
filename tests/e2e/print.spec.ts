@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('prints the current content tab snapshot without workspace controls', async ({ page }) => {
+test('prints the latest content snapshot without workspace controls', async ({ page }) => {
   await page.addInitScript(() => {
     let release!: () => void;
     const ready = new Promise<void>((resolve) => { release = resolve; });
@@ -11,6 +11,7 @@ test('prints the current content tab snapshot without workspace controls', async
   await page.getByRole('button', { name: '建立空白試卷' }).click();
   const source = page.getByRole('tabpanel').first().locator('.ProseMirror');
   await source.fill('最新未儲存的列印內容');
+  await page.getByRole('tab', { name: '排版預覽' }).click();
   await page.evaluate(() => {
     window.print = () => {
       const root = document.querySelector<HTMLElement>('#exam-print-root');
@@ -64,4 +65,31 @@ test('prints from the preview tab using the same selected output', async ({ page
   await page.evaluate(() => (window as unknown as { releasePrintFonts: () => void })
     .releasePrintFonts());
   expect(await printed).toContain('Preview source text');
+});
+
+test('switches preview columns while keeping headings across the page', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  const source = page.getByRole('tabpanel').first().locator('.ProseMirror');
+  await source.fill('Exam title');
+  await source.press('ControlOrMeta+Alt+1');
+  await source.press('End');
+  await source.press('Enter');
+  await source.press('ControlOrMeta+Alt+2');
+  await page.keyboard.type('Student details');
+  await source.press('Enter');
+  await page.keyboard.type('Question body');
+  await page.getByRole('tab', { name: '排版預覽' }).click();
+  await page.getByLabel('欄數').selectOption('2');
+  const preview = page.locator('.preview-paper .ProseMirror');
+  await expect(preview).toHaveCSS('column-count', '2');
+  await expect(preview.locator('h1')).toHaveCSS('column-span', 'all');
+  await expect(preview.locator('h2')).toHaveCSS('column-span', 'all');
+  await expect(preview.locator('p').filter({ hasText: 'Question body' })).toHaveCSS('column-span', 'none');
+  await expect(page.getByRole('status')).toHaveText('已儲存');
+  await page.reload();
+  await page.getByRole('tab', { name: '排版預覽' }).click();
+  await expect(page.getByLabel('欄數')).toHaveValue('2');
+  await page.getByLabel('欄數').selectOption('1');
+  await expect(preview).toHaveCSS('column-count', 'auto');
 });

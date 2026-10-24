@@ -120,3 +120,9 @@ describe('exam document schema', () => {
       marginsMm: { ...DEFAULT_PAGE_SETTINGS.marginsMm, top: -1 } })).toThrow();
   });
 });
+
+it('accepts legacy column settings and rejects unsupported column counts', () => {
+  expect(() => validatePageSettings({ ...DEFAULT_PAGE_SETTINGS, columns: undefined })).not.toThrow();
+  expect(() => validatePageSettings({ ...DEFAULT_PAGE_SETTINGS, columns: 2 })).not.toThrow();
+  expect(() => validatePageSettings({ ...DEFAULT_PAGE_SETTINGS, columns: 3 as 2 })).toThrow();
+});

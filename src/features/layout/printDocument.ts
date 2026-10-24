@@ -18,6 +18,10 @@ export function createPrintCss(settings: PageSettings): string {
     + '#exam-print-root .document-item-control, #exam-print-root .question-drag-handle, '
     + '#exam-print-root .ProseMirror, #exam-print-root .ProseMirror-focused { outline: none !important; } '
     + '#exam-print-root .document-item-control, #exam-print-root .question-drag-handle { display: none !important; } '
+    + `#exam-print-root .ProseMirror { column-count: ${settings.columns ?? 1}; column-gap: 10mm; `
+    + `column-rule: ${settings.columns === 2 ? '1px solid #777' : 'none'}; } `
+    + '#exam-print-root .ProseMirror > h1, #exam-print-root .ProseMirror > h2 { column-span: all; } '
+    + '#exam-print-root li, #exam-print-root .exam-image { break-inside: avoid; } '
     + '#exam-print-root img { max-width: 100%; height: auto; } '
     + '#exam-print-root table { max-width: 100%; border-collapse: collapse; } '
     + '#exam-print-root tr, #exam-print-root img { break-inside: avoid; } }';

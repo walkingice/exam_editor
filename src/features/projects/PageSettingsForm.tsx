@@ -41,6 +41,10 @@ export function PageSettingsForm({ settings, onChange }: {
           commit({ ...settings, paperSize: event.target.value as PageSettings['paperSize'] })}>
           <option value="TW_B4">台灣 B4</option><option value="A4">A4</option>
         </select></label>
+        <label>欄數 <select value={settings.columns ?? 1} onChange={(event) =>
+          commit({ ...settings, columns: Number(event.target.value) as 1 | 2 })}>
+          <option value="1">單欄</option><option value="2">雙欄</option>
+        </select></label>
         <label>方向 <select value={settings.orientation} onChange={(event) =>
           commit({ ...settings, orientation: event.target.value as PageSettings['orientation'] })}>
           <option value="portrait">直向</option><option value="landscape">橫向</option>

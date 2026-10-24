@@ -11,6 +11,7 @@ export type OutputListStyle = 'ordered' | 'unordered';
 export type PageSettings = {
   paperSize: PaperSize;
   orientation: Orientation;
+  columns?: 1 | 2;
   marginsMm: { top: number; right: number; bottom: number; left: number };
   defaultFontSizePt: number;
   lineHeight: number;
@@ -43,6 +44,7 @@ export type Asset = {
 export const DEFAULT_PAGE_SETTINGS: PageSettings = {
   paperSize: 'TW_B4',
   orientation: 'portrait',
+  columns: 1,
   marginsMm: { top: 15, right: 15, bottom: 15, left: 15 },
   defaultFontSizePt: 12,
   lineHeight: 1.5,
@@ -52,7 +54,8 @@ export const DEFAULT_PAGE_SETTINGS: PageSettings = {
 export function validatePageSettings(settings: PageSettings): void {
   if (!settings || !PAPER_DIMENSIONS_MM[settings.paperSize]
     || !['portrait', 'landscape'].includes(settings.orientation)
-    || !['ordered', 'unordered'].includes(settings.outputListStyle)) {
+    || !['ordered', 'unordered'].includes(settings.outputListStyle)
+    || (settings.columns !== undefined && ![1, 2].includes(settings.columns))) {
     throw new Error('Unsupported page setting');
   }
   const margins = settings.marginsMm;

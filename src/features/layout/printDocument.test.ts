@@ -53,3 +53,11 @@ it('waits until asynchronously resolved image nodes enter the print DOM', async 
   }, 0);
   await waiting;
 });
+
+it('prints two columns with spanning headers and a divider', () => {
+  const css = createPrintCss({ ...DEFAULT_PAGE_SETTINGS, columns: 2 });
+  expect(css).toContain('column-count: 2');
+  expect(css).toContain('column-rule: 1px solid #777');
+  expect(css).toContain('.ProseMirror > h1, #exam-print-root .ProseMirror > h2 { column-span: all; }');
+  expect(createPrintCss({ ...DEFAULT_PAGE_SETTINGS, columns: undefined })).toContain('column-count: 1');
+});

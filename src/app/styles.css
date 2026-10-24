@@ -255,3 +255,18 @@ li { margin: 10px 0; }
   .page-settings { padding: 14px; }
   .page-settings-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+.preview-paper[data-columns="2"] .ProseMirror {
+  column-count: 2;
+  column-gap: 10mm;
+  column-rule: 1px solid #777;
+}
+.preview-paper[data-columns="2"] .ProseMirror > h1,
+.preview-paper[data-columns="2"] .ProseMirror > h2 {
+  column-span: all;
+}
+.preview-paper[data-columns="2"] .ProseMirror li,
+.preview-paper[data-columns="2"] .ProseMirror tr,
+.preview-paper[data-columns="2"] .exam-image {
+  break-inside: avoid;
+}

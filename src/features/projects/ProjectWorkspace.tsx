@@ -344,7 +344,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
           {selectedNode && lease?.isActive && <PreviewFormatToolbar
             key={selectedPreviewId} type={selectedNode.type} attrs={selectedNode.attrs}
             maxWidthMm={page.contentWidthMm} onChange={changePreviewFormat} />}
-          <div className="preview-paper" style={{ width: `${page.widthMm}mm`,
+          <div className="preview-paper" data-columns={pageSettings.columns ?? 1} style={{ width: `${page.widthMm}mm`,
             minHeight: `${page.heightMm}mm`, padding: `${pageSettings.marginsMm.top}mm ${pageSettings.marginsMm.right}mm ${pageSettings.marginsMm.bottom}mm ${pageSettings.marginsMm.left}mm`,
             fontSize: `${pageSettings.defaultFontSizePt}pt`, lineHeight: pageSettings.lineHeight }}
             onClick={(event) => {
