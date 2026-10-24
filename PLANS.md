@@ -8,6 +8,7 @@
 - 每個 Phase 依 step 順序執行；依賴先前 Phase 已完成的產物。每個 step 是一個可獨立 review、測試與提交的工作單位，避免把整個 Phase 累積成一個 commit。需要 fixture 的 step 當下建立最小測試資料，不等待 Milestone 驗收才補；驗收 step 負責補齊案例矩陣與整合回歸。
 - 開始前讀 SPEC、目前 Phase 與相關程式；說明修改原因和範圍。程式、註解及 commit message 使用 English。
 - 每個 step 必須完成目標、實作、驗證與 sub-agent review/testing，才能將 `- [ ]` 改為 `- [x]`。在該 step 下補上驗證命令、結果、已知限制及 review 結果；測試失敗或必要人工驗收尚未執行不可勾選完成。
+- 依 SPEC 的瀏覽器驗證規則，只有使用者明確指定時才啟動真實瀏覽器。可完成 browser test 的程式與靜態設定檢查，但未執行的 browser test 必須標記為待驗，不能記成通過；Phase 0 的驗收以不啟動瀏覽器的驗證為準，後續需要真實瀏覽器的產品驗收 step 仍保持未完成直到獲得指定。
 - 實作與該 step 的 checkbox 更新放在同一 commit；commit hash 如需記錄，在後續進度更新填入，不寫尚不存在的 hash。Phase 僅於全部 steps 完成時勾選。
 - 每個 commit subject 以 type 開頭且不超過 50 字元；body 每行不超過 72 字元。使用多個 `git commit -m` 傳遞 subject、各段 body、agent metadata trailer。多步工作依 AGENTS 規則標記 `[Step 1 - 1/2]` 類型的進度，不執行 `git push`。
 - step 若因實際範圍過大需拆分，先新增有獨立目標、實作與驗證的子 steps，再執行；不得只以「完成部分」勾選原 step。函式盡量小於 50 行；依 AGENTS 規則拆分大型跨檔案變更。
@@ -103,7 +104,7 @@ type Asset = {
   - [ ] **Step 0.1 — 建立可啟動的 React 專案**
     - 目標：在乾淨 checkout 中可安裝、啟動與 build Hello World。
     - 實作：確認 Node.js/npm 相容版本，建立 React + TypeScript + Vite、`src/app/App.tsx` 與入口；保留現有文件。設定 Node 版本說明或版本檔、package scripts（`dev`、`build`、`preview`、`typecheck`）、lockfile 與 `.gitignore`，忽略 node_modules、dist、測試輸出。不要加入 Redux 或 Next.js。
-    - 驗證：執行 `npm ci`、`npm run typecheck`、`npm run build`；啟動 dev server 並確認瀏覽器能看到 Hello World。記錄實際使用版本及命令結果。
+    - 驗證：執行 `npm ci`、`npm run typecheck`、`npm run build`；啟動 dev server 並確認 HTTP 回應提供 app 入口，且來源包含 Hello World。真實瀏覽器畫面檢查依 SPEC 規則待指定。記錄實際使用版本及命令結果。
     - Commit：`chore: Bootstrap React application`。
 
   - [ ] **Step 0.2 — 安裝並確認核心 dependencies**
@@ -120,14 +121,14 @@ type Asset = {
 
   - [ ] **Step 0.4 — 建立 browser smoke test**
     - 目標：可以自動啟動網站並在 Chromium、Firefox 驗證基本頁面。
-    - 實作：安裝 Playwright 與對應 browser binaries，設定 webServer、獨立測試 context、`test:e2e` script、失敗時的 trace/screenshot；加入 Hello World smoke test。下載 browser binaries 的步驟與套件安裝分開記錄。
-    - 驗證：`npm run test:e2e` 在兩個 browser projects 通過；確認測試會結束自己啟動的 server，失敗產物不被提交。
+    - 實作：安裝 Playwright 測試套件，設定 Chromium、Firefox 的 webServer、獨立測試 context、`test:e2e` script、失敗時的 trace/screenshot；加入 Hello World smoke test。browser binaries 的下載命令另行記錄，不預設執行。
+    - 驗證：以 Playwright 的測試列舉與設定檢查確認兩個 browser projects 的案例可載入，確認失敗產物被忽略。`npm run test:e2e` 的實際 browser 結果待使用者明確指定後記錄。
     - Commit：`test: Add browser smoke coverage`。
 
   - [ ] **Step 0.5 — 撰寫 README 與驗收 infrastructure**
     - 目標：新進開發者只讀 README 就能啟動與測試專案。
     - 實作：建立 `README.md`，列出 Node/npm 需求、`npm ci`、Playwright browsers 安裝、dev、typecheck、unit/UI、E2E、build/preview 的實際命令，說明目錄、SPEC/PLANS 分工、目前只完成 Hello World、本機資料與已知限制。
-    - 驗證：依 README 從乾淨安裝順序執行所有命令；確認 dev 與 production preview 都顯示 Hello World。sub-agent 依文件獨立核對命令與結果，全部通過才勾選 Phase 0。
+    - 驗證：依 README 從乾淨安裝順序執行非 browser 命令；確認 dev 與 production preview 的 HTTP 回應。sub-agent 依文件獨立核對命令與結果；browser 畫面及 E2E 執行結果明列待驗後，才勾選 Phase 0。
     - Commit：`docs: Document setup and testing workflow`。
 
 - [ ] **Phase 1 — 文件 schema 與儲存基礎**
