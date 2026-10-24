@@ -134,6 +134,7 @@ type Asset = {
     - 實作：建立 `README.md`，列出 Node/npm 需求、`npm ci`、Playwright browsers 安裝、dev、typecheck、unit/UI、E2E、build/preview 的實際命令，說明目錄、SPEC/PLANS 分工、目前只完成 Hello World、本機資料與已知限制。
     - 驗證：依 README 從乾淨安裝順序執行非 browser 命令；確認 dev 與 production preview 的 HTTP 回應。sub-agent 依文件獨立核對命令與結果；browser 畫面及 E2E 執行結果明列待驗後，才勾選 Phase 0。
     - Commit：`docs: Document setup and testing workflow`。
+    - 進度紀錄（2026-10-24）：README 已列出環境、命令、目錄與限制；sub-agent review 通過。testing 依 README 執行 `npm ci`、`npm run typecheck`、`npm test`、`npm run build:smoke`、`npm run build`、`npm run test:e2e -- --list` 均通過。dev HTTP 已在 Step 0.1 驗證；本輪 dev／preview HTTP 因 sandbox `listen EPERM` 且提權執行中止，production preview HTTP 待驗。未啟動瀏覽器；此 step 與 Phase 0 暫不勾選。
 
 - [ ] **Phase 1 — 文件 schema 與儲存基礎**
 
