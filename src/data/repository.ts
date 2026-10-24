@@ -2,6 +2,7 @@ import { validateAsset, validateExamDocument, validateProject } from '../domain/
 import type { Asset, ExamDocument, Project } from '../domain/types';
 import { ExamDatabase } from './database';
 import type { WriteAuthority } from './ownership';
+import { notifyProjectDeleted } from './projectEvents';
 
 export type ProjectBundle = { project: Project; document: ExamDocument; assets: Asset[] };
 
@@ -82,5 +83,6 @@ export class ProjectRepository {
         await this.database.documents.delete(projectId);
         await this.database.projects.delete(projectId);
       }));
+    notifyProjectDeleted(projectId);
   }
 }

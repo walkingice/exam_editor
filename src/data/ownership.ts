@@ -50,7 +50,9 @@ export class ProjectOwnership implements WriteAuthority {
 
   async acquire(projectId: string): Promise<ProjectLease | null> {
     if (!this.locks) throw new WriteAccessError('Web Locks are unavailable');
-    if (this.leases.has(projectId)) throw new WriteAccessError('Already acquired in this tab');
+    const previous = this.leases.get(projectId);
+    if (previous?.isActive) throw new WriteAccessError('Already acquired in this tab');
+    if (previous) await previous.done;
     let resolve!: (lease: ProjectLease | null) => void;
     let reject!: (reason: unknown) => void;
     let granted: ProjectLease | null = null;
