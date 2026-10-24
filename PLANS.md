@@ -203,6 +203,7 @@ type Asset = {
     - 實作：建立六類 DOCX fixtures：中文題目、混合 marks、至少兩張 PNG/JPEG 與大圖、合併儲存格／多欄表格、多頁內容、公式／文字方塊／圖形。每個 fixture 附來源或產生方式、預期保留內容與降級結果，不使用真實學生資料。補 README 匯入／本機儲存操作與已知限制。
     - 驗證：匯入中文、標題、表格、兩張圖，重載與關閉重開仍存在；損壞 DOCX 不白畫面、不產生空 Project。不支援元素有提示或限制紀錄。執行 unit/UI/E2E、typecheck、build 並記錄結果；本階段仍為唯讀。
     - Commit：`test: Verify persistent DOCX import workflow`。
+    - 進度紀錄（2026-10-24）：六類合成 DOCX fixtures、可重產生腳本、預期保留／降級文件與解析測試已加入；明確啟用 Mammoth underline mapping。`npm test`（12 files／61 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Chromium／Firefox 各列出中文題目、表格、兩張圖片與重載案例。尚未執行真實 browser 驗收，Milestone 1 與本 step 保持未完成；實際 E2E 結果待指定後記錄。
 
 ## Milestone 2 — 編輯試卷內容
 

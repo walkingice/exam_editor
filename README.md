@@ -1,8 +1,8 @@
 # 試卷編輯器
 
 這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Phase 1，
-Phase 2 正在實作。已可建立、列表、開啟及刪除本機空白 Project，
-workspace 可唯讀顯示已儲存文件；功能順序與
+Phase 2／3 的 browser 驗收待執行。已可建立、列表、開啟及刪除本機 Project，
+匯入 DOCX，並在 workspace 唯讀顯示已儲存文件；功能順序與
 驗證紀錄見 [PLANS.md](PLANS.md)。
 
 ## 環境與安裝
@@ -69,6 +69,8 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 
 首頁可選擇 DOCX 匯入；轉換中可取消，完成後開啟唯讀「試卷內容」。
 匯入警告保存在目前 browser session，關閉 browser 後不會保留；請在匯入後立即校對。
+Word 原始版面、原始分頁不保證保留。公式、文字方塊、圖形、浮動物件可能遺失或改變順序；
+匯入後請對照原稿。六類合成 DOCX 測試資料及預期結果見 [docs/fixtures.md](docs/fixtures.md)。
 DOCX 匯出、編輯、預覽與列印尚未實作。本機資料不等於永久備份。
 
 DOCX 匯入解析器的限制：單一 DOCX 20 MiB、單張圖片 10 MiB／4,000 萬像素、
