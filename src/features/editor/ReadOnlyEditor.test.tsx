@@ -507,6 +507,38 @@ describe('read-only document', () => {
     expect(revoke).toHaveBeenCalledWith('blob:test-image');
   });
 
+  it('saves a dragged image width in document JSON and supports undo', async () => {
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    try {
+      Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:resize' });
+      Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+      const content = normalizeDocument({ type: 'doc', content: [
+        { type: 'image', attrs: { assetId: 'present', alt: 'Photo', widthMm: 50 } },
+      ] });
+      const repository = { getAsset: vi.fn(async () => ({
+        id: 'present', projectId: 'first', mimeType: 'image/png',
+        blob: new Blob(['image'], { type: 'image/png' }),
+      })) } as unknown as ProjectRepository;
+      let editor: Editor | undefined;
+      render(<ReadOnlyEditor projectId="first" content={content} repository={repository}
+        editable onEditor={(value) => { editor = value; }} />);
+      const image = await screen.findByRole('img', { name: 'Photo' });
+      vi.spyOn(image, 'getBoundingClientRect').mockReturnValue({
+        width: 200, height: 100, x: 0, y: 0, top: 0, left: 0,
+        right: 200, bottom: 100, toJSON: () => ({}),
+      });
+      Object.defineProperty(image.closest('.exam-image'), 'clientWidth', { value: 400 });
+      const handle = screen.getByRole('button', { name: '拖曳調整圖片大小' });
+      handle.setPointerCapture = vi.fn();
+      fireEvent.pointerDown(handle, { button: 0, clientX: 200 });
+      fireEvent.pointerMove(handle, { clientX: 300 });
+      fireEvent.pointerUp(handle, { clientX: 300 });
+      expect(editor!.getJSON().content?.[0].attrs?.widthMm).toBeCloseTo(79.375);
+      fireEvent.click(screen.getByRole('button', { name: '復原' }));
+      expect(editor!.getJSON().content?.[0].attrs?.widthMm).toBe(50);
+    } finally { vi.unstubAllGlobals(); }
+  });
+
   it('loads an image when StrictMode replays effects', async () => {
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: () => 'blob:strict-image' });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
