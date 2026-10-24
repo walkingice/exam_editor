@@ -143,7 +143,7 @@ li { margin: 10px 0; }
   z-index: 2;
   right: 0;
   left: 0;
-  height: 4px;
+  height: 3px;
   border-radius: 4px;
   background: #1769d2;
   content: '';
@@ -151,10 +151,6 @@ li { margin: 10px 0; }
 }
 .content-panel .exam-document .ProseMirror .question-drop-before::before { top: -7px; }
 .content-panel .exam-document .ProseMirror .question-drop-after::after { bottom: -7px; }
-.content-panel .exam-document .ProseMirror .question-drop-before,
-.content-panel .exam-document .ProseMirror .question-drop-after {
-  background-color: #eff6ff;
-}
 .content-panel .exam-document .ProseMirror li > .question-control {
   position: absolute;
   top: 12px;
