@@ -138,11 +138,12 @@ type Asset = {
 
 - [ ] **Phase 1 — 文件 schema 與儲存基礎**
 
-  - [ ] **Step 1.1 — 建立 domain 型別與 editor schema**
+  - [x] **Step 1.1 — 建立 domain 型別與 editor schema**
     - 目標：匯入與編輯共用同一套合法文件結構。
     - 實作：在 `domain/` 定義上述型別、預設值、驗證函式；在 `features/editor/` 建立共用 extensions。題目 item 容納段落、巢狀選項、圖片、表格；來源清單一律 unordered。建立穩定 ID 補齊與重複 ID 修復規則，已存在的合法 ID 不重建；新題目 selected=true。
     - 驗證：單元測試空文件、混合內容、選項不被當成新題目、重複正規化不改 ID、非法 schema 拒絕或明確降級；typecheck。
     - Commit：`feat: Define exam document schema`。
+    - 驗證紀錄（2026-10-24）：`npm test`（2 files／8 tests）、`npm run typecheck`、`npm run build` 通過。測試涵蓋空文件、混合表格／圖片、巢狀選項、ID 修復與重複正規化、非法節點、邊距，以及 `<ol>` 匯入後預設勾選。sub-agent review/testing 均通過；review 發現的 `<ol>` 屬性與預設勾選問題已修正。編輯階段仍須避免建立有序來源清單，並於儲存前正規化；本 step 無 browser 驗證要求。
 
   - [ ] **Step 1.2 — 建立 Dexie repository 與 migration**
     - 目標：以交易方式建立、讀取、更新、刪除完整 Project。
