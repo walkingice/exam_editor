@@ -67,3 +67,16 @@ test('renders a stored image after reloading the workspace', async ({ context, p
   await expect(page.getByRole('img', { name: 'Fixture image' })).toBeVisible();
   await expect(page.getByRole('img', { name: 'Fixture image' })).toHaveJSProperty('naturalWidth', 1);
 });
+
+test('keeps the second tab editor read-only', async ({ context, page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await expect(page.locator('.ProseMirror')).toHaveAttribute('contenteditable', 'true');
+  const second = await context.newPage();
+  await second.goto(page.url());
+  await expect(second.locator('.ProseMirror')).toHaveAttribute('contenteditable', 'false');
+  await second.locator('.ProseMirror').focus();
+  await second.keyboard.press('ControlOrMeta+A');
+  await second.keyboard.type('Blocked');
+  await expect(second.locator('.ProseMirror')).not.toContainText('Blocked');
+});

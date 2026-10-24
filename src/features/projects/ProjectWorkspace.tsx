@@ -4,6 +4,10 @@ import { ProjectRepository, type ProjectBundle } from '../../data/repository';
 import { onProjectDeleted } from '../../data/projectEvents';
 import { ReadOnlyEditor } from '../editor/ReadOnlyEditor';
 import { readImportWarnings } from '../import-docx/importNotices';
+import { normalizeDocument } from '../../domain/document';
+import type { Editor } from '@tiptap/core';
+
+type EditingSession = { projectId: string; revision: number; editor: Editor | null };
 
 export function ProjectWorkspace({ projectId, repository, ownership }: {
   projectId: string; repository: ProjectRepository; ownership: ProjectOwnership;
@@ -15,6 +19,8 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
   const [readOnlyReason, setReadOnlyReason] = useState('');
   const activeLease = useRef<ProjectLease | null>(null);
   const generation = useRef(0);
+  const session = useRef<EditingSession | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   const open = useCallback(async (cancelled: () => boolean) => {
     const attempt = ++generation.current;
@@ -36,6 +42,9 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
       }
       if (!next) await acquired?.lease.release();
       activeLease.current = next ? acquired?.lease ?? null : null;
+      session.current = next && acquired?.lease
+        ? { projectId, revision: 0, editor: null } : null;
+      setDirty(false);
       setLease(activeLease.current);
       setBundle(next);
       setStatus(next ? 'ready' : 'missing');
@@ -50,19 +59,38 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
   useEffect(() => {
     let cancelled = false;
     queueMicrotask(() => { if (!cancelled) void open(() => cancelled); });
-    return () => { cancelled = true; void activeLease.current?.release(); activeLease.current = null; };
+    return () => {
+      cancelled = true;
+      session.current = null;
+      void activeLease.current?.release();
+      activeLease.current = null;
+    };
   }, [open]);
 
   useEffect(() => onProjectDeleted(projectId, () => {
     generation.current += 1;
     void activeLease.current?.release();
     activeLease.current = null;
+    session.current = null;
     setLease(null);
     setBundle(null);
     setStatus('missing');
   }), [projectId]);
 
   async function takeOver() { if (!activeLease.current) await open(() => false); }
+
+  function recordChange(editor: Editor) {
+    const current = session.current;
+    if (!current || current.projectId !== projectId || current.editor !== editor
+      || !activeLease.current?.isActive) return;
+    try {
+      normalizeDocument(editor.getJSON());
+      current.revision += 1;
+      setDirty(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '文件內容無效');
+    }
+  }
 
   return <main>
     <a href="#/">返回首頁</a>
@@ -79,7 +107,11 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         <button onClick={() => void takeOver()}>重新取得寫入權</button></>}
       <h2>試卷內容</h2>
-      <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository} />
+      {lease && <p role="status">{dirty ? '尚未儲存' : '可以編輯'}</p>}
+      <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
+        editable={!!lease?.isActive} onEditor={(editor) => {
+          if (session.current?.projectId === projectId) session.current.editor = editor;
+        }} onChange={recordChange} />
     </>}
   </main>;
 }

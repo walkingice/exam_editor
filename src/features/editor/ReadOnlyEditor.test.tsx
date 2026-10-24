@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
 import type { ProjectRepository } from '../../data/repository';
+import type { Editor } from '@tiptap/core';
 import { ReadOnlyEditor } from './ReadOnlyEditor';
 
 const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
@@ -18,6 +19,30 @@ afterEach(() => {
 });
 
 describe('read-only document', () => {
+  it('allows an owner to edit and reports its editor instance', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    const changed = vi.fn();
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} onChange={changed} />);
+    await screen.findByLabelText('試卷文件');
+    expect(editor?.isEditable).toBe(true);
+    editor?.commands.insertContent('Edited');
+    expect(changed).toHaveBeenCalledWith(editor);
+    expect(screen.getByText('Edited')).toBeInTheDocument();
+  });
+
+  it('keeps a non-owner document read-only', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('試卷文件');
+    expect(editor?.isEditable).toBe(false);
+    expect(screen.getByRole('textbox')).toHaveAttribute('contenteditable', 'false');
+  });
   it('renders text and tables while showing a placeholder for a missing image', async () => {
     const content = normalizeDocument({ type: 'doc', content: [
       { type: 'paragraph', content: [{ type: 'text', text: 'Question text' }] },

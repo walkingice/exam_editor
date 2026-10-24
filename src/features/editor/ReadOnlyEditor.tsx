@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from '@tiptap/react';
 import type { JSONContent } from '@tiptap/core';
+import type { Editor } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { ProjectRepository } from '../../data/repository';
 import { AssetResolver, type AssetHandle } from '../../shared/assets/AssetResolver';
@@ -34,9 +35,14 @@ function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetRes
   </NodeViewWrapper>;
 }
 
-export function ReadOnlyEditor({ projectId, content, repository }: {
+export function ReadOnlyEditor({ projectId, content, repository, editable = false, onChange, onEditor }: {
   projectId: string; content: JSONContent; repository: ProjectRepository;
+  editable?: boolean;
+  onChange?: (editor: Editor) => void;
+  onEditor?: (editor: Editor) => void;
 }) {
+  const callbacks = useRef({ onChange, onEditor });
+  callbacks.current = { onChange, onEditor };
   const resolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
   ), [projectId, repository]);
@@ -46,7 +52,12 @@ export function ReadOnlyEditor({ projectId, content, repository }: {
         return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} />);
       },
     }) : extension), [resolver]);
-  const editor = useEditor({ extensions, content, editable: false, immediatelyRender: false }, [extensions]);
+  const editor = useEditor({ extensions, content, editable, immediatelyRender: false,
+    onUpdate: ({ editor: current }) => callbacks.current.onChange?.(current),
+    onCreate: ({ editor: current }) => callbacks.current.onEditor?.(current),
+  }, [extensions]);
+
+  useEffect(() => { editor?.setEditable(editable); }, [editable, editor]);
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.commands.setContent(content, { emitUpdate: false });

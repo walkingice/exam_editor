@@ -222,6 +222,7 @@ type Asset = {
     - 實作：workspace 取得最新 JSON 與寫入權後開啟 Tiptap editable；其他分頁維持唯讀並顯示原因。session 綁定 projectId、revision 和 editor instance；切換 Project 時關閉舊 session，避免舊 callback 寫入新 Project。先建立內容變更與 dirty 狀態，不在 React render 中寫 DB。
     - 驗證：UI 測試 owner/non-owner、切換 Project 與舊 callback；雙分頁測試唯讀無法從快捷鍵修改。
     - Commit：`feat: Add guarded editor sessions`。
+    - 進度紀錄（2026-10-24）：owner editor 已可編輯，非 owner 維持唯讀；session 以 Project、revision 與 editor instance 驗證變更，切換時關閉舊 session。新增 UI 與雙分頁 E2E 案例；UI 8/8、全套 unit 63/63、typecheck、build 通過，sub-agent review/testing 已執行。review 指出新節點 ID 應在後續儲存使用正規化快照；實際 browser E2E 依 SPEC 待指定，故 step 暫未勾選。
 
   - [ ] **Step 4.2 — 實作 autosave 與 Project 更名**
     - 目標：編輯可自動儲存且失敗可見、可重試。
