@@ -35,6 +35,7 @@ function normalizeNode(
     used.add(attrs.id as string);
   }
   if (type === 'listItem') attrs.selected = questionItem ? attrs.selected !== false : null;
+  else if (idTypes.has(type) && parentIsDoc) attrs.selected = attrs.selected !== false;
   if (type === 'image') {
     delete attrs.src;
     if (typeof attrs.assetId !== 'string' || !attrs.assetId) {
@@ -83,6 +84,8 @@ function checkNode(
     ? typeof attrs.selected !== 'boolean' : attrs.selected != null)) {
     throw new Error('Invalid question selection');
   }
+  if (node.type !== 'listItem' && parentIsDoc && idTypes.has(node.type)
+    && typeof attrs.selected !== 'boolean') throw new Error('Invalid item selection');
   if (node.type === 'image' && (typeof attrs.assetId !== 'string' || !attrs.assetId || attrs.src)) {
     throw new Error('Image requires a persistent asset ID');
   }

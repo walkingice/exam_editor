@@ -68,3 +68,13 @@ it('retains all selected questions in their current document order', () => {
   expect(output.content?.[1].attrs?.start).toBe(1);
   expect(output.content?.[3].attrs?.start).toBe(3);
 });
+
+it('filters unselected document items as well as questions for print', () => {
+  const source = normalizeDocument({ type: 'doc', content: [
+    { type: 'heading', attrs: { selected: false }, content: [{ type: 'text', text: 'Skip' }] },
+    { type: 'paragraph', content: [{ type: 'text', text: 'Keep' }] },
+    { type: 'image', attrs: { assetId: 'skip', selected: false } },
+    { type: 'paragraph', attrs: { selected: false }, content: [{ type: 'text', text: 'Skip too' }] },
+  ] });
+  expect(projectOutput(source, 'unordered').content?.map((node) => node.type)).toEqual(['paragraph']);
+});

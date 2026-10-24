@@ -23,7 +23,8 @@ const ExamAttributes = Extension.create({
         },
       },
       {
-        types: ['listItem'],
+        types: ['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
+          'codeBlock', 'horizontalRule'],
         attributes: {
           selected: {
             default: null,

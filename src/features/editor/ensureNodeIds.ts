@@ -6,11 +6,14 @@ const idTypes = new Set(['paragraph', 'heading', 'listItem', 'table', 'image', '
 export function ensureNodeIds(editor: Editor): boolean {
   const used = new Set<string>();
   const transaction = editor.state.tr;
+  let changed = false;
   const questionPositions = new Set<number>();
+  const documentItemPositions = new Set<number>();
   editor.state.doc.forEach((node, offset) => {
     if (node.type.name === 'bulletList') node.forEach((_item, itemOffset) => {
       questionPositions.add(offset + 1 + itemOffset);
     });
+    else if (idTypes.has(node.type.name)) documentItemPositions.add(offset);
   });
   editor.state.doc.descendants((node, position) => {
     const question = node.type.name === 'listItem' && questionPositions.has(position);
@@ -26,12 +29,14 @@ export function ensureNodeIds(editor: Editor): boolean {
         attrs.id = next;
       }
     }
-    if (question && attrs.selected == null) attrs.selected = true;
+    const selectable = question || documentItemPositions.has(position);
+    if (selectable && attrs.selected == null) attrs.selected = true;
     if (attrs.id !== node.attrs.id || attrs.selected !== node.attrs.selected) {
       transaction.setNodeMarkup(position, undefined, attrs);
+      changed = true;
     }
   });
-  if (!transaction.docChanged) return false;
+  if (!changed) return false;
   editor.view.dispatch(transaction.setMeta('addToHistory', false));
   return true;
 }
