@@ -80,6 +80,31 @@ describe('project repository', () => {
     expect((await repository.get(current.project.id))?.project.name).toBe('Exam');
   });
 
+  it('adds an image asset independently without changing the saved document', async () => {
+    const repository = createRepository();
+    const current = bundle();
+    await repository.create(current);
+    const added: Asset = { id: 'new-image', projectId: current.project.id,
+      mimeType: 'image/png', blob: new NodeBlob(['image'], { type: 'image/png' }) as Blob };
+    await repository.addAsset(added);
+    expect((await repository.getAsset(current.project.id, added.id))?.blob.size).toBe(5);
+    expect((await repository.get(current.project.id))?.document).toEqual(current.document);
+    await expect(repository.addAsset(added)).rejects.toThrow();
+    await expect(repository.addAsset({ ...added, id: 'other', projectId: 'missing' }))
+      .rejects.toThrow('Project does not exist');
+  });
+
+  it('rejects assets when the project exceeds its total image limit', async () => {
+    const repository = createRepository();
+    const current = bundle();
+    await repository.create(current);
+    const oversized: Asset = { id: 'too-much', projectId: current.project.id,
+      mimeType: 'image/png', blob: new NodeBlob([new Uint8Array(30 * 1024 * 1024)],
+        { type: 'image/png' }) as Blob };
+    await expect(repository.addAsset(oversized)).rejects.toThrow('圖片總量');
+    expect(await repository.getAsset(current.project.id, oversized.id)).toBeNull();
+  });
+
   it('upgrades a version-one fixture without changing content on later reads', async () => {
     const repository = createRepository();
     const legacy = new Dexie(databases.at(-1)!.name, dependencies);

@@ -3,6 +3,7 @@ import type { Asset, ExamDocument, Project } from '../domain/types';
 import { ExamDatabase } from './database';
 import type { WriteAuthority } from './ownership';
 import { notifyProjectDeleted } from './projectEvents';
+import { MAX_TOTAL_ASSET_BYTES } from '../shared/assets/limits';
 
 export type ProjectBundle = { project: Project; document: ExamDocument; assets: Asset[] };
 
@@ -54,6 +55,20 @@ export class ProjectRepository {
     if (!asset || asset.projectId !== projectId) return null;
     validateAsset(asset);
     return asset;
+  }
+
+  async addAsset(asset: Asset): Promise<void> {
+    validateAsset(asset);
+    await this.authority.run(asset.projectId, () => this.database.transaction('rw',
+      this.database.projects, this.database.assets, async () => {
+        const project = await this.database.projects.get(asset.projectId);
+        if (!project) throw new Error('Project does not exist');
+        validateProject(project);
+        const existing = await this.database.assets.where('projectId').equals(asset.projectId).toArray();
+        if (existing.reduce((size, item) => size + item.blob.size, asset.blob.size)
+          > MAX_TOTAL_ASSET_BYTES) throw new Error('圖片總量超過 30 MiB 限制');
+        await this.database.assets.add(asset);
+      }));
   }
 
   async save(bundle: ProjectBundle): Promise<void> {

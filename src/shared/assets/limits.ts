@@ -1,0 +1,1 @@
+export const MAX_TOTAL_ASSET_BYTES = 30 * 1024 * 1024;

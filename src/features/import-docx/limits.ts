@@ -1,8 +1,10 @@
+import { MAX_TOTAL_ASSET_BYTES } from '../../shared/assets/limits';
+
 export const IMPORT_LIMITS = {
   docxBytes: 20 * 1024 * 1024,
   imageBytes: 10 * 1024 * 1024,
   imagePixels: 40_000_000,
-  totalAssetBytes: 30 * 1024 * 1024,
+  totalAssetBytes: MAX_TOTAL_ASSET_BYTES,
 } as const;
 
 export type ImportErrorCode = 'cancelled' | 'file-type' | 'file-size'

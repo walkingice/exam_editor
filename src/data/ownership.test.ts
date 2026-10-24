@@ -1,4 +1,5 @@
 import { IDBKeyRange, indexedDB } from 'fake-indexeddb';
+import { Blob as NodeBlob } from 'node:buffer';
 import { describe, expect, it } from 'vitest';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS } from '../domain/types';
 import { ExamDatabase } from './database';
@@ -59,6 +60,9 @@ describe('project write ownership', () => {
       });
       expect(await second.acquire('project-1')).toBeNull();
       await expect(secondRepository.delete('project-1')).rejects.toBeInstanceOf(WriteAccessError);
+      await expect(secondRepository.addAsset({ id: 'blocked', projectId: 'project-1',
+        mimeType: 'image/png', blob: new NodeBlob(['image'], { type: 'image/png' }) as Blob }))
+        .rejects.toBeInstanceOf(WriteAccessError);
       await lease!.release();
       const handoff = await second.acquireLatest('project-1', () => secondRepository.get('project-1'));
       expect(handoff?.value?.project.name).toBe('Latest');
