@@ -101,11 +101,12 @@ type Asset = {
 
 - [ ] **Phase 0 — Infrastructure、Hello World 與開發文件**
 
-  - [ ] **Step 0.1 — 建立可啟動的 React 專案**
+  - [x] **Step 0.1 — 建立可啟動的 React 專案**
     - 目標：在乾淨 checkout 中可安裝、啟動與 build Hello World。
     - 實作：確認 Node.js/npm 相容版本，建立 React + TypeScript + Vite、`src/app/App.tsx` 與入口；保留現有文件。設定 Node 版本說明或版本檔、package scripts（`dev`、`build`、`preview`、`typecheck`）、lockfile 與 `.gitignore`，忽略 node_modules、dist、測試輸出。不要加入 Redux 或 Next.js。
     - 驗證：執行 `npm ci`、`npm run typecheck`、`npm run build`；啟動 dev server 並確認 HTTP 回應提供 app 入口，且來源包含 Hello World。真實瀏覽器畫面檢查依 SPEC 規則待指定。記錄實際使用版本及命令結果。
     - Commit：`chore: Bootstrap React application`。
+    - 驗證紀錄（2026-10-24）：Node.js 24.18.0、npm 11.18.0；`npm ci`、`npm run typecheck`、`npm run build` 通過。dev server 的 HTTP 回應提供 `#root` 與 `/src/main.tsx`，`src/app/App.tsx` 包含 Hello World。sub-agent testing 獨立通過安裝、型別、建置與 HTTP 檢查；review 建議忽略 `*.tsbuildinfo`，已修正。依 SPEC 規則未啟動瀏覽器，實際畫面待驗。
 
   - [ ] **Step 0.2 — 安裝並確認核心 dependencies**
     - 目標：後續功能使用的套件已安裝且授權、版本相容性可追蹤。
