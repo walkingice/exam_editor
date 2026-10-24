@@ -397,6 +397,9 @@ type Asset = {
     - 實作：為六類 fixtures 加上預期文字、題目順序、選取狀態、圖片與表格數、頁面設定；使用測試工具讀取輸出 DOCX 結構，忽略 timestamp、隨機 ID 等非語意差異。整合跨大題移動與兩種清單輸出案例，對照 preview/print/export 的相同內容。
     - 驗證：完整 E2E：匯入 → 編輯 → 勾選／拖曳 → 重載 → 預覽 → print smoke → DOCX 下載；確認未勾選文字、表格及圖片皆不在輸出，但仍在來源。執行 unit/UI/E2E、typecheck、build。
     - Commit：`test: Cover complete exam export workflow`。
+    - 拆分交付：Golden samples 與 browser workflows 分開提交，避免大型跨檔變更。
+      - [x] Step 12.2a — Golden semantic samples。
+        - 驗證（2026-10-25）：六類 fixture 在兩種清單樣式的文字順序、預設勾選、圖片／表格數及頁面尺寸均有 XML／media 驗證；另測排除題目不讀圖片、不輸出表格且來源不變。7/7 通過，sub-agent review/testing 無 blocker。
 
   - [ ] **Step 12.3 — Office 人工驗收與交付文件**
     - 目標：證明 DOCX 能在 Microsoft Word 與 LibreOffice 繼續編輯。
