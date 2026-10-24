@@ -108,11 +108,12 @@ type Asset = {
     - Commit：`chore: Bootstrap React application`。
     - 驗證紀錄（2026-10-24）：Node.js 24.18.0、npm 11.18.0；`npm ci`、`npm run typecheck`、`npm run build` 通過。dev server 的 HTTP 回應提供 `#root` 與 `/src/main.tsx`，`src/app/App.tsx` 包含 Hello World。sub-agent testing 獨立通過安裝、型別、建置與 HTTP 檢查；review 建議忽略 `*.tsbuildinfo`，已修正。依 SPEC 規則未啟動瀏覽器，實際畫面待驗。
 
-  - [ ] **Step 0.2 — 安裝並確認核心 dependencies**
+  - [x] **Step 0.2 — 安裝並確認核心 dependencies**
     - 目標：後續功能使用的套件已安裝且授權、版本相容性可追蹤。
     - 實作：安裝 Tiptap Core/React 與必要開源 extensions（heading、list、marks、alignment、image、table、history）、Mammoth、DOMPurify、Dexie、docx。先檢查 StarterKit 已包含的 extensions，避免重複註冊。安裝對應 TypeScript types；鎖定驗證過的版本並更新 lockfile。將直接依賴與擴充套件授權記於 `docs/dependencies.md`；不引入付費 Pages/Conversion 或外部轉檔服務。
     - 驗證：乾淨安裝、typecheck、build；用最小測試模組驗證套件能在 browser build 中載入，沒有依賴 Node-only runtime。授權檢查結果寫入文件。
     - Commit：`chore: Install core document dependencies`。
+    - 驗證紀錄（2026-10-24）：`npm ci`、`npm run typecheck`、`npm run build`、`npm run build:smoke` 通過；smoke bundle 含 320 個 modules，無 Node-only external 標記。套件版本與授權見 `docs/dependencies.md`；sub-agent testing 獨立核對通過，review 無阻礙並修正 `use client` 警告敘述。真實瀏覽器執行依 SPEC 待指定。
 
   - [ ] **Step 0.3 — 建立單元與 UI 測試環境**
     - 目標：開發者可以執行一次性測試與 watch mode。

@@ -9,10 +9,21 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:smoke": "vite build --config vite.smoke.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
+    "@tiptap/core": "3.32.0",
+    "@tiptap/extension-image": "3.32.0",
+    "@tiptap/extension-table": "3.32.0",
+    "@tiptap/extension-text-align": "3.32.0",
+    "@tiptap/react": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "dexie": "4.4.7",
+    "docx": "9.14.0",
+    "dompurify": "3.4.17",
+    "mammoth": "1.13.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
