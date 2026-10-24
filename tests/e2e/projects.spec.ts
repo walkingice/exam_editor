@@ -160,11 +160,15 @@ test('keeps rich text marks after reloading', async ({ page }) => {
   await expect(editor.locator('strong')).toHaveText('Marked question');
 });
 
-test('keeps question selection and IDs after reopening', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: '建立空白試卷' }).click();
-  await page.locator('.ProseMirror').fill('Selected question');
-  await page.getByRole('button', { name: '項目清單' }).click();
+test('keeps question selection and IDs after reopening', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const projectId = `selection-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((id) => window.ownershipHarness.acquire(id), projectId);
+  await setup.evaluate((id) => window.ownershipHarness.createQuestionSections(id), projectId);
+  await setup.evaluate((id) => window.ownershipHarness.release(id), projectId);
+  await page.goto(`/#/projects/${projectId}`);
   const item = page.locator('.ProseMirror > ul > li');
   await expect(item.getByRole('checkbox')).toBeChecked();
   const id = await item.getAttribute('data-node-id');
@@ -174,7 +178,7 @@ test('keeps question selection and IDs after reopening', async ({ page }) => {
   await page.getByRole('button', { name: '重做' }).click();
   await expect(item.getByRole('checkbox')).not.toBeChecked();
   await page.getByRole('link', { name: '返回首頁' }).click();
-  await page.getByRole('link', { name: '未命名試卷' }).click();
+  await page.getByRole('link', { name: 'Question sections' }).click();
   await expect(item.getByRole('checkbox')).not.toBeChecked();
   await expect(item).toHaveAttribute('data-node-id', id!);
 });
@@ -219,7 +223,9 @@ test('persists a complete multi-section editing session', async ({ context, page
   await page.goto(`/#/projects/${id}`);
   const item = page.locator('.ProseMirror > ul > li').first();
   await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
-  await item.getByRole('cell').first().click();
+  await item.getByRole('cell').first().locator('p').click();
+  await expect(page.getByRole('button', { name: '新增列' })).toBeEnabled();
+  await page.keyboard.press('End');
   await page.keyboard.type(' revised');
   await expect(item.getByRole('cell').first()).toContainText('revised');
   await item.getByRole('button', { name: /移動題目/ })
@@ -232,8 +238,7 @@ test('persists a complete multi-section editing session', async ({ context, page
   await expect(page.getByText('Unselected question')).toBeVisible();
   await expect(page.getByRole('img', { name: 'Shared image' })).toBeVisible();
   await expect(page.getByRole('cell').first()).toContainText('revised');
-  await expect(page.locator('.ProseMirror > h2').nth(1)
-    .locator('xpath=following-sibling::*[1][self::ul] > li')).toHaveCount(2);
+  await expect(page.locator('.ProseMirror > ul').last().locator(':scope > li')).toHaveCount(2);
 });
 
 test('keeps an edited table after reloading', async ({ page }) => {

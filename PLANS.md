@@ -279,21 +279,23 @@ type Asset = {
     - 進度紀錄（2026-10-24）：已建立以題目 ID 與目標位置為輸入的單一 transaction move command，以及題目拖曳把手；支援清單內前後移、跨大題、空大題，保留 ID、selected、選項、圖片及表格，移除空清單而保留 heading。單元／UI 測試涵蓋完整子樹、非法落點、巢狀選項、undo/redo；已列出跨大題拖曳、圖片與重開的 E2E 案例。`npm test`（16 files／96 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（32 cases）通過。sub-agent review 發現的內嵌選項落點問題已修正並複審通過；testing 獨立通過。當時尚未獲得略過真實瀏覽器測試的指示，step 與 Phase 6 保持待驗。
     - 驗收紀錄（2026-10-24）：依使用者指定略過真實瀏覽器測試，以既有非瀏覽器驗證與 sub-agent review/testing 完成本 step；拖曳與重開 E2E 未執行，結果仍待驗。
 
-- [ ] **Phase 7 — 資產清理與 Milestone 2 驗收**
+- [x] **Phase 7 — 資產清理與 Milestone 2 驗收**
 
-  - [ ] **Step 7.1 — 關閉分頁時清理孤立資產**
+  - [x] **Step 7.1 — 關閉分頁時清理孤立資產**
     - 目標：清理不用的圖片，同時保護 undo 與未勾選題目。
     - 實作：建立純函式遍歷完整 JSON 的 assetId 集合，以儲存後文件比對 assets。只由持有寫入權的分頁在關閉時 best effort 清理；flush 失敗就不刪。建立待清理標記／等價可恢復機制，下一次取得寫入權且未建立 history 前補清理；不以預覽投影計算引用，也不在一般刪圖、切換內容 Tab 時清 Blob。明確處理 browser 頁面暫存恢復，避免恢復中的 session 使用已清掉的 history。
     - 驗證：單元測試引用集合含未勾選題目、共享圖片、無引用圖片、save 失敗及無鎖；E2E 正常關閉及模擬未完成清理後重開。確認 session 中刪圖 undo 仍有效。
     - Commit：`feat: Clean unused assets after sessions`。
     - 進度紀錄（2026-10-24）：已加入完整 JSON assetId 收集、Dexie v3 待清理標記，以及持有寫入權時的原子清理；關閉先 flush，失敗保留標記，重開在建立 history 前補清理。BFCache 進入時仍嘗試 flush 而保留資產；失去 lease 且仍有未儲存內容時保留畫面並提示複製。unit/UI 測試涵蓋未勾選圖片、孤立圖片、無鎖、清理交易失敗、無效儲存文件、flush 失敗及 BFCache；新增正常離開、關閉分頁與中斷補清理 E2E。`npm test`（17 files／105 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（40 cases）通過；review 指出的 BFCache 風險已修正。依 SPEC 未啟動真實瀏覽器，E2E 待驗，step 保持待驗。
+    - 驗收紀錄（2026-10-24）：使用者指定執行真實瀏覽器後，Chromium／Firefox 的離開 workspace、關閉分頁重開及中斷後補清理均通過；完整 E2E 42/42、unit/UI 105/105、typecheck、build 通過。sub-agent review/testing 已完成。關頁非同步 flush 仍為 best effort，資料庫中待清理標記提供下次取得寫入權時的補做路徑。
 
-  - [ ] **Step 7.2 — 驗收 Milestone 2 並更新文件**
+  - [x] **Step 7.2 — 驗收 Milestone 2 並更新文件**
     - 目標：教師可持續編輯而不遺失內容或覆寫別人的分頁。
     - 實作：整合多大題 fixture，包含選項、圖片、表格及未勾選題目；更新 README 編輯、更名、保存狀態、單一分頁與清理限制。加入完整編輯 session regression tests。
     - 驗證：匯入後修改文字／表格／圖片、勾選、跨大題移動、undo/redo、重載；雙分頁限制、失敗重試與關閉後補清理。執行相關 unit/UI/E2E、typecheck、build，記錄 sub-agent review 與已知限制。
     - Commit：`test: Verify persistent editing workflow`。
     - 進度紀錄（2026-10-24）：已新增多大題、巢狀選項、圖片、表格及未勾選題目的整合 fixture；加入完整 session 的持久化 unit test 與編輯、跨大題移動、undo/redo、重載 E2E；README 已更新操作、儲存與清理限制。unit/UI 105/105、typecheck、build 及 E2E 列舉 40 cases 通過。匯入後的編輯情境由既有匯入與編輯測試分別涵蓋，完整串接尚待真實瀏覽器整合驗收；Phase 7 與 Milestone 2 保持待驗。
+    - 驗收紀錄（2026-10-24）：新增 DOCX 匯入後修改表格文字、插入本機圖片、等待 autosave 並重載的整合案例；修正勾選 undo 測試的 history 前置條件與表格輸入測試的 selection 同步等待。Chromium／Firefox 全套 E2E 42/42、unit/UI 105/105、typecheck、build 通過；sub-agent review/testing 無 blocker。極快的模擬鍵入可能早於 Chromium 將表格點擊同步到 editor selection；E2E 已等待工具列反映 selection，實際快速輸入仍有低風險時序限制。Phase 7 與 Milestone 2 完成。
 
 ## Milestone 3 — 排版預覽與列印／PDF
 

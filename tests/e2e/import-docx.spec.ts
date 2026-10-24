@@ -58,3 +58,27 @@ test('imports Chinese questions, merged tables, and two stored images', async ({
     await page.getByRole('link', { name: '返回首頁' }).click();
   }
 });
+
+test('edits an imported table and adds an image before reloading', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('匯入 DOCX').setInputFiles({
+    name: 'editable-table.docx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    buffer: readFileSync('src/test/fixtures/docx/merged-table.docx'),
+  });
+  await expect(page.getByRole('heading', { name: 'editable-table' })).toBeVisible();
+  const firstCell = page.getByRole('cell').first();
+  await firstCell.locator('p').click();
+  await expect(page.getByRole('button', { name: '新增列' })).toBeEnabled();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' edited');
+  await expect(firstCell).toContainText('edited');
+  await page.getByLabel('插入圖片').setInputFiles('src/test/fixtures/red.jpg');
+  const image = page.getByRole('img', { name: 'red.jpg' });
+  await expect(image).toHaveJSProperty('naturalWidth', 1);
+  await expect(firstCell).toContainText('edited');
+  await expect(page.getByRole('status')).toContainText('已儲存');
+  await page.reload();
+  await expect(page.getByRole('cell').first()).toContainText('edited');
+  await expect(image).toHaveJSProperty('naturalWidth', 1);
+});

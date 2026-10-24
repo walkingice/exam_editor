@@ -18,5 +18,5 @@ hashes while preserving the same document content.
 | `unsupported-elements.docx` | Ordinary heading text and Mammoth equation warning | Equation, text box, and shape content may be omitted; review the source |
 
 `npm test` parses every committed fixture through the import adapter and
-normalizer. Browser import, reload, and close/reopen remain pending until
-real-browser testing is explicitly requested.
+normalizer. Browser import, editing, reload, and close/reopen were verified in
+Chromium and Firefox after the user requested real-browser testing.
