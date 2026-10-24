@@ -3,11 +3,13 @@ import { EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from
 import type { JSONContent } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
+import { closeHistory } from '@tiptap/pm/history';
 import { ProjectRepository } from '../../data/repository';
 import { AssetResolver, type AssetHandle } from '../../shared/assets/AssetResolver';
 import { AssetImage, editingExtensions, examExtensions } from './schema';
 import { EditorToolbar } from './EditorToolbar';
 import { ImageToolbar } from './ImageToolbar';
+import { ResizableImage } from './ResizableImage';
 import { insertLocalImage } from './insertLocalImage';
 import { clearDocumentItemDropIndicator, setDocumentItemDragData } from './questionControls';
 
@@ -55,8 +57,16 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
         onDragEnd={clearDocumentItemDropIndicator} />}
     </span>}
     {resolved?.assetId === assetId
-      ? <img src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}
-        style={node.attrs.widthMm == null ? undefined : { width: `${node.attrs.widthMm}mm` }} />
+      ? <ResizableImage src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}
+        widthMm={node.attrs.widthMm} editable={!preview && editor.isEditable}
+        onResize={(widthMm) => {
+          const pos = getPos();
+          if (typeof pos !== 'number' || !editor.isEditable) return;
+          const current = editor.state.doc.nodeAt(pos);
+          if (current?.type.name !== 'image') return;
+          editor.view.dispatch(closeHistory(editor.state.tr).setNodeMarkup(pos, undefined,
+            { ...current.attrs, widthMm }));
+        }} />
       : errorAssetId === assetId ? <span role="img" aria-label="缺少圖片">找不到圖片：{assetId}</span>
         : <span>圖片載入中…</span>}
   </NodeViewWrapper>;

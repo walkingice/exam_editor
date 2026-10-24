@@ -125,6 +125,13 @@ li { margin: 10px 0; }
 .exam-document table { border-collapse: collapse; max-width: 100%; }
 .exam-document td, .exam-document th { border: 1px solid #9da9b9; padding: 6px 10px; }
 .exam-image img { max-width: 100%; height: auto; }
+.resizable-image { display: inline-block; position: relative; max-width: 100%; vertical-align: top; }
+.resizable-image img { display: block; width: 100%; }
+.image-resize-handle {
+  position: absolute; right: 0; bottom: 0; width: 16px; height: 16px;
+  padding: 0; margin: 0; border: 2px solid white; border-radius: 2px;
+  background: #174e91; cursor: nwse-resize; touch-action: none;
+}
 .question-control { display: inline-block; margin-right: 6px; }
 .question-control input { vertical-align: middle; }
 .question-drag-handle { cursor: grab; padding: 0 4px; margin-left: 4px; }
