@@ -122,11 +122,12 @@ type Asset = {
     - Commit：`test: Configure unit and UI testing`。
     - 驗證紀錄（2026-10-24）：`npm test`（1 file／1 test）、`npm run typecheck`、`npm run build` 通過；暫時將預期文字改成 `Wrong text` 時測試如預期失敗，還原後通過。sub-agent review/testing 均通過，未啟動瀏覽器。
 
-  - [ ] **Step 0.4 — 建立 browser smoke test**
+  - [x] **Step 0.4 — 建立 browser smoke test**
     - 目標：可以自動啟動網站並在 Chromium、Firefox 驗證基本頁面。
     - 實作：安裝 Playwright 測試套件，設定 Chromium、Firefox 的 webServer、獨立測試 context、`test:e2e` script、失敗時的 trace/screenshot；加入 Hello World smoke test。browser binaries 的下載命令另行記錄，不預設執行。
     - 驗證：以 Playwright 的測試列舉與設定檢查確認兩個 browser projects 的案例可載入，確認失敗產物被忽略。`npm run test:e2e` 的實際 browser 結果待使用者明確指定後記錄。
     - Commit：`test: Add browser smoke coverage`。
+    - 驗證紀錄（2026-10-24）：`npm ci`、`npm test`（1/1）、`npm run typecheck`、`npm run build` 通過；`npm run test:e2e -- --list` 列出 Chromium／Firefox 各一案。sub-agent review/testing 核對設定與忽略規則通過。依 SPEC 未下載 browser binaries、未執行 E2E；browser 結果與 webServer 自動停止待驗。
 
   - [ ] **Step 0.5 — 撰寫 README 與驗收 infrastructure**
     - 目標：新進開發者只讀 README 就能啟動與測試專案。

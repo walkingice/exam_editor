@@ -12,5 +12,5 @@
     "strict": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "vite.smoke.config.ts"]
+  "include": ["vite.config.ts", "vite.smoke.config.ts", "playwright.config.ts", "tests/e2e"]
 }

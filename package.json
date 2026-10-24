@@ -12,6 +12,7 @@
     "build:smoke": "vite build --config vite.smoke.config.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false"
   },
@@ -30,6 +31,7 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "26.6.5",
