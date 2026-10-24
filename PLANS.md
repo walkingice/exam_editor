@@ -401,6 +401,9 @@ type Asset = {
       - [x] Step 12.2a — Golden semantic samples。
         - 驗證（2026-10-25）：六類 fixture 在兩種清單樣式的文字順序、預設勾選、圖片／表格數及頁面尺寸均有 XML／media 驗證；另測排除題目不讀圖片、不輸出表格且來源不變。7/7 通過，sub-agent review/testing 無 blocker。
 
+      - [ ] Step 12.2b — Browser export workflows。
+        - 進度（2026-10-25）：已建立匯入→編輯→跨標題拖曳→重載→預覽→print smoke→下載流程，涵蓋兩種清單、排除文字／圖片／表格、全不勾選、立即匯出與唯讀分頁。全套 unit/UI 166/166、typecheck、build 通過；E2E `--list` 列出 Chromium／Firefox 共 58 案。sub-agent review/testing 無靜態 blocker；依 SPEC 未啟動 browser，新增 6 案與完整 E2E 實際結果均待驗，Step 12.1／12.2 保持未完成。既有 Chromium 拖曳時序風險未重新驗證。
+
   - [ ] **Step 12.3 — Office 人工驗收與交付文件**
     - 目標：證明 DOCX 能在 Microsoft Word 與 LibreOffice 繼續編輯。
     - 實作：用兩套應用程式開啟 golden exports，修改並儲存文字，核對圖片、表格、清單、紙張方向與邊距；記錄應用程式版本、案例及結果。更新 README 所有操作、支援範圍、資料備份限制、已知降級及測試命令。
