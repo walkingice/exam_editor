@@ -13,7 +13,7 @@ const databases: ExamDatabase[] = [];
 function createRepository(): ProjectRepository {
   const database = new ExamDatabase(`exam-test-${crypto.randomUUID()}`, dependencies);
   databases.push(database);
-  return new ProjectRepository(database);
+  return new ProjectRepository(database, { run: async (_projectId, operation) => operation() });
 }
 
 function bundle(id = 'project-1'): ProjectBundle {

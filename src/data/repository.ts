@@ -1,6 +1,7 @@
 import { validateAsset, validateExamDocument, validateProject } from '../domain/types';
 import type { Asset, ExamDocument, Project } from '../domain/types';
 import { ExamDatabase } from './database';
+import type { WriteAuthority } from './ownership';
 
 export type ProjectBundle = { project: Project; document: ExamDocument; assets: Asset[] };
 
@@ -15,16 +16,16 @@ function validateBundle(bundle: ProjectBundle): void {
 }
 
 export class ProjectRepository {
-  constructor(private readonly database: ExamDatabase) {}
+  constructor(private readonly database: ExamDatabase, private readonly authority: WriteAuthority) {}
 
   async create(bundle: ProjectBundle): Promise<void> {
     validateBundle(bundle);
-    await this.database.transaction('rw', this.database.projects,
+    await this.authority.run(bundle.project.id, () => this.database.transaction('rw', this.database.projects,
       this.database.documents, this.database.assets, async () => {
         await this.database.projects.add(bundle.project);
         await this.database.documents.add(bundle.document);
         await this.database.assets.bulkAdd(bundle.assets);
-      });
+      }));
   }
 
   async get(projectId: string): Promise<ProjectBundle | null> {
@@ -49,7 +50,7 @@ export class ProjectRepository {
 
   async save(bundle: ProjectBundle): Promise<void> {
     validateBundle(bundle);
-    await this.database.transaction('rw', this.database.projects,
+    await this.authority.run(bundle.project.id, () => this.database.transaction('rw', this.database.projects,
       this.database.documents, this.database.assets, async () => {
         const existing = await this.database.projects.get(bundle.project.id);
         const oldDocument = await this.database.documents.get(bundle.project.id);
@@ -65,11 +66,11 @@ export class ProjectRepository {
         await this.database.projects.put(bundle.project);
         await this.database.documents.put(bundle.document);
         await this.database.assets.bulkPut(bundle.assets);
-      });
+      }));
   }
 
   async delete(projectId: string): Promise<void> {
-    await this.database.transaction('rw', this.database.projects,
+    await this.authority.run(projectId, () => this.database.transaction('rw', this.database.projects,
       this.database.documents, this.database.assets, async () => {
         const project = await this.database.projects.get(projectId);
         if (!project) return;
@@ -80,6 +81,6 @@ export class ProjectRepository {
         await this.database.assets.where('projectId').equals(projectId).delete();
         await this.database.documents.delete(projectId);
         await this.database.projects.delete(projectId);
-      });
+      }));
   }
 }
