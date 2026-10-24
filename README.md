@@ -1,6 +1,6 @@
 # 試卷編輯器
 
-這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前正在完成 Phase 0：
+這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Phase 0：
 已建立 React + TypeScript + Vite 的 Hello World 與測試基礎。功能順序及驗證紀錄見
 [PLANS.md](PLANS.md)；正式產品功能尚未實作。
 
@@ -33,7 +33,7 @@ npm run preview
 `test:watch` 持續執行，結束時按 `Ctrl+C`；`npm test` 是一次性測試。
 `build:smoke` 檢查文件依賴可被 Vite 打包成 browser bundle，結果寫入已忽略的
 `dist-smoke/`。套件版本與授權見 [docs/dependencies.md](docs/dependencies.md)。
-dev 的 HTTP 回應已驗證；production preview 的 HTTP 回應仍待驗。
+dev 與 production preview 的 HTTP 回應已驗證；實際 browser 畫面待驗。
 
 ## Browser 測試
 

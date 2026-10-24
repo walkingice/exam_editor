@@ -99,7 +99,7 @@ type Asset = {
 
 目標：基本 DOCX 可匯入、唯讀展示、持久化並重新開啟。本 Milestone 不開放文字編輯或 DOCX 匯出。
 
-- [ ] **Phase 0 — Infrastructure、Hello World 與開發文件**
+- [x] **Phase 0 — Infrastructure、Hello World 與開發文件**
 
   - [x] **Step 0.1 — 建立可啟動的 React 專案**
     - 目標：在乾淨 checkout 中可安裝、啟動與 build Hello World。
@@ -129,12 +129,12 @@ type Asset = {
     - Commit：`test: Add browser smoke coverage`。
     - 驗證紀錄（2026-10-24）：`npm ci`、`npm test`（1/1）、`npm run typecheck`、`npm run build` 通過；`npm run test:e2e -- --list` 列出 Chromium／Firefox 各一案。sub-agent review/testing 核對設定與忽略規則通過。依 SPEC 未下載 browser binaries、未執行 E2E；browser 結果與 webServer 自動停止待驗。
 
-  - [ ] **Step 0.5 — 撰寫 README 與驗收 infrastructure**
+  - [x] **Step 0.5 — 撰寫 README 與驗收 infrastructure**
     - 目標：新進開發者只讀 README 就能啟動與測試專案。
     - 實作：建立 `README.md`，列出 Node/npm 需求、`npm ci`、Playwright browsers 安裝、dev、typecheck、unit/UI、E2E、build/preview 的實際命令，說明目錄、SPEC/PLANS 分工、目前只完成 Hello World、本機資料與已知限制。
     - 驗證：依 README 從乾淨安裝順序執行非 browser 命令；確認 dev 與 production preview 的 HTTP 回應。sub-agent 依文件獨立核對命令與結果；browser 畫面及 E2E 執行結果明列待驗後，才勾選 Phase 0。
     - Commit：`docs: Document setup and testing workflow`。
-    - 進度紀錄（2026-10-24）：README 已列出環境、命令、目錄與限制；sub-agent review 通過。testing 依 README 執行 `npm ci`、`npm run typecheck`、`npm test`、`npm run build:smoke`、`npm run build`、`npm run test:e2e -- --list` 均通過。dev HTTP 已在 Step 0.1 驗證；本輪 dev／preview HTTP 因 sandbox `listen EPERM` 且提權執行中止，production preview HTTP 待驗。未啟動瀏覽器；此 step 與 Phase 0 暫不勾選。
+    - 驗證紀錄（2026-10-24）：README 已列出環境、命令、目錄與限制；sub-agent review 通過。testing 依 README 執行 `npm ci`、`npm run typecheck`、`npm test`、`npm run build:smoke`、`npm run build`、`npm run test:e2e -- --list` 均通過。dev HTTP 已在 Step 0.1 驗證；production preview 回傳 HTTP 200，建置資產含 Hello World，server 已停止。未啟動瀏覽器；實際畫面、E2E 與 Playwright webServer 啟停待指定後驗證。
 
 - [ ] **Phase 1 — 文件 schema 與儲存基礎**
 
