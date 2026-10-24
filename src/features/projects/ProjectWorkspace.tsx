@@ -46,17 +46,22 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   }, [registerGuard]);
 
   useEffect(() => {
-    const flushOnClose = () => { void saving.current?.flush().catch(() => {}); };
+    const flushOnClose = (event: PageTransitionEvent) => {
+      const current = saving.current;
+      if (!current) return;
+      void current.flush().then(() => event.persisted
+        ? undefined : repository.finishSession(projectId)).catch(() => {});
+    };
     window.addEventListener('pagehide', flushOnClose);
     return () => window.removeEventListener('pagehide', flushOnClose);
-  }, []);
+  }, [projectId, repository]);
 
   const open = useCallback(async (cancelled: () => boolean) => {
     const attempt = ++generation.current;
     setStatus('loading');
     setReadOnlyReason('');
     try {
-      const acquired = await ownership.acquireLatest(projectId, () => repository.get(projectId))
+      const acquired = await ownership.acquireLatest(projectId, () => repository.beginSession(projectId))
         .catch((cause: unknown) => {
           if (cause instanceof WriteAccessError) {
             if (!cancelled()) setReadOnlyReason(cause.message);
@@ -66,6 +71,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         });
       const next = acquired?.value ?? await repository.get(projectId);
       if (cancelled() || attempt !== generation.current) {
+        if (acquired?.value) await repository.finishSession(projectId).catch(() => {});
         await acquired?.lease.release();
         return;
       }
@@ -95,6 +101,22 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   }, [ownership, projectId, repository]);
 
   useEffect(() => {
+    const resume = (event: PageTransitionEvent) => {
+      if (event.persisted && activeLease.current && !activeLease.current.isActive) {
+        if (saving.current?.saveState !== 'saved') {
+          setLease(null);
+          setReadOnlyReason('寫入權已失效，未儲存內容仍顯示於此頁。請先複製內容。');
+          setSaveError('未儲存的編輯無法自動恢復。');
+          return;
+        }
+        void open(() => false);
+      }
+    };
+    window.addEventListener('pageshow', resume);
+    return () => window.removeEventListener('pageshow', resume);
+  }, [open]);
+
+  useEffect(() => {
     let cancelled = false;
     queueMicrotask(() => { if (!cancelled) void open(() => cancelled); });
     return () => {
@@ -104,7 +126,10 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       const currentLease = activeLease.current;
       saving.current = null;
       void (async () => {
-        try { await currentSaving?.flush(); } catch { /* Best effort on page close. */ }
+        try {
+          await currentSaving?.flush();
+          if (currentSaving) await repository.finishSession(projectId);
+        } catch { /* Keep cleanup pending after failed flush or cleanup. */ }
         currentSaving?.close();
         await currentLease?.release();
       })();
@@ -175,12 +200,14 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
       </section>}
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
-        <button onClick={() => void takeOver()}>重新取得寫入權</button></>}
+        {saving.current?.saveState === 'saved' || !saving.current
+          ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
       <h2>試卷內容</h2>
       {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
         saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
       {saveError && <><p role="alert">{saveError}</p>
-        <button onClick={() => void saving.current?.flush().catch(() => {})}>重試儲存</button></>}
+        {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
+          重試儲存</button>}</>}
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
         editable={!!lease?.isActive} onEditor={(editor) => {
           if (session.current?.projectId === projectId) session.current.editor = editor;
