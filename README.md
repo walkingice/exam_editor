@@ -67,8 +67,10 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 - `tests/e2e/`：待執行的 Playwright smoke test。
 - `docs/`：套件與授權紀錄。
 
-DOCX 匯入／匯出、編輯、預覽與列印尚未實作。本機資料不等於永久備份。
+首頁可選擇 DOCX 匯入；轉換中可取消，完成後開啟唯讀「試卷內容」。
+匯入警告保存在目前 browser session，關閉 browser 後不會保留；請在匯入後立即校對。
+DOCX 匯出、編輯、預覽與列印尚未實作。本機資料不等於永久備份。
 
 DOCX 匯入解析器的限制：單一 DOCX 20 MiB、單張圖片 10 MiB／4,000 萬像素、
 圖片總量 30 MiB。圖片僅支援 PNG/JPEG，其他格式會顯示警告。
-解析器目前尚未接入首頁，產生的 HTML 必須經後續清理與正規化才可顯示或儲存。
+匯入時會清理 HTML、正規化文件並以單一交易儲存 Project、JSON 與圖片。

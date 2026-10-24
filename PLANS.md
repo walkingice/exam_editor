@@ -196,6 +196,7 @@ type Asset = {
     - 實作：首頁檔案選擇器串接 adapter、sanitizer、normalizer；轉換期間顯示等待與取消。只在全部轉換成功且未取消後提交 Project、JSON、Blobs 交易；若先存暫存資產，必須 rollback 清除。完成後開啟「試卷內容」，呈現警告與人工校對提示；不可把取消當成功。
     - 驗證：UI/E2E 測試成功、重複操作防護、轉換中取消、儲存失敗、quota error；檢查失敗後首頁與 DB 都沒有半成品。
     - Commit：`feat: Add transactional DOCX import flow`。
+    - 進度紀錄（2026-10-24）：首頁匯入、轉換中取消、交易儲存、警告及人工校對提醒已接通；離開首頁會中止轉換，儲存時不能取消。`npm test`（11 files／55 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過，E2E 清單含 Chromium／Firefox 成功匯入重載與損壞檔案。unit/UI 測試涵蓋取消、重複操作、quota 與交易 rollback；sub-agent review/testing 通過。依 SPEC 未執行真實 browser，E2E 與產品驗收待驗，本 step 保持未完成。關閉 browser 後 sessionStorage 警告不保留，見 README。
 
   - [ ] **Step 3.4 — 建立 fixtures 並驗收 Milestone 1**
     - 目標：有可重複的真實輸入與明確限制紀錄。
