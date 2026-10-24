@@ -356,11 +356,12 @@ type Asset = {
 
 - [ ] **Phase 11 — DOCX 語意 mapper**
 
-  - [ ] **Step 11.1 — 文字、標題與清單 mapping**
+  - [x] **Step 11.1 — 文字、標題與清單 mapping**
     - 目標：不靠畫面截圖即可產生可編輯文字。
     - 實作：建立獨立於 React 的 exporter，輸入完整 JSON/pageSettings，先呼叫共用 projection。拆成小 mapper：heading、paragraph、text marks、list；將 bold/italic/underline、alignment 等映射成 docx.js 元件。Ordered list 依 projection 的 start 延續題號，標題樣式不重設題號；巢狀選項維持 bullets。未知樣式保留文字並回報 warning。
     - 驗證：單元測試中文、多種 marks、跨分離清單的連續編號、unordered 與未勾選內容排除；生成文件的語意結構可讀，不以不穩定的整包 ZIP bytes snapshot 驗證。
     - Commit：`feat: Map exam text and lists to DOCX`。
+    - 驗證紀錄（2026-10-25）：建立獨立 React 的語意 mapper，使用共用 projection；中文、heading、marks、換行、對齊、跨標題連續題號與巢狀 bullets 的 DOCX XML 測試 3/3、typecheck 通過。未知文字／block 樣式保留文字並回報 warning。sub-agent review 發現巢狀層級問題，修正後獨立 testing 與複查通過；超過 OOXML 九層的清單降為第九層並提示。JSZip 3.10.2 僅為直接測試依賴；未啟動瀏覽器。
 
   - [ ] **Step 11.2 — 表格與嵌入圖片 mapping**
     - 目標：保留輸出範圍內可編輯表格和實際圖片。

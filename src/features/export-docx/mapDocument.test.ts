@@ -1,0 +1,57 @@
+import { describe, expect, it } from 'vitest';
+import { Packer } from 'docx';
+import JSZip from 'jszip';
+import type { JSONContent } from '@tiptap/core';
+import { normalizeDocument } from '../../domain/document';
+import { DEFAULT_PAGE_SETTINGS } from '../../domain/types';
+import { mapExamDocument } from './mapDocument';
+
+export const paragraph = (text: string): JSONContent => ({ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] });
+export const question = (text: string, selected = true): JSONContent => ({ type: 'listItem',
+  attrs: { selected }, content: [paragraph(text)] });
+export async function unpack(source: JSONContent, style: 'ordered' | 'unordered' = 'ordered') {
+  const result = await mapExamDocument(normalizeDocument(source), { ...DEFAULT_PAGE_SETTINGS, outputListStyle: style });
+  const zip = await JSZip.loadAsync(await Packer.toBuffer(result.document));
+  return { ...result, zip, xml: await zip.file('word/document.xml')!.async('string'),
+    numbering: await zip.file('word/numbering.xml')!.async('string') };
+}
+
+describe('DOCX text mapping', () => {
+  it('exports editable Chinese, headings, marks, breaks, and alignment without mutating source', async () => {
+    const source = { type: 'doc', content: [{ type: 'heading', attrs: { level: 2 },
+      content: [{ type: 'text', text: '中文試卷' }] }, { type: 'paragraph', attrs: { textAlign: 'center' },
+      content: [{ type: 'text', text: '粗斜底線', marks: [{ type: 'bold' }, { type: 'italic' }, { type: 'underline' }] },
+        { type: 'hardBreak' }, { type: 'text', text: '連結', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] }] }] };
+    const before = structuredClone(source);
+    const { xml, warnings } = await unpack(source);
+    for (const value of ['中文試卷', 'Heading2', '<w:b', '<w:i', '<w:u', '<w:br', 'w:val="center"', '連結']) expect(xml).toContain(value);
+    expect(warnings).toContain('Unsupported text style: link; text was preserved.');
+    expect(source).toEqual(before);
+  });
+
+  it('continues numbering across headings, filters subtrees, and keeps nested bullets', async () => {
+    const first = question('第一題');
+    first.content!.push({ type: 'bulletList', content: [question('選項')] });
+    const source = { type: 'doc', content: [{ type: 'bulletList', content: [first, question('排除', false)] },
+      { type: 'heading', attrs: { level: 3 }, content: [{ type: 'text', text: '第二大題' }] },
+      { type: 'bulletList', content: [question('第二題')] }] };
+    const { xml, numbering } = await unpack(source);
+    expect(xml.indexOf('第一題')).toBeLessThan(xml.indexOf('第二大題'));
+    expect(xml).not.toContain('排除');
+    expect(numbering).toContain('<w:start w:val="2"');
+    expect(numbering).toContain('w:val="bullet"');
+    expect(xml).toContain('<w:ilvl w:val="1"');
+    expect(numbering).toContain('w:left="1440"');
+    const unordered = await unpack(source, 'unordered');
+    expect(unordered.numbering).not.toContain('w:val="decimal"');
+  });
+
+  it('supports an empty output and preserves unsupported block text with warnings', async () => {
+    const { xml, warnings } = await unpack({ type: 'doc', content: [{ type: 'blockquote', content: [paragraph('引言')] },
+      { type: 'bulletList', content: [question('隱藏', false)] }] });
+    expect(xml).toContain('引言');
+    expect(xml).not.toContain('隱藏');
+    expect(warnings.some((warning) => warning.includes('blockquote'))).toBe(true);
+    expect((await unpack({ type: 'doc', content: [paragraph('')] })).xml).toContain('<w:p');
+  });
+});

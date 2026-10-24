@@ -35,3 +35,8 @@ Sources: [Tiptap StarterKit](https://tiptap.dev/docs/editor/extensions/functiona
 [DOMPurify](https://github.com/cure53/DOMPurify),
 [Dexie license](https://github.com/dexie/Dexie.js/blob/master/LICENSE),
 [docx license](https://github.com/dolanmiu/docx/blob/master/LICENSE).
+
+JSZip 3.10.2 (MIT OR GPL-3.0-or-later; used under MIT) is a pinned
+devDependency for semantic DOCX ZIP inspection in unit tests. It was
+already a transitive dependency of docx and Mammoth. Export runtime uses
+docx directly, without importing JSZip.
