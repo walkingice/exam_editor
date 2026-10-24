@@ -12,6 +12,14 @@ it('generates physical page dimensions and applies margins only in @page', () =>
   expect(css).not.toContain('#exam-print-root { break-inside: avoid');
 });
 
+it.each([
+  ['TW_B4', 'portrait', '265mm 379mm'], ['TW_B4', 'landscape', '379mm 265mm'],
+  ['A4', 'portrait', '210mm 297mm'], ['A4', 'landscape', '297mm 210mm'],
+] as const)('generates %s %s physical print size', (paperSize, orientation, size) => {
+  const settings = { ...DEFAULT_PAGE_SETTINGS, paperSize, orientation };
+  expect(createPrintCss(settings)).toContain(`@page { size: ${size};`);
+});
+
 it('waits for fonts and decoded images before printing', async () => {
   const root = document.createElement('div');
   const image = document.createElement('img');
