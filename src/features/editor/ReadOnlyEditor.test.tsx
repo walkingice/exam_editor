@@ -3,8 +3,9 @@ import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
 import type { ProjectRepository } from '../../data/repository';
-import type { Editor } from '@tiptap/core';
+import type { Editor, JSONContent } from '@tiptap/core';
 import { ReadOnlyEditor } from './ReadOnlyEditor';
+import { ensureNodeIds } from './ensureNodeIds';
 
 const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
 const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL');
@@ -31,6 +32,41 @@ describe('read-only document', () => {
     editor?.commands.insertContent('Edited');
     expect(changed).toHaveBeenCalledWith(editor);
     expect(screen.getByText('Edited')).toBeInTheDocument();
+  });
+
+  it('assigns stable IDs to newly split paragraphs', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Line' }] }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Line');
+    editor?.commands.focus('end');
+    editor?.commands.splitBlock();
+    expect(ensureNodeIds(editor!)).toBe(true);
+    const ids = editor!.getJSON().content?.map((node) => node.attrs?.id);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+    expect(ensureNodeIds(editor!)).toBe(false);
+    expect(editor!.getJSON().content?.map((node) => node.attrs?.id)).toEqual(ids);
+  });
+
+  it('sets newly created question items selected in the live editor', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('試卷文件');
+    editor?.commands.setContent({ type: 'doc', content: [{ type: 'bulletList', content: [
+      { type: 'listItem', content: [{ type: 'paragraph' }] },
+    ] }] });
+    expect(ensureNodeIds(editor!)).toBe(true);
+    const item = (editor!.getJSON() as JSONContent).content?.[0].content?.[0];
+    expect(item?.attrs?.selected).toBe(true);
+    expect(item?.attrs?.id).toBeTruthy();
+    expect(ensureNodeIds(editor!)).toBe(false);
   });
 
   it('keeps a non-owner document read-only', async () => {
