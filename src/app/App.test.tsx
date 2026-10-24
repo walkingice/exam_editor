@@ -17,6 +17,7 @@ const repository = {
   }),
   get: vi.fn(async (id: string) => records.get(id) ?? null),
   create: vi.fn(async (bundle: ProjectBundle) => { records.set(bundle.project.id, bundle); }),
+  save: vi.fn(async (bundle: ProjectBundle) => { records.set(bundle.project.id, bundle); }),
   delete: vi.fn(async (id: string) => { records.delete(id); }),
 } as unknown as ProjectRepository;
 
@@ -111,5 +112,21 @@ describe('project navigation', () => {
     finishRead(bundle);
     expect(await screen.findByText('找不到這份試卷。')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Slow' })).toBeNull());
+  });
+
+  it('stays in the workspace when a route change cannot save', async () => {
+    vi.spyOn(repository, 'save').mockRejectedValue(new DOMException('Quota exceeded', 'QuotaExceededError'));
+    render(<App projects={repository} writes={ownership} />);
+    await screen.findByRole('button', { name: '建立空白試卷' });
+    fireEvent.click(screen.getByRole('button', { name: '建立空白試卷' }));
+    await screen.findByRole('heading', { name: '試卷內容' });
+    const projectUrl = window.location.hash;
+    fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+    fireEvent.click(screen.getByRole('button', { name: '更名' }));
+    window.location.hash = '#/';
+    await waitFor(() => expect(window.location.hash).toBe(projectUrl));
+    expect(screen.getByRole('heading', { name: 'Changed' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Quota exceeded');
+    expect(screen.getByRole('button', { name: '重試儲存' })).toBeInTheDocument();
   });
 });

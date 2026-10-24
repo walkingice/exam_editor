@@ -80,3 +80,16 @@ test('keeps the second tab editor read-only', async ({ context, page }) => {
   await second.keyboard.type('Blocked');
   await expect(second.locator('.ProseMirror')).not.toContainText('Blocked');
 });
+
+test('saves edits and the project name before reopening', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await expect(page.locator('.ProseMirror')).toHaveAttribute('contenteditable', 'true');
+  await page.locator('.ProseMirror').fill('Saved text');
+  await page.getByLabel('試卷名稱').fill('Renamed exam');
+  await page.getByRole('button', { name: '更名' }).click();
+  await expect(page.getByRole('status')).toContainText('已儲存');
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: 'Renamed exam' }).click();
+  await expect(page.locator('.ProseMirror')).toContainText('Saved text');
+});

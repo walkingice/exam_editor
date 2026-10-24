@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ProjectOwnership, WriteAccessError, type ProjectLease } from '../../data/ownership';
 import { ProjectRepository, type ProjectBundle } from '../../data/repository';
 import { onProjectDeleted } from '../../data/projectEvents';
@@ -6,11 +6,19 @@ import { ReadOnlyEditor } from '../editor/ReadOnlyEditor';
 import { readImportWarnings } from '../import-docx/importNotices';
 import { normalizeDocument } from '../../domain/document';
 import type { Editor } from '@tiptap/core';
+import { EditingSession, type SaveState } from '../editor/EditingSession';
+import { ensureNodeIds } from '../editor/ensureNodeIds';
 
-type EditingSession = { projectId: string; revision: number; editor: Editor | null };
+type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
 
-export function ProjectWorkspace({ projectId, repository, ownership }: {
+function errorMessage(cause: unknown): string {
+  return cause && typeof cause === 'object' && 'message' in cause
+    && typeof cause.message === 'string' ? cause.message : '儲存失敗';
+}
+
+export function ProjectWorkspace({ projectId, repository, ownership, registerGuard }: {
   projectId: string; repository: ProjectRepository; ownership: ProjectOwnership;
+  registerGuard?: (callback: (() => Promise<boolean>) | null) => void;
 }) {
   const [bundle, setBundle] = useState<ProjectBundle | null>(null);
   const [lease, setLease] = useState<ProjectLease | null>(null);
@@ -19,8 +27,29 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
   const [readOnlyReason, setReadOnlyReason] = useState('');
   const activeLease = useRef<ProjectLease | null>(null);
   const generation = useRef(0);
-  const session = useRef<EditingSession | null>(null);
-  const [dirty, setDirty] = useState(false);
+  const session = useRef<EditorIdentity | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>('saved');
+  const [saveError, setSaveError] = useState('');
+  const [name, setName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const saving = useRef<EditingSession | null>(null);
+
+  useLayoutEffect(() => {
+    registerGuard?.(async () => {
+      try { await saving.current?.flush(); return true; }
+      catch (cause) {
+        setSaveError(errorMessage(cause));
+        return false;
+      }
+    });
+    return () => registerGuard?.(null);
+  }, [registerGuard]);
+
+  useEffect(() => {
+    const flushOnClose = () => { void saving.current?.flush().catch(() => {}); };
+    window.addEventListener('pagehide', flushOnClose);
+    return () => window.removeEventListener('pagehide', flushOnClose);
+  }, []);
 
   const open = useCallback(async (cancelled: () => boolean) => {
     const attempt = ++generation.current;
@@ -42,9 +71,18 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
       }
       if (!next) await acquired?.lease.release();
       activeLease.current = next ? acquired?.lease ?? null : null;
+      saving.current?.close();
+      saving.current = next && acquired?.lease
+        ? new EditingSession(next, repository, (state, message) => {
+          if (saving.current?.projectId !== projectId) return;
+          setSaveState(state);
+          setSaveError(message ?? '');
+        }) : null;
       session.current = next && acquired?.lease
         ? { projectId, revision: 0, editor: null } : null;
-      setDirty(false);
+      setSaveState('saved');
+      setName(next?.project.name ?? '');
+      setDisplayName(next?.project.name ?? '');
       setLease(activeLease.current);
       setBundle(next);
       setStatus(next ? 'ready' : 'missing');
@@ -62,7 +100,14 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
     return () => {
       cancelled = true;
       session.current = null;
-      void activeLease.current?.release();
+      const currentSaving = saving.current;
+      const currentLease = activeLease.current;
+      saving.current = null;
+      void (async () => {
+        try { await currentSaving?.flush(); } catch { /* Best effort on page close. */ }
+        currentSaving?.close();
+        await currentLease?.release();
+      })();
       activeLease.current = null;
     };
   }, [open]);
@@ -72,6 +117,8 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
     void activeLease.current?.release();
     activeLease.current = null;
     session.current = null;
+    saving.current?.close();
+    saving.current = null;
     setLease(null);
     setBundle(null);
     setStatus('missing');
@@ -84,22 +131,45 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
     if (!current || current.projectId !== projectId || current.editor !== editor
       || !activeLease.current?.isActive) return;
     try {
-      normalizeDocument(editor.getJSON());
+      if (ensureNodeIds(editor)) return;
+      const content = normalizeDocument(editor.getJSON());
+      saving.current?.updateContent(content);
       current.revision += 1;
-      setDirty(true);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '文件內容無效');
     }
   }
 
+  async function leave(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    try {
+      await saving.current?.flush();
+      window.location.hash = '/';
+    } catch (cause) {
+      setSaveError(errorMessage(cause));
+    }
+  }
+
+  function rename() {
+    try {
+      saving.current?.rename(name);
+      if (saving.current) setDisplayName(saving.current.snapshot.project.name);
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : '更名失敗');
+    }
+  }
+
   return <main>
-    <a href="#/">返回首頁</a>
+    <a href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
     {status === 'loading' && <p>載入中…</p>}
     {status === 'missing' && <p>找不到這份試卷。</p>}
     {status === 'error' && <><p role="alert">{error}</p>
       <button onClick={() => void open(() => false)}>重試</button></>}
     {status === 'ready' && bundle && <>
-      <h1>{bundle.project.name}</h1>
+      <h1>{displayName}</h1>
+      {lease && <div><label>試卷名稱 <input value={name}
+        onChange={(event) => setName(event.target.value)} /></label>
+        <button onClick={rename}>更名</button></div>}
       {readImportWarnings(projectId).length > 0 && <section aria-label="匯入提醒">
         <p>匯入文件需人工校對：</p>
         <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
@@ -107,7 +177,10 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         <button onClick={() => void takeOver()}>重新取得寫入權</button></>}
       <h2>試卷內容</h2>
-      {lease && <p role="status">{dirty ? '尚未儲存' : '可以編輯'}</p>}
+      {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
+        saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
+      {saveError && <><p role="alert">{saveError}</p>
+        <button onClick={() => void saving.current?.flush().catch(() => {})}>重試儲存</button></>}
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
         editable={!!lease?.isActive} onEditor={(editor) => {
           if (session.current?.projectId === projectId) session.current.editor = editor;

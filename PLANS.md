@@ -222,13 +222,14 @@ type Asset = {
     - 實作：workspace 取得最新 JSON 與寫入權後開啟 Tiptap editable；其他分頁維持唯讀並顯示原因。session 綁定 projectId、revision 和 editor instance；切換 Project 時關閉舊 session，避免舊 callback 寫入新 Project。先建立內容變更與 dirty 狀態，不在 React render 中寫 DB。
     - 驗證：UI 測試 owner/non-owner、切換 Project 與舊 callback；雙分頁測試唯讀無法從快捷鍵修改。
     - Commit：`feat: Add guarded editor sessions`。
-    - 進度紀錄（2026-10-24）：owner editor 已可編輯，非 owner 維持唯讀；session 以 Project、revision 與 editor instance 驗證變更，切換時關閉舊 session。新增 UI 與雙分頁 E2E 案例；UI 8/8、全套 unit 63/63、typecheck、build 通過，sub-agent review/testing 已執行。review 指出新節點 ID 應在後續儲存使用正規化快照；實際 browser E2E 依 SPEC 待指定，故 step 暫未勾選。
+    - 進度紀錄（2026-10-24）：owner editor 已可編輯，非 owner 維持唯讀；session 以 Project、revision 與 editor instance 驗證變更，切換時關閉舊 session。新增 UI 與雙分頁 E2E 案例；UI 8/8、全套 unit 65/65、typecheck、build 通過，sub-agent review/testing 已執行。review 指出新節點 ID 應在後續儲存使用正規化快照；實際 browser E2E 依 SPEC 待指定，故 step 暫未勾選。
 
   - [ ] **Step 4.2 — 實作 autosave 與 Project 更名**
     - 目標：編輯可自動儲存且失敗可見、可重試。
     - 實作：以 500–1500 ms debounce 排程，序列化每個 session 的 save，避免較舊 revision 覆蓋新內容。保存 metadata、JSON 與設定的相容快照；顯示 dirty/saving/saved/error。切換 Project 或離開 workspace 前等待 flush；失敗留在原頁並提供重試，關閉 browser 僅 best effort。更名走同一寫入權與錯誤處理。
     - 驗證：fake timers 測試 debounce、並行 save 順序、失敗重試、flush、rename；E2E 編輯與更名後 reload；quota 錯誤不能顯示 saved。
     - Commit：`feat: Autosave document changes safely`。
+    - 進度紀錄（2026-10-24）：已加入 800 ms debounce、同一 session 序列化儲存、最新 revision flush、失敗與 quota 提示及重試、更名，以及 hash 路由離頁保護。新節點 ID 與題目預設勾選回寫 editor；`pagehide` 嘗試 flush，但瀏覽器關閉不保證完成。`npm test`（13 files／73 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；sub-agent review/testing 已執行。Chromium／Firefox 實際 E2E 依 SPEC 待指定，故 step 暫未勾選。
 
 - [ ] **Phase 5 — 文字、表格與圖片編輯**
 
