@@ -301,7 +301,7 @@ type Asset = {
 
 前置：Milestone 2 驗收完成。目標：同一份文件可選擇輸出樣式，提供連續預覽與 browser 原生列印。
 
-- [ ] **Phase 8 — 共用輸出轉換與頁面設定**
+- [x] **Phase 8 — 共用輸出轉換與頁面設定**
 
   - [x] **Step 8.1 — 建立純函式輸出 projection**
     - 目標：預覽、列印與後續 DOCX 使用相同篩選結果。
@@ -310,12 +310,13 @@ type Asset = {
     - Commit：`feat: Derive selected exam output`。
     - 進度紀錄（2026-10-24）：已加入純函式 projection，只篩選 doc 直屬清單的未勾選題目，保留其他內容與穩定 ID；ordered 清單各自從 1 開始，巢狀選項維持 unordered。單元測試涵蓋跨清單排序、空大題、來源不變與圖片引用。
 
-  - [ ] **Step 8.2 — 頁面設定與尺寸計算**
+  - [x] **Step 8.2 — 頁面設定與尺寸計算**
     - 目標：尺寸、方向、邊距、字級、行距與清單樣式可儲存。
     - 實作：建立共用紙張常數與有效寬高計算；TW_B4=265×379 mm，A4=210×297 mm，橫向交換。UI 寫回 pageSettings；預設 portrait、15 mm、12 pt、1.5、ordered。拒絕非有限數值、負邊距、非正字級／行距、使內容區域不為正的邊距；定義合理可輸入範圍並記錄。
     - 驗證：單元測試兩尺寸兩方向、有效內容寬高、非法輸入；UI/E2E 改設定重載後一致，儲存失敗可見。
     - Commit：`feat: Persist exam page settings`。
-    - 進度紀錄（2026-10-24）：已加入 B4／A4 與直橫向有效尺寸計算，並在 workspace 提供設定 UI 與 autosave。輸入限制為邊距 0–100 mm、字級 6–72 pt、行距 0.5–4，內容寬高須大於 0。單元／UI 測試涵蓋尺寸、非法值、儲存失敗與重新開啟；Chromium／Firefox 設定重載 E2E 已列出但依 SPEC 未啟動真實瀏覽器，step 與 Phase 8 待驗。
+    - 進度紀錄（2026-10-24）：已加入 B4／A4 與直橫向有效尺寸計算，並在 workspace 提供設定 UI 與 autosave。輸入限制為邊距 0–100 mm、字級 6–72 pt、行距 0.5–4，內容寬高須大於 0。單元／UI 測試涵蓋尺寸、非法值、儲存失敗與重新開啟；頁面設定重載 E2E 在 Chromium／Firefox 均通過。
+    - 驗收紀錄（2026-10-24）：使用者指定執行測試後，unit/UI 113/113、typecheck、build 通過。E2E 43/44 通過；使用者指定略過失敗的 Chromium 跨大題拖曳案例（Firefox 該案例通過）。依此完成 Phase 8；被略過案例不記為通過。
 
 - [ ] **Phase 9 — 唯讀預覽與局部格式**
 
