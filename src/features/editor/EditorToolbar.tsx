@@ -35,9 +35,22 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     { label: '重做', run: () => editor.chain().focus().redo().run() },
   ];
 
+  const groups = [
+    { label: '段落樣式', tools: tools.slice(0, 4), columns: 2 },
+    { label: '文字樣式', tools: tools.slice(4, 7), columns: 3 },
+    { label: '清單', tools: tools.slice(7, 8), columns: 1 },
+    { label: '文字對齊', tools: tools.slice(8, 11), columns: 3 },
+    { label: '編輯記錄', tools: tools.slice(11), columns: 2 },
+  ];
+
   return <div role="toolbar" aria-label="文字編輯工具列" className="editor-toolbar">
-    {tools.map((tool) => <button key={tool.label} type="button"
-      aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>{tool.label}</button>)}
+    {groups.map((group) => <div key={group.label} role="group" aria-label={group.label}
+      className={`toolbar-group toolbar-columns-${group.columns}`}>
+      {group.tools.map((tool) => <button key={tool.label} type="button"
+        aria-label={tool.label} aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>
+        {{ 左對齊: '靠左', 中對齊: '置中', 右對齊: '靠右' }[tool.label] ?? tool.label}
+      </button>)}
+    </div>)}
     <TableToolbar editor={editor} />
   </div>;
 }

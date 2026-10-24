@@ -18,7 +18,7 @@ export function TableToolbar({ editor }: { editor: Editor }) {
       run: () => editor.chain().focus().deleteTable().run() },
   ];
 
-  return <div role="group" aria-label="表格編輯">
+  return <div role="group" aria-label="表格編輯" className="toolbar-group toolbar-columns-2 table-toolbar">
     {controls.map(({ label, enabled, run }) => <button key={label} type="button"
       disabled={!enabled} onClick={run}>{label}</button>)}
   </div>;
