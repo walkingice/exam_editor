@@ -21,6 +21,24 @@ test('creates, reloads, reopens, and deletes a project', async ({ page }) => {
   await expect(page.getByText('找不到這份試卷。')).toBeVisible();
 });
 
+test('persists page settings after reloading the workspace', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await page.getByLabel('紙張').selectOption('A4');
+  await page.getByLabel('方向').selectOption('landscape');
+  await page.getByLabel('左邊距 (mm)').fill('20');
+  await page.getByLabel('字級 (pt)').fill('14');
+  await page.getByLabel('輸出清單').selectOption('unordered');
+  await expect(page.getByRole('status')).toContainText('尚未儲存');
+  await expect(page.getByRole('status')).toContainText('已儲存');
+  await page.reload();
+  await expect(page.getByLabel('紙張')).toHaveValue('A4');
+  await expect(page.getByLabel('方向')).toHaveValue('landscape');
+  await expect(page.getByLabel('左邊距 (mm)')).toHaveValue('20');
+  await expect(page.getByLabel('字級 (pt)')).toHaveValue('14');
+  await expect(page.getByLabel('輸出清單')).toHaveValue('unordered');
+});
+
 test('prevents another tab from deleting until ownership changes', async ({ context, page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();

@@ -116,3 +116,29 @@ it('preserves an unsaved BFCache session after its lease expires', async () => {
   expect(screen.getByText(/請先複製內容/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '重新取得寫入權' })).toBeNull();
 });
+
+it('saves page settings, reports failures, and restores them after reopening', async () => {
+  let stored = bundle('first');
+  const save = vi.fn(async (next: ProjectBundle) => {
+    if (save.mock.calls.length === 1) throw new Error('Storage failed');
+    stored = next;
+  });
+  const repository = { get: vi.fn(async () => stored),
+    beginSession: vi.fn(async () => stored), finishSession: vi.fn(async () => {}),
+    save } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  const view = render(<ProjectWorkspace projectId="first" repository={repository}
+    ownership={ownership} />);
+  await screen.findByLabelText('紙張');
+  fireEvent.change(screen.getByLabelText('紙張'), { target: { value: 'A4' } });
+  await act(async () => { await vi.waitFor(() => expect(save).toHaveBeenCalledOnce()); });
+  expect(await screen.findByText('儲存失敗')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '重試儲存' }));
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+  expect(stored.project.pageSettings.paperSize).toBe('A4');
+  view.unmount();
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  expect(await screen.findByLabelText('紙張')).toHaveValue('A4');
+});

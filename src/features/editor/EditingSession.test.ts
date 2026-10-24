@@ -77,4 +77,17 @@ describe('editing autosave', () => {
     expect(() => session.rename('   ')).toThrow();
     expect(session.snapshot.project.name).toBe('Original');
   });
+
+  it('persists valid page settings and rejects invalid ones', async () => {
+    const save = vi.fn(async (_snapshot: ProjectBundle) => {});
+    const session = new EditingSession(bundle(), { save } as unknown as ProjectRepository, vi.fn());
+    const settings = { ...DEFAULT_PAGE_SETTINGS, paperSize: 'A4' as const,
+      marginsMm: { top: 20, right: 10, bottom: 20, left: 10 } };
+    session.updatePageSettings(settings);
+    await session.flush();
+    expect(save.mock.calls[0][0].project.pageSettings).toEqual(settings);
+    expect(() => session.updatePageSettings({ ...settings,
+      defaultFontSizePt: Number.NaN })).toThrow();
+    expect(session.snapshot.project.pageSettings).toEqual(settings);
+  });
 });
