@@ -241,20 +241,23 @@ type Asset = {
     - 驗證：UI 測試 commands、shortcuts、undo/redo 與 saved JSON；手動驗證中文輸入不中斷，E2E 編輯重載保留 marks。
     - Commit：`feat: Add rich text editing controls`。
     - 進度紀錄（2026-10-24）：已加入依 selection 更新狀態的文字 toolbar、heading／marks／對齊／unordered list commands、undo/redo，以及 `#`、`- `、`1. ` 捷徑。編輯 schema 禁用 ordered list，匯入解析仍支援 `<ol>` 正規化。`npm test`（14 files／77 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；sub-agent review/testing 通過，並修正 E2E 儲存競態。依 SPEC 未執行真實瀏覽器；marks 重載 E2E 與中文 IME 人工驗證待指定，因此 step 保持待驗。
+    - 瀏覽器驗證（2026-10-24）：使用者指定後執行完整 `npm run test:e2e`，Chromium／Firefox 的 marks 重載案例通過，完整 E2E 28/28 通過。中文 IME 人工輸入尚未檢查，因此 step 仍待驗；不加入合成 composition 測試。
 
-  - [ ] **Step 5.2 — 加入基本表格編輯**
+  - [x] **Step 5.2 — 加入基本表格編輯**
     - 目標：可建立表格、編輯文字、增刪列／欄及刪除表格。
     - 實作：使用已安裝開源 table extensions；提供必要 toolbar 並防止非法空表格。簡單矩形表格必須可編輯；合併儲存格等匯入特性依已記錄退化策略處理，不宣稱完整 Word 表格相容。確保表格可位於題目 item 內。
     - 驗證：UI 測試插入、儲存格輸入、增刪列欄、刪除與 undo；重載後結構相同，題目內表格通過 schema validation。
     - Commit：`feat: Add basic table editing`。
     - 進度紀錄（2026-10-24）：已加入 2×2 表格插入、儲存格編輯、增刪列欄及刪除表格；測試題目內表格的 schema validation、結構修改、undo 與保存後重新載入。`npm test`（14 files／79 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（26 cases）通過；sub-agent review/testing 通過。依 SPEC 未執行真實瀏覽器，表格重載 E2E 待指定，因此 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：使用者指定後，Chromium／Firefox 的表格編輯、離頁 flush 與重載案例均通過；完整 E2E 28/28、unit/UI 88/88、typecheck、build 通過。搭配既有 sub-agent review/testing，本 step 完成。
 
-  - [ ] **Step 5.3 — 加入本機圖片插入與刪除**
+  - [x] **Step 5.3 — 加入本機圖片插入與刪除**
     - 目標：使用者新增的 PNG/JPEG 可儲存、重載與 undo。
     - 實作：共用匯入限制，先成功儲存 Blob 再插入 assetId 節點；失敗不插入壞引用。刪除只移除文件節點，session 期間保留 Blob；不要把 Base64 或 object URL 寫入 JSON。插入完成前保護 Project/session 身分，避免非同步結果串到另一份試卷。
     - 驗證：測試錯誤格式、超限、Blob 寫入失敗、換 Project 中完成上傳、刪除後 undo、重載仍可顯示圖片。
     - Commit：`feat: Add persistent image editing`。
     - 進度紀錄（2026-10-24）：已加入 PNG/JPEG 本機插入、Blob-first 寫入、共用圖片限制、Project/session 身分檢查，以及選取圖片後刪除與 undo。repository 在持有寫入權時單獨儲存 Blob，並檢查 Project 圖片總量。`npm test`（15 files／88 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（28 cases）通過；sub-agent review/testing 已執行，刪圖 UI 為 review 後補齊。若 Blob 寫入後 session 立即失效，可能留下未引用資產，待 Phase 7 補做清理。依 SPEC 未執行真實瀏覽器，新增圖片重載 E2E 待指定，因此 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：使用者指定後，Chromium／Firefox 的本機圖片插入、Blob 顯示與重載案例均通過；完整 E2E 28/28、unit/UI 88/88、typecheck、build 通過。搭配既有 sub-agent review/testing，本 step 完成；未引用資產仍依 Phase 7 清理。
 
 - [ ] **Phase 6 — 題目勾選與跨大題排序**
 

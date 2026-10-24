@@ -1,7 +1,7 @@
 # 試卷編輯器
 
 這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Milestone 1
-及 Phase 4，Phase 5 的功能已實作但尚待 browser 驗收。已可建立、列表、開啟及刪除
+及 Phase 4；Phase 5 的表格與圖片編輯已驗收，文字編輯的中文 IME 人工檢查待驗。已可建立、列表、開啟及刪除
 本機 Project、匯入 DOCX，並在有寫入權的 workspace 編輯文件；功能順序與
 驗證紀錄見 [PLANS.md](PLANS.md)。
 
@@ -54,8 +54,8 @@ npm run test:e2e -- --list
 
 Playwright 已設定 Chromium、Firefox、獨立測試 context、由測試工具管理的 dev
 server，以及失敗時保留 trace／screenshot。`test-results/` 與
-`playwright-report/` 已由 Git 忽略。使用者指定後，Phase 4 以前的 Chromium／Firefox
-共 22 個 E2E 案例已通過；Phase 5 新增的案例尚未執行。
+`playwright-report/` 已由 Git 忽略。使用者指定後，Chromium／Firefox
+共 28 個 E2E 案例已通過，包含 Phase 5 的文字格式、表格與圖片重載。
 
 ## 目錄與目前限制
 
