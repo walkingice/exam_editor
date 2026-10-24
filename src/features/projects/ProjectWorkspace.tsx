@@ -285,13 +285,21 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     ? findEditorNode(session.current?.editor, selectedPreviewId) : null;
 
   return <main>
-    <a href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
     {status === 'loading' && <p>載入中…</p>}
     {status === 'missing' && <p>找不到這份試卷。</p>}
     {status === 'error' && <><p role="alert">{error}</p>
       <button onClick={() => void open(() => false)}>重試</button></>}
     {status === 'ready' && bundle && <>
-      <h1>{displayName}</h1>
+      <header className="workspace-header">
+        <a className="workspace-home" href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
+        <h1>{displayName}</h1>
+        <div role="tablist" aria-label="Workspace tabs" className="workspace-tabs">
+          <button role="tab" aria-selected={tab === 'content'} onClick={() => setTab('content')}>
+            試卷內容</button>
+          <button role="tab" aria-selected={tab === 'preview'} onClick={() => setTab('preview')}>
+            排版預覽</button>
+        </div>
+      </header>
       {lease && <div><label>試卷名稱 <input value={name}
         onChange={(event) => setName(event.target.value)} /></label>
         <button onClick={rename}>更名</button></div>}
@@ -302,12 +310,6 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
-      <div role="tablist" aria-label="Workspace tabs">
-        <button role="tab" aria-selected={tab === 'content'} onClick={() => setTab('content')}>
-          試卷內容</button>
-        <button role="tab" aria-selected={tab === 'preview'} onClick={() => setTab('preview')}>
-          排版預覽</button>
-      </div>
       <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
       {pageSettings && <div className="workspace-actions">
         <button onClick={() => void printExam()} disabled={printing.current}>列印 / PDF</button>
