@@ -27,3 +27,4 @@ li { margin: 10px 0; }
 .exam-image img { max-width: 100%; height: auto; }
 .question-control { display: inline-block; margin-right: 6px; }
 .question-control input { vertical-align: middle; }
+.question-drag-handle { cursor: grab; padding: 0 4px; margin-left: 4px; }

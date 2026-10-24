@@ -127,6 +127,35 @@ test('keeps question selection and IDs after reopening', async ({ page }) => {
   await expect(item).toHaveAttribute('data-node-id', id!);
 });
 
+test('drags a full question across sections and reopens it', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const id = `move-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.createQuestionSections(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
+  await setup.close();
+  await page.goto(`/#/projects/${id}`);
+  const item = page.locator('.ProseMirror > ul > li');
+  const itemId = await item.getAttribute('data-node-id');
+  await item.getByRole('button', { name: /移動題目/ })
+    .dragTo(page.getByRole('heading', { name: 'Section two' }));
+  await expect(page.locator('.ProseMirror > h2').nth(1)
+    .locator('xpath=following-sibling::*[1][self::ul]')).toHaveCount(1);
+  await expect(item).toHaveAttribute('data-node-id', itemId!);
+  await expect(item).toContainText('Option');
+  await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
+  await page.getByRole('button', { name: '復原' }).click();
+  await expect(page.locator('.ProseMirror > h2').first()
+    .locator('xpath=following-sibling::*[1][self::ul]')).toHaveCount(1);
+  await page.getByRole('button', { name: '重做' }).click();
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: 'Question sections' }).click();
+  await expect(item).toHaveAttribute('data-node-id', itemId!);
+  await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
+});
+
 test('keeps an edited table after reloading', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();

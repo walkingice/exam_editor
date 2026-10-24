@@ -273,6 +273,7 @@ type Asset = {
     - 實作：建立以 source item ID 與 target position 為輸入的 move command，再接拖曳 handle。以單一 transaction 搬移完整 subtree，保留 selected、圖片、表格與選項；支援同清單、不同大題與空大題的落點。使用 transaction mapping 或等價方式處理刪除後位移，禁止拖入自身子節點；移除空清單但保留 heading。
     - 驗證：command 單元測試前移後移、跨大題、空大題、無效落點、完整 subtree 相等；UI/E2E 拖曳後 undo/redo、重載檢查順序及圖片。
     - Commit：`feat: Move questions across exam sections`。
+    - 進度紀錄（2026-10-24）：已建立以題目 ID 與目標位置為輸入的單一 transaction move command，以及題目拖曳把手；支援清單內前後移、跨大題、空大題，保留 ID、selected、選項、圖片及表格，移除空清單而保留 heading。單元／UI 測試涵蓋完整子樹、非法落點、巢狀選項、undo/redo；已列出跨大題拖曳、圖片與重開的 E2E 案例。`npm test`（16 files／96 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（32 cases）通過。sub-agent review 發現的內嵌選項落點問題已修正並複審通過；testing 獨立通過。依 SPEC 未執行真實瀏覽器，拖曳與重開 E2E 待指定，因此 step 與 Phase 6 保持待驗。
 
 - [ ] **Phase 7 — 資產清理與 Milestone 2 驗收**
 

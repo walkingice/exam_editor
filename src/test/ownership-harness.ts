@@ -41,6 +41,30 @@ const harness = {
         blob: new Blob([bytes], { type: 'image/png' }) }],
     });
   },
+  async createQuestionSections(projectId: string) {
+    const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLytQAAAABJRU5ErkJggg==';
+    const bytes = Uint8Array.from(atob(png), (character) => character.charCodeAt(0));
+    const now = Date.now();
+    await repository.create({
+      project: { id: projectId, name: 'Question sections', createdAt: now, updatedAt: now,
+        pageSettings: structuredClone(DEFAULT_PAGE_SETTINGS), schemaVersion: 1 },
+      document: { projectId, schemaVersion: 1, content: normalizeDocument({
+        type: 'doc', content: [
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Section one' }] },
+          { type: 'bulletList', content: [{ type: 'listItem', content: [
+            { type: 'paragraph', content: [{ type: 'text', text: 'Move me' }] },
+            { type: 'bulletList', content: [{ type: 'listItem', content: [
+              { type: 'paragraph', content: [{ type: 'text', text: 'Option' }] },
+            ] }] },
+            { type: 'image', attrs: { assetId: `image-${projectId}`, alt: 'Question image' } },
+          ] }] },
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Section two' }] },
+        ],
+      }) },
+      assets: [{ id: `image-${projectId}`, projectId, mimeType: 'image/png',
+        blob: new Blob([bytes], { type: 'image/png' }) }],
+    });
+  },
   async rename(projectId: string, name: string) {
     const bundle = await repository.get(projectId);
     if (!bundle) throw new Error('Project not found');

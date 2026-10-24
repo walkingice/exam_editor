@@ -123,6 +123,67 @@ describe('read-only document', () => {
     expect(editor!.state.selection.from).toBe(selection);
   });
 
+  it('drags a whole question to an empty section with undo and redo', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'First section' }] },
+      { type: 'bulletList', content: [{ type: 'listItem', content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Question' }] },
+        { type: 'image', attrs: { assetId: 'photo' } },
+      ] }] },
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Empty section' }] },
+    ] });
+    let editor: Editor | undefined;
+    const view = render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn(async () => null) } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const handle = await screen.findByRole('button', { name: /移動題目/ });
+    const original = (editor!.getJSON() as JSONContent).content![1].content![0];
+    const values = new Map<string, string>();
+    const dataTransfer = { types: ['application/x-exam-question'],
+      setData: (type: string, value: string) => { values.set(type, value); },
+      getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
+    fireEvent.dragStart(handle, { dataTransfer });
+    fireEvent.drop(screen.getByRole('heading', { name: 'Empty section' }), { dataTransfer });
+    expect((editor!.getJSON() as JSONContent).content?.slice(0, 3).map((node) => node.type))
+      .toEqual(['heading', 'heading', 'bulletList']);
+    expect((editor!.getJSON() as JSONContent).content?.[2].content?.[0]).toEqual(original);
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect((editor!.getJSON() as JSONContent).content?.[1].content?.[0]).toEqual(original);
+    fireEvent.click(screen.getByRole('button', { name: '重做' }));
+    const saved = normalizeDocument(editor!.getJSON());
+    view.rerender(<ReadOnlyEditor projectId="first" content={saved}
+      repository={{ getAsset: vi.fn(async () => null) } as unknown as ProjectRepository} />);
+    expect(saved.content?.[2].content?.[0].attrs).toMatchObject(original.attrs!);
+  });
+
+  it('treats a nested option drop as a drop on its outer question', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'bulletList', content: [
+        { type: 'listItem', attrs: { id: 'a' }, content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
+        ] },
+        { type: 'listItem', attrs: { id: 'b' }, content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'Second' }] },
+          { type: 'bulletList', content: [{ type: 'listItem', content: [
+            { type: 'paragraph', content: [{ type: 'text', text: 'Nested option' }] },
+          ] }] },
+        ] },
+      ] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const values = new Map<string, string>();
+    const dataTransfer = { types: ['application/x-exam-question'],
+      setData: (type: string, value: string) => { values.set(type, value); },
+      getData: (type: string) => values.get(type) ?? '', effectAllowed: '', dropEffect: '' };
+    fireEvent.dragStart(await screen.findByRole('button', { name: '移動題目 a' }), { dataTransfer });
+    fireEvent.drop(screen.getByText('Nested option'), { dataTransfer, clientY: 1 });
+    expect((editor!.getJSON() as JSONContent).content?.[0].content?.map((node) => node.attrs?.id))
+      .toEqual(['b', 'a']);
+  });
+
   it('maps Markdown input shortcuts to heading and unordered lists', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
     let editor: Editor | undefined;
