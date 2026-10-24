@@ -78,15 +78,17 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   }, [content, editor]);
   useEffect(() => () => ownedResolver.dispose(), [ownedResolver]);
 
-  return <>
-    {editable && editor && <EditorToolbar editor={editor} />}
-    {editable && editor && <ImageToolbar editor={editor} onInsert={(file) => insertLocalImage(
-      file, projectId, editor, repository,
-      () => active.current && editor.isEditable && !editor.isDestroyed
-        && callbacks.current.canInsertImage?.(editor) !== false,
-    )} />}
+  return <div className={editable && editor ? 'content-editor-layout' : undefined}>
+    {editable && editor && <aside className="content-editor-controls" aria-label="編輯工具">
+      <EditorToolbar editor={editor} />
+      <ImageToolbar editor={editor} onInsert={(file) => insertLocalImage(
+        file, projectId, editor, repository,
+        () => active.current && editor.isEditable && !editor.isDestroyed
+          && callbacks.current.canInsertImage?.(editor) !== false,
+      )} />
+    </aside>}
     <div aria-label="試卷文件" className="exam-document">
       <EditorContent editor={editor} />
     </div>
-  </>;
+  </div>;
 }
