@@ -86,6 +86,7 @@ li { margin: 10px 0; }
   line-height: 1.6;
 }
 .exam-document .ProseMirror { outline: none; }
+.exam-document .ProseMirror[contenteditable="false"] .document-item-control { display: none; }
 .content-editor-layout { display: grid; grid-template-columns: 156px minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (min-width: 1288px) {
   .content-editor-layout {
@@ -117,6 +118,16 @@ li { margin: 10px 0; }
   padding: 0;
   list-style: none;
 }
+.content-panel .exam-document .ProseMirror > :not(ul) {
+  position: relative;
+  box-sizing: border-box;
+  margin: 0 0 10px;
+  padding: 12px 14px 12px 56px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+.content-panel .exam-document .ProseMirror > :not(ul):last-child { margin-bottom: 0; }
 .content-panel .exam-document .ProseMirror li {
   position: relative;
   box-sizing: border-box;
@@ -126,8 +137,8 @@ li { margin: 10px 0; }
   border-radius: 6px;
   background: #fff;
 }
-.content-panel .exam-document .ProseMirror li.question-drop-before::before,
-.content-panel .exam-document .ProseMirror li.question-drop-after::after {
+.content-panel .exam-document .ProseMirror .question-drop-before::before,
+.content-panel .exam-document .ProseMirror .question-drop-after::after {
   position: absolute;
   z-index: 2;
   right: 0;
@@ -138,19 +149,11 @@ li { margin: 10px 0; }
   content: '';
   pointer-events: none;
 }
-.content-panel .exam-document .ProseMirror li.question-drop-before::before { top: -7px; }
-.content-panel .exam-document .ProseMirror li.question-drop-after::after { bottom: -7px; }
-.content-panel .exam-document .ProseMirror li.question-drop-before,
-.content-panel .exam-document .ProseMirror li.question-drop-after {
+.content-panel .exam-document .ProseMirror .question-drop-before::before { top: -7px; }
+.content-panel .exam-document .ProseMirror .question-drop-after::after { bottom: -7px; }
+.content-panel .exam-document .ProseMirror .question-drop-before,
+.content-panel .exam-document .ProseMirror .question-drop-after {
   background-color: #eff6ff;
-}
-.content-panel .exam-document .ProseMirror h1.question-drop-section,
-.content-panel .exam-document .ProseMirror h2.question-drop-section,
-.content-panel .exam-document .ProseMirror h3.question-drop-section {
-  outline: 3px solid #1769d2;
-  outline-offset: 3px;
-  border-radius: 2px;
-  background: #eff6ff;
 }
 .content-panel .exam-document .ProseMirror li > .question-control {
   position: absolute;
@@ -159,6 +162,13 @@ li { margin: 10px 0; }
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0;
+}
+.content-panel .document-item-control {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
   margin: 0;
 }
 .content-panel .question-control input { width: 16px; height: 16px; margin: 0; }
