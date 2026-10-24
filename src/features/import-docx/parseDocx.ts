@@ -31,6 +31,7 @@ export async function parseDocx(file: File, signal?: AbortSignal): Promise<Parse
   try {
     result = await mammoth.convertToHtml({ arrayBuffer }, {
       externalFileAccess: false,
+      styleMap: ['u => u'],
       convertImage: mammoth.images.imgElement(async (image) => {
         checkCancelled(signal);
         if (image.contentType !== 'image/png' && image.contentType !== 'image/jpeg') {
