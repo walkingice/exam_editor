@@ -363,11 +363,12 @@ type Asset = {
     - Commit：`feat: Map exam text and lists to DOCX`。
     - 驗證紀錄（2026-10-25）：建立獨立 React 的語意 mapper，使用共用 projection；中文、heading、marks、換行、對齊、跨標題連續題號與巢狀 bullets 的 DOCX XML 測試 3/3、typecheck 通過。未知文字／block 樣式保留文字並回報 warning。sub-agent review 發現巢狀層級問題，修正後獨立 testing 與複查通過；超過 OOXML 九層的清單降為第九層並提示。JSZip 3.10.2 僅為直接測試依賴；未啟動瀏覽器。
 
-  - [ ] **Step 11.2 — 表格與嵌入圖片 mapping**
+  - [x] **Step 11.2 — 表格與嵌入圖片 mapping**
     - 目標：保留輸出範圍內可編輯表格和實際圖片。
     - 實作：table mapper 逐列逐格轉換子內容；圖片依投影使用的 assetId 讀 Blob/ArrayBuffer，對 PNG/JPEG 建 image run，換算寬高並保留比例。遵守文件化表格降級策略；缺少被引用資產須明確報錯，不靜默下載假成功檔案。未勾選題目的圖片不得被打包進 DOCX。
     - 驗證：測試題目內表格、巢狀文字、不同圖片尺寸、缺圖、同圖多次引用及被過濾資產；檢查 DOCX media entries 及 table 結構。
     - Commit：`feat: Export DOCX tables and image assets`。
+    - 驗證紀錄（2026-10-25）：加入可編輯表格、合併欄列、格內清單及 PNG/JPEG mapping；圖片依投影讀取、同圖快取並維持比例，缺少／錯誤資產明確失敗。exporter tests 6/6、typecheck、build 通過（既有 bundle size warning）。XML／media entries 驗證涵蓋實際圖片 bytes、過濾圖片、表格結構及不同寬度；sub-agent review/testing 通過，無 blocker。表格欄寬採等分 logical columns 並提示，已記錄於 `docs/docx-export.md`；Office 人工驗收留待 Phase 12。
 
   - [ ] **Step 11.3 — 紙張與段落格式 mapping**
     - 目標：輸出使用相同紙張方向、邊距與可映射樣式。
