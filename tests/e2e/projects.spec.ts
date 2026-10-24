@@ -68,6 +68,58 @@ test('renders a stored image after reloading the workspace', async ({ context, p
   await expect(page.getByRole('img', { name: 'Fixture image' })).toHaveJSProperty('naturalWidth', 1);
 });
 
+test('cleans an unused image after leaving the workspace', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const id = `cleanup-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.createWithImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.addUnusedImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
+  await page.goto(`/#/projects/${id}`);
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toBeVisible();
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await expect(page.getByRole('link', { name: 'Image fixture' })).toBeVisible();
+  await expect.poll(() => setup.evaluate((projectId) =>
+    window.ownershipHarness.assetIds(projectId), id)).toEqual([`image-${id}`]);
+});
+
+test('completes interrupted cleanup before reopening a writer', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const id = `pending-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.createWithImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.addUnusedImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.leaveCleanupPending(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
+  await page.goto(`/#/projects/${id}`);
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toBeVisible();
+  expect(await setup.evaluate((projectId) => window.ownershipHarness.assetIds(projectId), id))
+    .toEqual([`image-${id}`]);
+});
+
+test('cleans unused assets after closing and reopening a tab', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const id = `tab-close-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.createWithImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.addUnusedImage(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
+  await page.goto(`/#/projects/${id}`);
+  await expect(page.getByRole('img', { name: 'Fixture image' })).toBeVisible();
+  await page.close();
+  const reopened = await context.newPage();
+  await reopened.goto(`/#/projects/${id}`);
+  await expect(reopened.getByRole('img', { name: 'Fixture image' })).toBeVisible();
+  expect(await setup.evaluate((projectId) => window.ownershipHarness.assetIds(projectId), id))
+    .toEqual([`image-${id}`]);
+});
+
 test('keeps the second tab editor read-only', async ({ context, page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();
@@ -154,6 +206,34 @@ test('drags a full question across sections and reopens it', async ({ context, p
   await page.getByRole('link', { name: 'Question sections' }).click();
   await expect(item).toHaveAttribute('data-node-id', itemId!);
   await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
+});
+
+test('persists a complete multi-section editing session', async ({ context, page }) => {
+  const setup = await context.newPage();
+  const id = `session-${crypto.randomUUID()}`;
+  await setup.goto('/tests/harness/');
+  await setup.waitForFunction(() => !!window.ownershipHarness);
+  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.createMilestone2Fixture(projectId), id);
+  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
+  await page.goto(`/#/projects/${id}`);
+  const item = page.locator('.ProseMirror > ul > li').first();
+  await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
+  await item.getByRole('cell').first().click();
+  await page.keyboard.type(' revised');
+  await expect(item.getByRole('cell').first()).toContainText('revised');
+  await item.getByRole('button', { name: /移動題目/ })
+    .dragTo(page.getByRole('heading', { name: 'Section two' }));
+  await page.getByRole('button', { name: '復原' }).click();
+  await page.getByRole('button', { name: '重做' }).click();
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: 'Milestone two fixture' }).click();
+  await page.reload();
+  await expect(page.getByText('Unselected question')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Shared image' })).toBeVisible();
+  await expect(page.getByRole('cell').first()).toContainText('revised');
+  await expect(page.locator('.ProseMirror > h2').nth(1)
+    .locator('xpath=following-sibling::*[1][self::ul] > li')).toHaveCount(2);
 });
 
 test('keeps an edited table after reloading', async ({ page }) => {
