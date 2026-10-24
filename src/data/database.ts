@@ -14,6 +14,7 @@ export class ExamDatabase extends Dexie {
   projects!: Table<Project, string>;
   documents!: Table<ExamDocument, string>;
   assets!: Table<Asset, string>;
+  cleanupRequests!: Table<{ projectId: string }, string>;
 
   constructor(name = 'exam-editor', dependencies?: { indexedDB: IDBFactory; IDBKeyRange: typeof IDBKeyRange }) {
     super(name, dependencies);
@@ -41,6 +42,12 @@ export class ExamDatabase extends Dexie {
         document.content = normalizeDocument(document.content);
         document.schemaVersion = DOCUMENT_SCHEMA_VERSION;
       });
+    });
+    this.version(3).stores({
+      projects: 'id, updatedAt',
+      documents: 'projectId',
+      assets: 'id, projectId',
+      cleanupRequests: 'projectId',
     });
   }
 }

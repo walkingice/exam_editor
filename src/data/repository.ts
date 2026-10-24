@@ -4,6 +4,7 @@ import { ExamDatabase } from './database';
 import type { WriteAuthority } from './ownership';
 import { notifyProjectDeleted } from './projectEvents';
 import { MAX_TOTAL_ASSET_BYTES } from '../shared/assets/limits';
+import { collectAssetIds } from '../domain/assetReferences';
 
 export type ProjectBundle = { project: Project; document: ExamDocument; assets: Asset[] };
 
@@ -71,6 +72,46 @@ export class ProjectRepository {
       }));
   }
 
+  private async removeUnusedAssets(projectId: string): Promise<void> {
+    const document = await this.database.documents.get(projectId);
+    if (!document) throw new Error('Project document is missing');
+    validateExamDocument(document);
+    const referenced = collectAssetIds(document.content);
+    const assets = await this.database.assets.where('projectId').equals(projectId).toArray();
+    const unused = assets.filter((asset) => !referenced.has(asset.id)).map((asset) => asset.id);
+    if (unused.length) await this.database.assets.bulkDelete(unused);
+  }
+
+  async beginSession(projectId: string): Promise<ProjectBundle | null> {
+    return this.authority.run(projectId, () => this.database.transaction('rw',
+      this.database.projects, this.database.documents, this.database.assets,
+      this.database.cleanupRequests, async () => {
+        const project = await this.database.projects.get(projectId);
+        if (!project) return null;
+        validateProject(project);
+        if (await this.database.cleanupRequests.get(projectId)) {
+          await this.removeUnusedAssets(projectId);
+        }
+        await this.database.cleanupRequests.put({ projectId });
+        const document = await this.database.documents.get(projectId);
+        if (!document) throw new Error('Project document is missing');
+        const assets = await this.database.assets.where('projectId').equals(projectId).toArray();
+        const bundle = { project, document, assets };
+        validateBundle(bundle);
+        return bundle;
+      }));
+  }
+
+  async finishSession(projectId: string): Promise<void> {
+    await this.authority.run(projectId, () => this.database.transaction('rw',
+      this.database.projects, this.database.documents, this.database.assets,
+      this.database.cleanupRequests, async () => {
+        if (!await this.database.cleanupRequests.get(projectId)) return;
+        await this.removeUnusedAssets(projectId);
+        await this.database.cleanupRequests.delete(projectId);
+      }));
+  }
+
   async save(bundle: ProjectBundle): Promise<void> {
     validateBundle(bundle);
     await this.authority.run(bundle.project.id, () => this.database.transaction('rw', this.database.projects,
@@ -94,7 +135,7 @@ export class ProjectRepository {
 
   async delete(projectId: string): Promise<void> {
     await this.authority.run(projectId, () => this.database.transaction('rw', this.database.projects,
-      this.database.documents, this.database.assets, async () => {
+      this.database.documents, this.database.assets, this.database.cleanupRequests, async () => {
         const project = await this.database.projects.get(projectId);
         if (!project) return;
         const document = await this.database.documents.get(projectId);
@@ -102,6 +143,7 @@ export class ProjectRepository {
         validateProject(project);
         validateExamDocument(document);
         await this.database.assets.where('projectId').equals(projectId).delete();
+        await this.database.cleanupRequests.delete(projectId);
         await this.database.documents.delete(projectId);
         await this.database.projects.delete(projectId);
       }));
