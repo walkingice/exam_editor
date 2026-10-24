@@ -184,7 +184,9 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
         editable={!!lease?.isActive} onEditor={(editor) => {
           if (session.current?.projectId === projectId) session.current.editor = editor;
-        }} onChange={recordChange} />
+        }} onChange={recordChange} canInsertImage={(editor) =>
+          session.current?.projectId === projectId && session.current.editor === editor
+          && !!activeLease.current?.isActive} />
     </>}
   </main>;
 }

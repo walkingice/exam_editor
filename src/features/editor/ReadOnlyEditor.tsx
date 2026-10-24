@@ -7,6 +7,8 @@ import { ProjectRepository } from '../../data/repository';
 import { AssetResolver, type AssetHandle } from '../../shared/assets/AssetResolver';
 import { AssetImage, editingExtensions } from './schema';
 import { EditorToolbar } from './EditorToolbar';
+import { ImageToolbar } from './ImageToolbar';
+import { insertLocalImage } from './insertLocalImage';
 
 function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetResolver }) {
   const [resolved, setResolved] = useState<{ assetId: string; handle: AssetHandle } | null>(null);
@@ -36,14 +38,17 @@ function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetRes
   </NodeViewWrapper>;
 }
 
-export function ReadOnlyEditor({ projectId, content, repository, editable = false, onChange, onEditor }: {
+export function ReadOnlyEditor({ projectId, content, repository, editable = false, onChange, onEditor,
+  canInsertImage }: {
   projectId: string; content: JSONContent; repository: ProjectRepository;
   editable?: boolean;
   onChange?: (editor: Editor) => void;
   onEditor?: (editor: Editor) => void;
+  canInsertImage?: (editor: Editor) => boolean;
 }) {
-  const callbacks = useRef({ onChange, onEditor });
-  callbacks.current = { onChange, onEditor };
+  const callbacks = useRef({ onChange, onEditor, canInsertImage });
+  callbacks.current = { onChange, onEditor, canInsertImage };
+  const active = useRef(false);
   const resolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
   ), [projectId, repository]);
@@ -59,6 +64,10 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   }, [extensions]);
 
   useEffect(() => { editor?.setEditable(editable); }, [editable, editor]);
+  useEffect(() => {
+    active.current = true;
+    return () => { active.current = false; };
+  }, []);
 
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.commands.setContent(content, { emitUpdate: false });
@@ -67,6 +76,11 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
 
   return <>
     {editable && editor && <EditorToolbar editor={editor} />}
+    {editable && editor && <ImageToolbar editor={editor} onInsert={(file) => insertLocalImage(
+      file, projectId, editor, repository,
+      () => active.current && editor.isEditable && !editor.isDestroyed
+        && callbacks.current.canInsertImage?.(editor) !== false,
+    )} />}
     <div aria-label="試卷文件" className="exam-document">
       <EditorContent editor={editor} />
     </div>
