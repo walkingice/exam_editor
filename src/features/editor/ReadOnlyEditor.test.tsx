@@ -91,6 +91,48 @@ describe('read-only document', () => {
     }
   });
 
+  it('edits table cells and structure with undo support', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('試卷文件');
+    fireEvent.click(screen.getByRole('button', { name: '插入表格' }));
+    expect(screen.getAllByRole('cell')).toHaveLength(4);
+    editor!.commands.insertContent('Cell text');
+    expect(screen.getByText('Cell text')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '新增列' }));
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: '新增欄' }));
+    expect(screen.getAllByRole('cell')).toHaveLength(9);
+    fireEvent.click(screen.getByRole('button', { name: '刪除欄' }));
+    expect(screen.getAllByRole('cell')).toHaveLength(6);
+    fireEvent.click(screen.getByRole('button', { name: '刪除列' }));
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: '刪除表格' }));
+    expect(screen.queryByRole('table')).toBeNull();
+  });
+
+  it('keeps a table inside a question item valid for saving', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'bulletList',
+      content: [{ type: 'listItem', content: [{ type: 'paragraph',
+        content: [{ type: 'text', text: 'Question' }] }] }] }] });
+    let editor: Editor | undefined;
+    const view = render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    fireEvent.click(screen.getByRole('button', { name: '插入表格' }));
+    const saved = normalizeDocument(editor!.getJSON() as JSONContent);
+    expect(saved.content?.[0].content?.[0].content?.some((node) => node.type === 'table')).toBe(true);
+    view.rerender(<ReadOnlyEditor projectId="first" content={saved}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} />);
+    expect(screen.getAllByRole('cell')).toHaveLength(4);
+  });
+
   it('assigns stable IDs to newly split paragraphs', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
       content: [{ type: 'text', text: 'Line' }] }] });

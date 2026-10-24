@@ -247,6 +247,7 @@ type Asset = {
     - 實作：使用已安裝開源 table extensions；提供必要 toolbar 並防止非法空表格。簡單矩形表格必須可編輯；合併儲存格等匯入特性依已記錄退化策略處理，不宣稱完整 Word 表格相容。確保表格可位於題目 item 內。
     - 驗證：UI 測試插入、儲存格輸入、增刪列欄、刪除與 undo；重載後結構相同，題目內表格通過 schema validation。
     - Commit：`feat: Add basic table editing`。
+    - 進度紀錄（2026-10-24）：已加入 2×2 表格插入、儲存格編輯、增刪列欄及刪除表格；測試題目內表格的 schema validation、結構修改、undo 與保存後重新載入。`npm test`（14 files／79 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（26 cases）通過；sub-agent review/testing 通過。依 SPEC 未執行真實瀏覽器，表格重載 E2E 待指定，因此 step 保持待驗。
 
   - [ ] **Step 5.3 — 加入本機圖片插入與刪除**
     - 目標：使用者新增的 PNG/JPEG 可儲存、重載與 undo。

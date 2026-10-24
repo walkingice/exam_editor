@@ -107,3 +107,19 @@ test('keeps rich text marks after reloading', async ({ page }) => {
   await page.reload();
   await expect(editor.locator('strong')).toHaveText('Marked question');
 });
+
+test('keeps an edited table after reloading', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await page.getByRole('button', { name: '插入表格' }).click();
+  const editor = page.locator('.ProseMirror');
+  await editor.getByRole('cell').first().click();
+  await page.keyboard.type('Answer');
+  await page.getByRole('button', { name: '新增列' }).click();
+  await expect(editor.getByRole('row')).toHaveCount(3);
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: '未命名試卷' }).click();
+  await page.reload();
+  await expect(editor.getByRole('row')).toHaveCount(3);
+  await expect(editor.getByRole('cell').first()).toHaveText('Answer');
+});

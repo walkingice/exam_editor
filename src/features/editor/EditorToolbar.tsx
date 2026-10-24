@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/core';
+import { TableToolbar } from './TableToolbar';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
 
@@ -37,5 +38,6 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   return <div role="toolbar" aria-label="文字編輯工具列" className="editor-toolbar">
     {tools.map((tool) => <button key={tool.label} type="button"
       aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>{tool.label}</button>)}
+    <TableToolbar editor={editor} />
   </div>;
 }
