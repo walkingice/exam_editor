@@ -123,3 +123,16 @@ test('keeps an edited table after reloading', async ({ page }) => {
   await expect(editor.getByRole('row')).toHaveCount(3);
   await expect(editor.getByRole('cell').first()).toHaveText('Answer');
 });
+
+test('stores a locally inserted image across reloads', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await page.getByLabel('插入圖片').setInputFiles('src/test/fixtures/red.jpg');
+  const image = page.getByRole('img', { name: 'red.jpg' });
+  await expect(image).toBeVisible();
+  await expect(image).toHaveJSProperty('naturalWidth', 1);
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: '未命名試卷' }).click();
+  await page.reload();
+  await expect(image).toHaveJSProperty('naturalWidth', 1);
+});

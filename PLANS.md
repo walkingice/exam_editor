@@ -254,6 +254,7 @@ type Asset = {
     - 實作：共用匯入限制，先成功儲存 Blob 再插入 assetId 節點；失敗不插入壞引用。刪除只移除文件節點，session 期間保留 Blob；不要把 Base64 或 object URL 寫入 JSON。插入完成前保護 Project/session 身分，避免非同步結果串到另一份試卷。
     - 驗證：測試錯誤格式、超限、Blob 寫入失敗、換 Project 中完成上傳、刪除後 undo、重載仍可顯示圖片。
     - Commit：`feat: Add persistent image editing`。
+    - 進度紀錄（2026-10-24）：已加入 PNG/JPEG 本機插入、Blob-first 寫入、共用圖片限制、Project/session 身分檢查，以及選取圖片後刪除與 undo。repository 在持有寫入權時單獨儲存 Blob，並檢查 Project 圖片總量。`npm test`（15 files／88 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（28 cases）通過；sub-agent review/testing 已執行，刪圖 UI 為 review 後補齊。若 Blob 寫入後 session 立即失效，可能留下未引用資產，待 Phase 7 補做清理。依 SPEC 未執行真實瀏覽器，新增圖片重載 E2E 待指定，因此 step 保持待驗。
 
 - [ ] **Phase 6 — 題目勾選與跨大題排序**
 

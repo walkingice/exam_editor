@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
@@ -131,6 +131,42 @@ describe('read-only document', () => {
     view.rerender(<ReadOnlyEditor projectId="first" content={saved}
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} />);
     expect(screen.getAllByRole('cell')).toHaveLength(4);
+  });
+
+  it('shows an image upload error without adding a document node', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    const repository = { getAsset: vi.fn(), addAsset: vi.fn() } as unknown as ProjectRepository;
+    render(<ReadOnlyEditor projectId="first" content={content} repository={repository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('插入圖片');
+    fireEvent.change(screen.getByLabelText('插入圖片'), { target: {
+      files: [new File(['gif'], 'wrong.gif', { type: 'image/gif' })],
+    } });
+    expect(await screen.findByRole('alert')).toHaveTextContent('只支援 PNG 或 JPEG');
+    expect(editor!.getJSON().content?.some((node) => node.type === 'image')).toBe(false);
+    expect(repository.addAsset).not.toHaveBeenCalled();
+  });
+
+  it('deletes a selected image and restores it with undo', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'Before' }] },
+      { type: 'image', attrs: { assetId: 'photo' } },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn(async () => null) } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Before');
+    act(() => { editor!.commands.setTextSelection(2); });
+    const remove = screen.getByRole('button', { name: '刪除圖片' });
+    expect(remove).toBeDisabled();
+    act(() => { editor!.commands.setNodeSelection(editor!.state.doc.firstChild!.nodeSize); });
+    expect(remove).toBeEnabled();
+    fireEvent.click(remove);
+    expect(editor!.getJSON().content?.some((node) => node.type === 'image')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(editor!.getJSON().content?.some((node) => node.type === 'image')).toBe(true);
   });
 
   it('assigns stable IDs to newly split paragraphs', async () => {
