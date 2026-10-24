@@ -199,6 +199,14 @@ li { margin: 10px 0; }
   background: #fff; box-shadow: 0 2px 12px #17233a24; }
 .preview-paper .exam-document { min-height: 0; padding: 0; border: 0;
   border-radius: 0; line-height: inherit; }
+.preview-paper[data-orientation="landscape"] .preview-content > div,
+.preview-paper[data-orientation="landscape"] .exam-document,
+.preview-paper[data-orientation="landscape"] .exam-document > div,
+.preview-paper[data-orientation="landscape"] .ProseMirror { height: 100%; }
+.preview-paper[data-orientation="landscape"] .ProseMirror {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
 .page-settings {
   margin: 20px 0;
   padding: 20px;
@@ -269,4 +277,8 @@ li { margin: 10px 0; }
 .preview-paper[data-columns="2"] .ProseMirror tr,
 .preview-paper[data-columns="2"] .exam-image {
   break-inside: avoid;
+}
+.preview-paper[data-orientation="landscape"] .ProseMirror > h1,
+.preview-paper[data-orientation="landscape"] .ProseMirror > h2 {
+  column-span: none;
 }

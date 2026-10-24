@@ -36,6 +36,40 @@ function bundle(id: string): ProjectBundle {
 
 afterEach(() => { cleanup(); vi.useRealTimers(); editorProps.current.length = 0; });
 
+it('updates preview orientation, columns, and usable height without changing the source', async () => {
+  const current = bundle('first');
+  const originalContent = structuredClone(current.document.content);
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  const sourceEditor = screen.getByTestId('editor');
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
+  const paper = screen.getByRole('tabpanel', { name: '排版預覽' })
+    .querySelector<HTMLElement>('.preview-paper')!;
+  const content = paper.querySelector<HTMLElement>('.preview-content')!;
+  expect(paper).toHaveAttribute('data-orientation', 'portrait');
+  expect(content).not.toHaveAttribute('style');
+  fireEvent.change(screen.getByLabelText('方向'), { target: { value: 'landscape' } });
+  fireEvent.change(screen.getByLabelText('欄數'), { target: { value: '2' } });
+  expect(paper).toHaveAttribute('data-orientation', 'landscape');
+  expect(paper).toHaveAttribute('data-columns', '2');
+  expect(paper.style.width).toBe('379mm');
+  expect(paper.style.minHeight).toBe('265mm');
+  expect(content.style.height).toBe('235mm');
+  fireEvent.change(screen.getByLabelText('上邊距 (mm)'), { target: { value: '20' } });
+  expect(content.style.height).toBe('230mm');
+  fireEvent.change(screen.getByLabelText('方向'), { target: { value: 'portrait' } });
+  expect(paper).toHaveAttribute('data-orientation', 'portrait');
+  expect(content.style.height).toBe('');
+  expect(paper).toHaveAttribute('data-columns', '2');
+  expect(sourceEditor).toBeInTheDocument();
+  expect(current.document.content).toEqual(originalContent);
+});
+
 it('ignores a callback from a project closed before switching', async () => {
   const repository = { get: vi.fn(async (id: string) => bundle(id)),
     beginSession: vi.fn(async (id: string) => bundle(id)),

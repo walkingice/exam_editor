@@ -92,4 +92,15 @@ test('switches preview columns while keeping headings across the page', async ({
   await expect(page.getByLabel('欄數')).toHaveValue('2');
   await page.getByLabel('欄數').selectOption('1');
   await expect(preview).toHaveCSS('column-count', 'auto');
+  await page.getByLabel('方向').selectOption('landscape');
+  await page.getByLabel('欄數').selectOption('2');
+  await expect(preview).toHaveCSS('writing-mode', 'vertical-rl');
+  await expect(preview).toHaveCSS('column-count', '2');
+  await expect(preview.locator('h1')).toHaveCSS('column-span', 'none');
+  await expect(preview.locator('h2')).toHaveCSS('column-span', 'none');
+  const height = await preview.evaluate((element) => element.getBoundingClientRect().height);
+  expect(height).toBeCloseTo(235 * 96 / 25.4, 0);
+  await page.getByLabel('方向').selectOption('portrait');
+  await expect(preview).toHaveCSS('writing-mode', 'horizontal-tb');
+  await expect(preview.locator('h1')).toHaveCSS('column-span', 'all');
 });
