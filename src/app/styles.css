@@ -19,6 +19,9 @@ li { margin: 10px 0; }
   line-height: 1.6;
 }
 .exam-document .ProseMirror { outline: none; }
+.editor-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.editor-toolbar button { margin: 0; }
+.editor-toolbar button[aria-pressed="true"] { background: #174e91; color: #fff; }
 .exam-document table { border-collapse: collapse; max-width: 100%; }
 .exam-document td, .exam-document th { border: 1px solid #9da9b9; padding: 6px 10px; }
 .exam-image img { max-width: 100%; height: auto; }

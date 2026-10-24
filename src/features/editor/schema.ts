@@ -1,4 +1,4 @@
-import { Extension, getSchema } from '@tiptap/core';
+import { Extension, getSchema, wrappingInputRule } from '@tiptap/core';
 import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
@@ -61,3 +61,22 @@ export const examExtensions = [
 ];
 
 export const examSchema = getSchema(examExtensions);
+
+const SourceListShortcut = Extension.create({
+  name: 'sourceListShortcut',
+  addInputRules() {
+    return [wrappingInputRule({ find: /^1\.\s$/, type: this.editor.schema.nodes.bulletList })];
+  },
+});
+
+export const editingExtensions = [
+  StarterKit.configure({ orderedList: false }),
+  ExamAttributes,
+  AssetImage,
+  Table,
+  TableRow,
+  TableCell,
+  TableHeader,
+  TextAlign.configure({ types: ['heading', 'paragraph'] }),
+  SourceListShortcut,
+];

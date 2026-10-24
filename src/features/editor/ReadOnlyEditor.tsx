@@ -5,7 +5,8 @@ import type { Editor } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { ProjectRepository } from '../../data/repository';
 import { AssetResolver, type AssetHandle } from '../../shared/assets/AssetResolver';
-import { AssetImage, examExtensions } from './schema';
+import { AssetImage, editingExtensions } from './schema';
+import { EditorToolbar } from './EditorToolbar';
 
 function AssetImageView({ node, resolver }: NodeViewProps & { resolver: AssetResolver }) {
   const [resolved, setResolved] = useState<{ assetId: string; handle: AssetHandle } | null>(null);
@@ -46,7 +47,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   const resolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
   ), [projectId, repository]);
-  const extensions = useMemo(() => examExtensions.map((extension) => extension.name === 'image'
+  const extensions = useMemo(() => editingExtensions.map((extension) => extension.name === 'image'
     ? AssetImage.extend({
       addNodeView() {
         return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} />);
@@ -64,7 +65,10 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   }, [content, editor]);
   useEffect(() => () => resolver.dispose(), [resolver]);
 
-  return <div aria-label="試卷文件" className="exam-document">
-    <EditorContent editor={editor} />
-  </div>;
+  return <>
+    {editable && editor && <EditorToolbar editor={editor} />}
+    <div aria-label="試卷文件" className="exam-document">
+      <EditorContent editor={editor} />
+    </div>
+  </>;
 }
