@@ -88,6 +88,30 @@ function dropTarget(view: EditorView, event: DragEvent): QuestionTarget | null {
   return null;
 }
 
+function updateDropIndicator(view: EditorView, event: DragEvent): void {
+  clearDropIndicator(view);
+  const element = event.target instanceof HTMLElement ? event.target : null;
+  const target = dropTarget(view, event);
+  if (target?.placement === 'section') {
+    element?.closest('h1, h2, h3')?.classList.add('question-drop-section');
+    return;
+  }
+  let item = element?.closest('li');
+  while (item && item.parentElement?.parentElement !== view.dom) {
+    item = item.parentElement?.closest('li') ?? null;
+  }
+  if (!item || item.parentElement?.parentElement !== view.dom) return;
+  const placement = event.clientY < item.getBoundingClientRect().top + item.clientHeight / 2
+    ? 'before' : 'after';
+  item.classList.add(`question-drop-${placement}`);
+}
+
+function clearDropIndicator(view: EditorView): void {
+  view.dom.querySelectorAll('.question-drop-before, .question-drop-after, .question-drop-section')
+    .forEach((element) => element.classList.remove(
+      'question-drop-before', 'question-drop-after', 'question-drop-section'));
+}
+
 export const QuestionControls = Extension.create({
   name: 'questionControls',
   addProseMirrorPlugins() {
@@ -111,18 +135,29 @@ export const QuestionControls = Extension.create({
       handleDOMEvents: {
         dragover: (view, event) => {
           if (!this.editor.isEditable || !event.dataTransfer?.types.includes(dragType)
-            || !dropTarget(view, event)) return false;
+            || !dropTarget(view, event)) {
+            clearDropIndicator(view);
+            return false;
+          }
           event.preventDefault();
           event.dataTransfer.dropEffect = 'move';
+          updateDropIndicator(view, event);
           return true;
         },
         drop: (view, event) => {
+          clearDropIndicator(view);
           const id = event.dataTransfer?.getData(dragType);
           if (!id || !this.editor.isEditable) return false;
           event.preventDefault();
           const target = dropTarget(view, event);
           if (target) moveQuestion(this.editor, id, target);
           return true;
+        },
+        dragleave: (view, event) => {
+          if (!(event.relatedTarget instanceof Node) || !view.dom.contains(event.relatedTarget)) {
+            clearDropIndicator(view);
+          }
+          return false;
         },
       },
     } })];

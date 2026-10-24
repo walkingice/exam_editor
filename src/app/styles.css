@@ -126,6 +126,32 @@ li { margin: 10px 0; }
   border-radius: 6px;
   background: #fff;
 }
+.content-panel .exam-document .ProseMirror li.question-drop-before::before,
+.content-panel .exam-document .ProseMirror li.question-drop-after::after {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  left: 0;
+  height: 4px;
+  border-radius: 4px;
+  background: #1769d2;
+  content: '';
+  pointer-events: none;
+}
+.content-panel .exam-document .ProseMirror li.question-drop-before::before { top: -7px; }
+.content-panel .exam-document .ProseMirror li.question-drop-after::after { bottom: -7px; }
+.content-panel .exam-document .ProseMirror li.question-drop-before,
+.content-panel .exam-document .ProseMirror li.question-drop-after {
+  background-color: #eff6ff;
+}
+.content-panel .exam-document .ProseMirror h1.question-drop-section,
+.content-panel .exam-document .ProseMirror h2.question-drop-section,
+.content-panel .exam-document .ProseMirror h3.question-drop-section {
+  outline: 3px solid #1769d2;
+  outline-offset: 3px;
+  border-radius: 2px;
+  background: #eff6ff;
+}
 .content-panel .exam-document .ProseMirror li > .question-control {
   position: absolute;
   top: 12px;
