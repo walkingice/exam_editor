@@ -19,44 +19,37 @@ export function setDocumentItemDragData(dataTransfer: DataTransfer | null, id: s
   }
 }
 
-function questionAt(view: EditorView, id: string) {
-  let offset = 0;
-  for (let index = 0; index < view.state.doc.childCount; index += 1) {
-    const node = view.state.doc.child(index);
-    if (node.type.name === 'bulletList') {
-      let itemOffset = 0;
-      for (let itemIndex = 0; itemIndex < node.childCount; itemIndex += 1) {
-        const item = node.child(itemIndex);
-        if (item.attrs.id === id) {
-          return { position: offset + 1 + itemOffset, attrs: item.attrs };
-        }
-        itemOffset += item.nodeSize;
-      }
+function documentNodeAt(view: EditorView, id: string) {
+  const found: Array<{ position: number; attrs: Record<string, unknown> }> = [];
+  view.state.doc.descendants((node, position) => {
+    if (node.attrs.id === id) {
+      found.push({ position, attrs: node.attrs });
+      return false;
     }
-    offset += node.nodeSize;
-  }
-  return null;
+    return true;
+  });
+  return found[0] ?? null;
 }
 
-function questionControl(view: EditorView, id: string): HTMLElement {
+export function itemControl(view: EditorView, id: string, question = false): HTMLElement {
   const control = document.createElement('span');
-  control.className = 'question-control';
+  control.className = question ? 'document-item-control question-control' : 'document-item-control';
   control.contentEditable = 'false';
   const label = document.createElement('label');
   label.contentEditable = 'false';
   const input = document.createElement('input');
   input.type = 'checkbox';
-  input.setAttribute('aria-label', `選取題目 ${id}`);
-  input.checked = questionAt(view, id)?.attrs.selected !== false;
+  input.setAttribute('aria-label', `選取${question ? '題目' : '項目'} ${id}`);
+  input.checked = documentNodeAt(view, id)?.attrs.selected !== false;
   input.disabled = !view.editable;
   input.addEventListener('change', () => {
-    const question = questionAt(view, id);
-    if (!view.editable || !question) return;
-    view.dispatch(view.state.tr.setNodeMarkup(question.position, undefined,
-      { ...question.attrs, selected: input.checked }));
+    const item = documentNodeAt(view, id);
+    if (!view.editable || !item) return;
+    view.dispatch(view.state.tr.setNodeMarkup(item.position, undefined,
+      { ...item.attrs, selected: input.checked }));
   });
   label.append(input);
-  const handle = dragHandle(view, id, `移動題目 ${id}`);
+  const handle = dragHandle(view, id, `移動${question ? '題目' : '項目'} ${id}`);
   control.append(label);
   if (view.editable) control.append(handle);
   return control;
@@ -69,21 +62,12 @@ function dragHandle(view: EditorView, id: string, label: string): HTMLButtonElem
   handle.draggable = true;
   handle.disabled = !view.editable;
   handle.setAttribute('aria-label', label);
-  handle.textContent = '↕';
   handle.addEventListener('dragstart', (event) => {
     if (!view.editable) { event.preventDefault(); return; }
     setDocumentItemDragData(event.dataTransfer, id);
   });
   handle.addEventListener('dragend', clearDocumentItemDropIndicator);
   return handle;
-}
-
-function itemControl(view: EditorView, id: string): HTMLElement {
-  const control = document.createElement('span');
-  control.className = 'document-item-control';
-  control.contentEditable = 'false';
-  if (view.editable) control.append(dragHandle(view, id, `移動項目 ${id}`));
-  return control;
 }
 
 function itemPosition(view: EditorView, id: string): number | null {
@@ -199,7 +183,7 @@ export const QuestionControls = Extension.create({
             node.forEach((item, itemOffset) => {
               const id = item.attrs.id as string;
               widgets.push(Decoration.widget(offset + 2 + itemOffset,
-                (view) => questionControl(view, id), {
+                (view) => itemControl(view, id, true), {
                   key: `question-${id}-${item.attrs.selected}-${this.editor.isEditable}`,
                   side: -1,
                   stopEvent: () => true,
@@ -209,7 +193,7 @@ export const QuestionControls = Extension.create({
             const id = node.attrs.id as string;
             widgets.push(Decoration.widget(offset + 1,
               (view) => itemControl(view, id), {
-                key: `item-${id}-${this.editor.isEditable}`,
+                key: `item-${id}-${node.attrs.selected}-${this.editor.isEditable}`,
                 side: -1,
                 stopEvent: () => true,
               }));

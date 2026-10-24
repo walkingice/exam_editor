@@ -15,9 +15,9 @@ export function createPrintCss(settings: PageSettings): string {
     + `font-size: ${settings.defaultFontSizePt}pt; line-height: ${settings.lineHeight}; } `
     + '#exam-print-root .exam-document { min-height: 0 !important; padding: 0 !important; '
     + 'border: 0 !important; border-radius: 0 !important; background: transparent !important; } '
-    + '#exam-print-root .question-control, #exam-print-root .question-drag-handle, '
+    + '#exam-print-root .document-item-control, #exam-print-root .question-drag-handle, '
     + '#exam-print-root .ProseMirror, #exam-print-root .ProseMirror-focused { outline: none !important; } '
-    + '#exam-print-root .question-control, #exam-print-root .question-drag-handle { display: none !important; } '
+    + '#exam-print-root .document-item-control, #exam-print-root .question-drag-handle { display: none !important; } '
     + '#exam-print-root img { max-width: 100%; height: auto; } '
     + '#exam-print-root table { max-width: 100%; border-collapse: collapse; } '
     + '#exam-print-root tr, #exam-print-root img { break-inside: avoid; } }';

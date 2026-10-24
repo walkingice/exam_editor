@@ -4,8 +4,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
 import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { clearDocumentItemDropIndicator, QuestionControls, setDocumentItemDragData }
-  from './questionControls';
+import { itemControl, QuestionControls } from './questionControls';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
@@ -80,27 +79,19 @@ export const AssetImage = Image.extend({
 
 const ExamHorizontalRule = HorizontalRule.extend({
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor }) => {
       const dom = document.createElement('div');
       dom.className = 'exam-horizontal-rule';
       dom.setAttribute('data-node-id', node.attrs.id);
-      const control = document.createElement('span');
-      control.className = 'document-item-control';
-      control.contentEditable = 'false';
-      const handle = document.createElement('button');
-      handle.type = 'button';
-      handle.className = 'question-drag-handle';
-      handle.draggable = true;
-      handle.setAttribute('aria-label', `移動項目 ${node.attrs.id}`);
-      handle.textContent = '↕';
-      handle.addEventListener('dragstart', (event) => {
-        setDocumentItemDragData(event.dataTransfer, node.attrs.id);
-      });
-      handle.addEventListener('dragend', clearDocumentItemDropIndicator);
-      control.append(handle);
+      const control = itemControl(editor.view, node.attrs.id);
       const rule = document.createElement('hr');
       dom.append(control, rule);
-      return { dom };
+      return { dom, update: (updatedNode) => {
+        if (updatedNode.type !== node.type || updatedNode.attrs.id !== node.attrs.id) return false;
+        const checkbox = control.querySelector<HTMLInputElement>('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = updatedNode.attrs.selected !== false;
+        return true;
+      } };
     };
   },
 });

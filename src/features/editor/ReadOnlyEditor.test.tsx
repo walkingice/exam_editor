@@ -85,22 +85,53 @@ describe('read-only document', () => {
     const view = render(<ReadOnlyEditor projectId="first" content={content}
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
-    const checkbox = await screen.findByRole('checkbox');
-    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    const checkbox = await screen.findByRole('checkbox', { name: /選取題目/ });
+    expect(screen.getAllByRole('checkbox', { name: /選取題目/ })).toHaveLength(1);
     expect(checkbox).toBeChecked();
     const id = content.content?.[0].content?.[0].attrs?.id;
     fireEvent.click(checkbox);
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs)
       .toMatchObject({ id, selected: false });
     fireEvent.click(screen.getByRole('button', { name: '復原' }));
-    expect(screen.getByRole('checkbox')).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /選取題目/ })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: '重做' }));
-    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /選取題目/ })).not.toBeChecked();
     const saved = normalizeDocument(editor!.getJSON());
     view.rerender(<ReadOnlyEditor projectId="first" content={saved}
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} />);
-    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /選取題目/ })).not.toBeChecked();
     expect(saved.content?.[0].content?.[0].attrs?.id).toBe(id);
+  });
+
+  it('adds a print selection checkbox to ordinary document items', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Intro' }] }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const checkbox = await screen.findByRole('checkbox', { name: /選取項目/ });
+    expect(checkbox).toBeChecked();
+    fireEvent.click(checkbox);
+    expect(editor!.getJSON().content?.[0].attrs).toMatchObject({ selected: false });
+  });
+
+  it('keeps a horizontal rule checkbox in sync with undo and redo', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'horizontalRule' }, { type: 'paragraph' },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const id = content.content?.[0].attrs?.id;
+    const checkbox = await screen.findByRole('checkbox', { name: `選取項目 ${id}` });
+    fireEvent.click(checkbox);
+    expect(editor!.getJSON().content?.[0].attrs?.selected).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(checkbox).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: '重做' }));
+    expect(checkbox).not.toBeChecked();
   });
 
   it('toggles a question after earlier text shifts its position without moving selection', async () => {
@@ -114,7 +145,7 @@ describe('read-only document', () => {
     render(<ReadOnlyEditor projectId="first" content={content}
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
-    const checkbox = await screen.findByRole('checkbox');
+    const checkbox = await screen.findByRole('checkbox', { name: /選取題目/ });
     editor!.commands.insertContentAt(2, ' more words');
     editor!.commands.setTextSelection(3);
     const selection = editor!.state.selection.from;
@@ -355,6 +386,21 @@ describe('read-only document', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('只支援 PNG 或 JPEG');
     expect(editor!.getJSON().content?.some((node) => node.type === 'image')).toBe(false);
     expect(repository.addAsset).not.toHaveBeenCalled();
+  });
+
+  it('stores the print selection of a top-level image', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'image', attrs: { assetId: 'photo' } },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn(async () => null) } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const checkbox = await screen.findByRole('checkbox', {
+      name: `選取項目 ${content.content?.[0].attrs?.id}`,
+    });
+    fireEvent.click(checkbox);
+    expect(editor!.getJSON().content?.[0].attrs?.selected).toBe(false);
   });
 
   it('deletes a selected image and restores it with undo', async () => {

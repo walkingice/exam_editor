@@ -11,7 +11,9 @@ import { ImageToolbar } from './ImageToolbar';
 import { insertLocalImage } from './insertLocalImage';
 import { clearDocumentItemDropIndicator, setDocumentItemDragData } from './questionControls';
 
-function AssetImageView({ node, resolver, editor }: NodeViewProps & { resolver: AssetResolver }) {
+function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewProps & {
+  resolver: AssetResolver; preview: boolean;
+}) {
   const [resolved, setResolved] = useState<{ assetId: string; handle: AssetHandle } | null>(null);
   const [errorAssetId, setErrorAssetId] = useState<string | null>(null);
   const assetId = node.attrs.assetId as string;
@@ -32,12 +34,25 @@ function AssetImageView({ node, resolver, editor }: NodeViewProps & { resolver: 
   }, [assetId, resolver]);
 
   const dragId = node.attrs.id as string;
+  const itemSelected = node.attrs.selected !== false;
+  const position = getPos();
+  const isDocumentItem = typeof position === 'number'
+    && editor.state.doc.resolve(position).depth === 0;
   return <NodeViewWrapper as="div" className="exam-image" data-node-id={dragId}>
-    {editor.isEditable && <span className="document-item-control" contentEditable={false}>
-      <button type="button" className="question-drag-handle" draggable
+    {!preview && isDocumentItem && <span className="document-item-control" contentEditable={false}>
+      <label><input type="checkbox" aria-label={`選取項目 ${dragId}`}
+        checked={itemSelected} disabled={!editor.isEditable}
+        onChange={(event) => {
+          const selected = event.currentTarget.checked;
+          const currentPosition = getPos();
+          if (typeof currentPosition !== 'number' || !editor.isEditable) return;
+          editor.view.dispatch(editor.state.tr.setNodeMarkup(currentPosition, undefined,
+            { ...node.attrs, selected }));
+        }} /></label>
+      {editor.isEditable && <button type="button" className="question-drag-handle" draggable
         aria-label={`移動項目 ${dragId}`}
         onDragStart={(event) => setDocumentItemDragData(event.dataTransfer, dragId)}
-        onDragEnd={clearDocumentItemDropIndicator}>↕</button>
+        onDragEnd={clearDocumentItemDropIndicator} />}
     </span>}
     {resolved?.assetId === assetId
       ? <img src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}
@@ -67,7 +82,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   const extensions = useMemo(() => (preview ? examExtensions : editingExtensions).map((extension) => extension.name === 'image'
     ? AssetImage.extend({
       addNodeView() {
-        return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} />);
+        return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} preview={preview} />);
       },
     }) : extension), [preview, resolver]);
   const editor = useEditor({ extensions, content, editable, immediatelyRender: false,
