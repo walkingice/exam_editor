@@ -16,6 +16,7 @@ import { pageDimensions } from '../../domain/pageSettings';
 import { AssetResolver } from '../../shared/assets/AssetResolver';
 import { PreviewFormatToolbar } from '../layout/PreviewFormatToolbar';
 import { updateSourceFormat, type FormatChange } from '../layout/updateSourceFormat';
+import { createPrintCss, waitForPrintAssets } from '../layout/printDocument';
 
 type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
 
@@ -63,6 +64,10 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [previewRevision, setPreviewRevision] = useState(0);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const [formatError, setFormatError] = useState('');
+  const [printSnapshot, setPrintSnapshot] = useState<{ content: JSONContent; settings: PageSettings } | null>(null);
+  const [printError, setPrintError] = useState('');
+  const printRoot = useRef<HTMLDivElement>(null);
+  const printing = useRef(false);
   const saving = useRef<EditingSession | null>(null);
   const assetResolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
@@ -239,6 +244,38 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     catch (cause) { setFormatError(errorMessage(cause)); }
   }
 
+  async function printExam() {
+    if (!pageSettings || printing.current) return;
+    printing.current = true;
+    setPrintError('');
+    try {
+      await saving.current?.flush();
+      const source = session.current?.editor?.getJSON() ?? bundle?.document.content;
+      if (!source) throw new Error('無法取得最新試卷內容。');
+      setPrintSnapshot({ content: projectOutput(source, pageSettings.outputListStyle),
+        settings: { ...pageSettings, marginsMm: { ...pageSettings.marginsMm } } });
+    } catch (cause) {
+      setPrintError(errorMessage(cause));
+      printing.current = false;
+    }
+  }
+
+  useEffect(() => {
+    if (!printSnapshot || !printRoot.current) return;
+    let active = true;
+    void waitForPrintAssets(printRoot.current, document.fonts).then(() => {
+      if (!active) return;
+      window.print();
+      setPrintSnapshot(null);
+      printing.current = false;
+    }).catch((cause: unknown) => {
+      if (!active) return;
+      setPrintError(errorMessage(cause));
+      printing.current = false;
+    });
+    return () => { active = false; };
+  }, [printSnapshot]);
+
   const previewContent = useMemo(() => {
     const source = session.current?.editor?.getJSON() ?? bundle?.document.content;
     return source && pageSettings ? projectOutput(source, pageSettings.outputListStyle) : null;
@@ -272,6 +309,11 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
           排版預覽</button>
       </div>
       <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
+      {pageSettings && <div className="workspace-actions">
+        <button onClick={() => void printExam()} disabled={printing.current}>列印 / PDF</button>
+        {printError && <><p role="alert">{printError}</p>
+          <button onClick={() => void printExam()}>重試列印</button></>}
+      </div>}
       {lease?.isActive && pageSettings && <PageSettingsForm settings={pageSettings}
         onChange={changePageSettings} />}
       {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
@@ -307,6 +349,13 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
               repository={repository} preview />
           </div>
         </div>}
+      {printSnapshot && <>
+        <style>{createPrintCss(printSnapshot.settings)}</style>
+        <div id="exam-print-root" ref={printRoot} aria-hidden="true">
+          <ReadOnlyEditor projectId={projectId} content={printSnapshot.content}
+            assetResolver={assetResolver} repository={repository} preview />
+        </div>
+      </>}
     </>}
   </main>;
 }

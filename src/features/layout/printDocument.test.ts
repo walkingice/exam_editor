@@ -1,0 +1,47 @@
+import { expect, it, vi } from 'vitest';
+import { DEFAULT_PAGE_SETTINGS } from '../../domain/types';
+import { createPrintCss, waitForPrintAssets } from './printDocument';
+
+it('generates physical page dimensions and applies margins only in @page', () => {
+  const settings = { ...DEFAULT_PAGE_SETTINGS, paperSize: 'TW_B4' as const,
+    orientation: 'landscape' as const };
+  const css = createPrintCss(settings);
+  expect(css).toContain('@page { size: 379mm 265mm; margin: 15mm 15mm 15mm 15mm; }');
+  expect(css).toContain('font-size: 12pt; line-height: 1.5');
+  expect(css).toContain('overflow: visible !important');
+  expect(css).not.toContain('#exam-print-root { break-inside: avoid');
+});
+
+it('waits for fonts and decoded images before printing', async () => {
+  const root = document.createElement('div');
+  const image = document.createElement('img');
+  image.src = 'data:image/png;base64,AA==';
+  root.append(image);
+  Object.defineProperty(image, 'complete', { value: true });
+  Object.defineProperty(image, 'naturalWidth', { value: 2 });
+  image.decode = vi.fn(async () => {});
+  const fonts = { ready: Promise.resolve() } as unknown as FontFaceSet;
+  await waitForPrintAssets(root, fonts);
+  expect(image.decode).toHaveBeenCalledOnce();
+});
+
+it('reports unavailable print images', async () => {
+  const root = document.createElement('div');
+  root.innerHTML = '<span aria-label="缺少圖片"></span>';
+  await expect(waitForPrintAssets(root, { ready: Promise.resolve() } as unknown as FontFaceSet))
+    .rejects.toThrow('列印圖片載入失敗');
+});
+
+it('waits until asynchronously resolved image nodes enter the print DOM', async () => {
+  const root = document.createElement('div');
+  root.innerHTML = '<div class="exam-image"><span>圖片載入中…</span></div>';
+  const waiting = waitForPrintAssets(root, { ready: Promise.resolve() } as unknown as FontFaceSet);
+  window.setTimeout(() => {
+    const image = document.createElement('img');
+    Object.defineProperty(image, 'complete', { value: true });
+    Object.defineProperty(image, 'naturalWidth', { value: 1 });
+    image.decode = async () => {};
+    root.querySelector('.exam-image')?.replaceChildren(image);
+  }, 0);
+  await waiting;
+});

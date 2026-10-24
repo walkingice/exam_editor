@@ -336,11 +336,12 @@ type Asset = {
 
 - [ ] **Phase 10 — 列印／PDF 與 Milestone 3 驗收**
 
-  - [ ] **Step 10.1 — 建立 print stylesheet 與列印入口**
+  - [x] **Step 10.1 — 建立 print stylesheet 與列印入口**
     - 目標：不論目前在哪個 Tab，列印均使用最新已勾選內容。
     - 實作：從當前完整 JSON 建立輸出快照，不只讀可能過時的 DB；共用 projection/rendering。動態產生 `@page` 實際 mm 尺寸與 margins，不使用會指向其他 B4 尺寸的命名值。`@media print` 隱藏所有 UI、checkbox、handles、可編輯外框；避免外層 fixed height/overflow 裁掉多頁內容，不重複套用內外邊距。圖片與必要字型就緒才呼叫 window.print，失敗提供重試；超高內容允許跨頁，不對整份文件強制 break-inside avoid。
     - 驗證：測試產生的尺寸與 CSS、print 呼叫前圖片載入等待、圖片失敗；browser print-media 檢查 UI 隱藏、非勾選內容不存在，內容 Tab 直接列印也正確。
     - Commit：`feat: Print selected exam content`。
+    - 驗證紀錄（2026-10-24）：加入列印按鈕，先 flush 編輯 session，再由目前 editor JSON 建立輸出 projection 快照；內容與預覽 Tab 均可直接列印。列印 DOM 使用動態 `@page` mm 尺寸／邊距及獨立 print media CSS，移除 UI、checkbox、handles 與外框；圖片 placeholder 解析、圖片 decode、字型 ready 後才呼叫列印，錯誤可重試。`npm test -- --run src/features/layout/printDocument.test.ts src/features/projects/ProjectWorkspace.test.tsx`（10/10）、`npm run typecheck`、`npm run build` 通過。sub-agent review 修正圖片 resolver 非同步時序，複查無阻礙；sub-agent testing 獨立通過。Browser 原生列印預覽尚未驗收，留待 Step 10.2。
 
   - [ ] **Step 10.2 — 驗收列印並更新限制文件**
     - 目標：多頁試卷可完整列印或由 browser 存 PDF。
