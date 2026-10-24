@@ -8,6 +8,7 @@ import mammoth from 'mammoth';
 import DOMPurify from 'dompurify';
 import Dexie from 'dexie';
 import { Document } from 'docx';
+import { parseDocx } from '../features/import-docx/parseDocx';
 
 export const browserDependencies = {
   Editor,
@@ -20,4 +21,5 @@ export const browserDependencies = {
   DOMPurify,
   Dexie,
   Document,
+  parseDocx,
 };
