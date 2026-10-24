@@ -15,6 +15,10 @@ latest editor content, and printing from both workspace tabs in Chromium and
 Firefox. Playwright media emulation is a CSS smoke test; it does not open or verify
 the native print preview dialog.
 
+The user requested skipping the native preview checks below. They are recorded as
+skipped, not passed; PDF pagination, clipping, and image/table page breaks remain
+unverified.
+
 ## Native print preview matrix
 
 Use `src/test/fixtures/docx/multi-page.docx` for the 120-paragraph page-break case
@@ -27,14 +31,14 @@ or contained workspace UI.
 
 | Browser | Paper | Orientation | Native preview result |
 | --- | --- | --- | --- |
-| Chromium | TW_B4 | Portrait | Pending manual inspection |
-| Chromium | TW_B4 | Landscape | Pending manual inspection |
-| Chromium | A4 | Portrait | Pending manual inspection |
-| Chromium | A4 | Landscape | Pending manual inspection |
-| Firefox | TW_B4 | Portrait | Pending manual inspection |
-| Firefox | TW_B4 | Landscape | Pending manual inspection |
-| Firefox | A4 | Portrait | Pending manual inspection |
-| Firefox | A4 | Landscape | Pending manual inspection |
+| Chromium | TW_B4 | Portrait | Skipped at user request; unverified |
+| Chromium | TW_B4 | Landscape | Skipped at user request; unverified |
+| Chromium | A4 | Portrait | Skipped at user request; unverified |
+| Chromium | A4 | Landscape | Skipped at user request; unverified |
+| Firefox | TW_B4 | Portrait | Skipped at user request; unverified |
+| Firefox | TW_B4 | Landscape | Skipped at user request; unverified |
+| Firefox | A4 | Portrait | Skipped at user request; unverified |
+| Firefox | A4 | Landscape | Skipped at user request; unverified |
 
 Do not treat a Playwright print-media screenshot or generated PDF as completion
 of the native preview checks above.

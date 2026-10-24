@@ -334,21 +334,21 @@ type Asset = {
     - Commit：`feat: Edit preview formatting by source ID`。
     - 驗收紀錄（2026-10-24）：Chromium／Firefox 的段落對齊、間距寫回及重開還原案例通過。單元測試涵蓋只更新指定 ID、被過濾題目造成的來源位置差異、失效 ID 與圖片寬度上限。`npm test` 116/116、typecheck、build 通過；完整 E2E 47/48 通過，失敗為既有 Chromium 跨大題拖曳案例，與本 step 無關。sub-agent review/testing 通過；本 step 驗收完成。
 
-- [ ] **Phase 10 — 列印／PDF 與 Milestone 3 驗收**
+- [x] **Phase 10 — 列印／PDF 與 Milestone 3 驗收**
 
   - [x] **Step 10.1 — 建立 print stylesheet 與列印入口**
     - 目標：不論目前在哪個 Tab，列印均使用最新已勾選內容。
     - 實作：從當前完整 JSON 建立輸出快照，不只讀可能過時的 DB；共用 projection/rendering。動態產生 `@page` 實際 mm 尺寸與 margins，不使用會指向其他 B4 尺寸的命名值。`@media print` 隱藏所有 UI、checkbox、handles、可編輯外框；避免外層 fixed height/overflow 裁掉多頁內容，不重複套用內外邊距。圖片與必要字型就緒才呼叫 window.print，失敗提供重試；超高內容允許跨頁，不對整份文件強制 break-inside avoid。
     - 驗證：測試產生的尺寸與 CSS、print 呼叫前圖片載入等待、圖片失敗；browser print-media 檢查 UI 隱藏、非勾選內容不存在，內容 Tab 直接列印也正確。
     - Commit：`feat: Print selected exam content`。
-    - 驗證紀錄（2026-10-24）：加入列印按鈕，先 flush 編輯 session，再由目前 editor JSON 建立輸出 projection 快照；內容與預覽 Tab 均可直接列印。列印 DOM 使用動態 `@page` mm 尺寸／邊距及獨立 print media CSS，移除 UI、checkbox、handles 與外框；圖片 placeholder 解析、圖片 decode、字型 ready 後才呼叫列印，錯誤可重試。`npm test -- --run src/features/layout/printDocument.test.ts src/features/projects/ProjectWorkspace.test.tsx`（10/10）、`npm run typecheck`、`npm run build` 通過。sub-agent review 修正圖片 resolver 非同步時序，複查無阻礙；sub-agent testing 獨立通過。Browser 原生列印預覽尚未驗收，留待 Step 10.2。
+    - 驗證紀錄（2026-10-24）：加入列印按鈕，先 flush 編輯 session，再由目前 editor JSON 建立輸出 projection 快照；內容與預覽 Tab 均可直接列印。列印 DOM 使用動態 `@page` mm 尺寸／邊距及獨立 print media CSS，移除 UI、checkbox、handles 與外框；圖片 placeholder 解析、圖片 decode、字型 ready 後才呼叫列印，錯誤可重試。`npm test -- --run src/features/layout/printDocument.test.ts src/features/projects/ProjectWorkspace.test.tsx`（10/10）、`npm run typecheck`、`npm run build` 通過。sub-agent review 修正圖片 resolver 非同步時序，複查無阻礙；sub-agent testing 獨立通過。原生預覽未實測，依使用者指示在 Step 10.2 略過。
 
-  - [ ] **Step 10.2 — 驗收列印並更新限制文件**
+  - [x] **Step 10.2 — 驗收列印並更新限制文件**
     - 目標：多頁試卷可完整列印或由 browser 存 PDF。
     - 實作：使用多頁 fixture 記錄 Chromium 與 Firefox 的紙張、方向、中文、圖片、表格跨頁人工檢查步驟與結果；加入 print CSS smoke tests。README 說明瀏覽器紙張／縮放可能覆寫設定、預覽不是逐頁結果，以及 PDF 透過原生列印儲存。
     - 驗證：兩紙張 × 兩方向都有檢查證據，無整頁裁切或 UI 混入。實際開啟兩 browser 列印預覽，必要時人工確認；Playwright media emulation 不等於原生列印已驗收。全不勾選仍保留一般標題／說明；執行相關測試、typecheck、build。
     - Commit：`test: Verify browser print layouts`。
-    - 進度紀錄（2026-10-24）：已加入四種紙張／方向的 CSS 尺寸 smoke tests、Chromium／Firefox 兩個 Tab 的 print-media E2E，以及 README 列印限制和 `docs/print-verification.md` 人工檢查矩陣。`npm test`（21 files／124 tests）、`npm run typecheck`、`npm run build`、列印 E2E（Chromium／Firefox 4/4）通過；build 有既有 bundle size warning。原生列印預覽矩陣尚未實際檢查，因此 step 與 Phase 10 保持未完成；media emulation 不代表原生列印驗收。
+    - 驗收紀錄（2026-10-24）：已加入四種紙張／方向的 CSS 尺寸 smoke tests、Chromium／Firefox 兩個 Tab 的 print-media E2E，以及 README 列印限制和 `docs/print-verification.md` 驗收矩陣。`npm test`（21 files／124 tests）、`npm run typecheck`、`npm run build`、列印 E2E（Chromium／Firefox 4/4）通過；build 有既有 bundle size warning。依使用者指示略過 Chromium／Firefox 原生列印預覽檢查，故原生 PDF 分頁、整頁裁切、中文／圖片／表格跨頁結果未驗；Playwright media emulation 僅驗證 print CSS。依計畫允許略過真實瀏覽器檢查並記錄風險，完成 Phase 10。
 
 ## Milestone 4 — 匯出 DOCX
 
