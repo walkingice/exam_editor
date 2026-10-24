@@ -2,6 +2,7 @@ import type { JSONContent } from '@tiptap/core';
 import { ImageRun, Paragraph } from 'docx';
 import type { Asset, PageSettings } from '../../domain/types';
 import { pageDimensions } from '../../domain/pageSettings';
+import { mmToPixels } from './formatMapper';
 import { imageDimensions } from '../import-docx/imageDimensions';
 
 export type AssetReader = (assetId: string) => Promise<Asset | undefined>;
@@ -26,10 +27,9 @@ export function createImageLoader(readAsset: AssetReader | undefined, settings: 
     if (!cache.has(id)) cache.set(id, load(id));
     const image = await cache.get(id)!;
     const page = pageDimensions(settings);
-    const mmToPx = 96 / 25.4;
-    const requestedWidth = node.attrs?.widthMm == null ? image.width : node.attrs.widthMm * mmToPx;
-    const width = Math.min(requestedWidth, (availableWidthMm ?? page.contentWidthMm) * mmToPx,
-      page.contentHeightMm * mmToPx * image.width / image.height);
+    const requestedWidth = node.attrs?.widthMm == null ? image.width : mmToPixels(node.attrs.widthMm);
+    const width = Math.min(requestedWidth, mmToPixels(availableWidthMm ?? page.contentWidthMm),
+      mmToPixels(page.contentHeightMm) * image.width / image.height);
     return new Paragraph({ children: [new ImageRun({ type: image.type, data: image.bytes,
       transformation: { width, height: width * image.height / image.width },
       altText: { name: node.attrs?.alt ?? '', description: node.attrs?.title ?? '' } })] });

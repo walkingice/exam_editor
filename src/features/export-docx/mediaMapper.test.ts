@@ -72,4 +72,32 @@ describe('DOCX tables and media', () => {
       async () => ({ ...asset('bad'), blob: new NodeBlob(['bad'], { type: 'image/png' }) as Blob })))
       .rejects.toThrow('Invalid image asset');
   });
+
+  it('fits oversized images and ends nested-table cells with a paragraph', async () => {
+    const cell = (content: JSONContent[]): JSONContent => ({ type: 'tableCell', content });
+    const table = (content: JSONContent[]): JSONContent => ({ type: 'table',
+      content: [{ type: 'tableRow', content: [cell(content)] }] });
+    const { xml } = await packed([image('png', 379), table([table([image('png', 379)])])], [asset('png')]);
+    const extents = [...xml.getElementsByTagName('wp:extent')];
+    const emuPerMm = 36000;
+    for (const extent of extents) {
+      expect(Number(extent.getAttribute('cx'))).toBeLessThanOrEqual(235 * emuPerMm);
+      expect(Number(extent.getAttribute('cy'))).toBeLessThanOrEqual(349 * emuPerMm);
+    }
+    expect(Number(extents[1].getAttribute('cx'))).toBeLessThan(Number(extents[0].getAttribute('cx')));
+    const parentCell = xml.getElementsByTagName('w:tc')[0];
+    expect(parentCell.lastElementChild?.tagName).toBe('w:p');
+    expect(xml.getElementsByTagName('w:tbl')).toHaveLength(2);
+  });
+
+  it('excludes all unselected table and image subtrees without reading assets', async () => {
+    const hidden = question('不輸出', false);
+    hidden.content!.push(image('not-stored'), { type: 'table', content: [{ type: 'tableRow',
+      content: [{ type: 'tableCell', content: [paragraph('隱藏表格')] }] }] });
+    const { xml, reader, zip } = await packed([{ type: 'bulletList', content: [hidden] }], []);
+    expect(reader).not.toHaveBeenCalled();
+    expect(xml.getElementsByTagName('w:tbl')).toHaveLength(0);
+    expect(xml.documentElement.textContent).not.toContain('不輸出');
+    expect(Object.keys(zip.files).some((name) => name.startsWith('word/media/'))).toBe(false);
+  });
 });

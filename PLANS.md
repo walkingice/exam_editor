@@ -354,7 +354,7 @@ type Asset = {
 
 前置：Milestone 3 驗收完成。目標：選定內容可下載為 Word／LibreOffice 可繼續編輯的 DOCX。
 
-- [ ] **Phase 11 — DOCX 語意 mapper**
+- [x] **Phase 11 — DOCX 語意 mapper**
 
   - [x] **Step 11.1 — 文字、標題與清單 mapping**
     - 目標：不靠畫面截圖即可產生可編輯文字。
@@ -370,11 +370,12 @@ type Asset = {
     - Commit：`feat: Export DOCX tables and image assets`。
     - 驗證紀錄（2026-10-25）：加入可編輯表格、合併欄列、格內清單及 PNG/JPEG mapping；圖片依投影讀取、同圖快取並維持比例，缺少／錯誤資產明確失敗。exporter tests 6/6、typecheck、build 通過（既有 bundle size warning）。XML／media entries 驗證涵蓋實際圖片 bytes、過濾圖片、表格結構及不同寬度；sub-agent review/testing 通過，無 blocker。表格欄寬採等分 logical columns 並提示，已記錄於 `docs/docx-export.md`；Office 人工驗收留待 Phase 12。
 
-  - [ ] **Step 11.3 — 紙張與段落格式 mapping**
+  - [x] **Step 11.3 — 紙張與段落格式 mapping**
     - 目標：輸出使用相同紙張方向、邊距與可映射樣式。
     - 實作：集中 mm/pt 與 docx.js 所需單位換算；設定 section size、orientation、margins、預設字級、行距、段落間距、圖片寬度。不重複交換 landscape 尺寸；專屬 CSS 無對應時提供合理退化與 warning，不把文字變成圖片。
     - 驗證：單元測試 TW_B4/A4、兩方向、15 mm 等邊距、字級／行距換算及局部格式；檢查產生的 section/paragraph properties，記錄數值容差。
     - Commit：`feat: Preserve DOCX page formatting`。
+    - 驗證紀錄（2026-10-25）：集中 twips／half-point／line units／pixel 換算；section 套用 TW_B4/A4、兩方向與各邊邊距，docx 9.14 自行交換 landscape 尺寸，避免重複交換。預設字級、行距、局部對齊與段落間距、圖片寬高均有 XML 驗證；補上巢狀表格、超寬圖片限制與全不勾選表格／圖片案例。全套 `npm test`（24 files／149 tests）、typecheck、build、build:smoke 通過，sub-agent 獨立重跑與 review 通過，無 blocker。僅有既有 bundle size／Tiptap use client warnings；數值容差與降級策略見 `docs/docx-export.md`。未啟動瀏覽器，未執行 Office 人工驗收，兩者保留於 Phase 12；本 phase 不提供下載 UI。
 
 - [ ] **Phase 12 — 下載整合與最終驗收**
 

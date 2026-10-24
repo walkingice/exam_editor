@@ -8,6 +8,7 @@ import mammoth from 'mammoth';
 import DOMPurify from 'dompurify';
 import Dexie from 'dexie';
 import { Document } from 'docx';
+import { mapExamDocument } from '../features/export-docx/mapDocument';
 import { parseDocx } from '../features/import-docx/parseDocx';
 
 export const browserDependencies = {
@@ -22,4 +23,5 @@ export const browserDependencies = {
   Dexie,
   Document,
   parseDocx,
+  mapExamDocument,
 };

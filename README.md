@@ -91,3 +91,10 @@ DOCX 匯出尚未實作。本機資料不等於永久備份。
 DOCX 匯入解析器的限制：單一 DOCX 20 MiB、單張圖片 10 MiB／4,000 萬像素、
 圖片總量 30 MiB。圖片僅支援 PNG/JPEG，其他格式會顯示警告。
 匯入時會清理 HTML、正規化文件並以單一交易儲存 Project、JSON 與圖片。
+
+## DOCX mapper development status
+
+Phase 11 provides an independent semantic DOCX mapper for selected content,
+including editable text, lists, tables, embedded PNG/JPEG images, and page
+formatting. See [mapping behavior and limitations](docs/docx-export.md).
+The download UI and Word/LibreOffice manual acceptance remain in Phase 12.
