@@ -286,12 +286,14 @@ type Asset = {
     - 實作：建立純函式遍歷完整 JSON 的 assetId 集合，以儲存後文件比對 assets。只由持有寫入權的分頁在關閉時 best effort 清理；flush 失敗就不刪。建立待清理標記／等價可恢復機制，下一次取得寫入權且未建立 history 前補清理；不以預覽投影計算引用，也不在一般刪圖、切換內容 Tab 時清 Blob。明確處理 browser 頁面暫存恢復，避免恢復中的 session 使用已清掉的 history。
     - 驗證：單元測試引用集合含未勾選題目、共享圖片、無引用圖片、save 失敗及無鎖；E2E 正常關閉及模擬未完成清理後重開。確認 session 中刪圖 undo 仍有效。
     - Commit：`feat: Clean unused assets after sessions`。
+    - 進度紀錄（2026-10-24）：已加入完整 JSON assetId 收集、Dexie v3 待清理標記，以及持有寫入權時的原子清理；關閉先 flush，失敗保留標記，重開在建立 history 前補清理。BFCache 進入時仍嘗試 flush 而保留資產；失去 lease 且仍有未儲存內容時保留畫面並提示複製。unit/UI 測試涵蓋未勾選圖片、孤立圖片、無鎖、清理交易失敗、無效儲存文件、flush 失敗及 BFCache；新增正常離開、關閉分頁與中斷補清理 E2E。`npm test`（17 files／105 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（40 cases）通過；review 指出的 BFCache 風險已修正。依 SPEC 未啟動真實瀏覽器，E2E 待驗，step 保持待驗。
 
   - [ ] **Step 7.2 — 驗收 Milestone 2 並更新文件**
     - 目標：教師可持續編輯而不遺失內容或覆寫別人的分頁。
     - 實作：整合多大題 fixture，包含選項、圖片、表格及未勾選題目；更新 README 編輯、更名、保存狀態、單一分頁與清理限制。加入完整編輯 session regression tests。
     - 驗證：匯入後修改文字／表格／圖片、勾選、跨大題移動、undo/redo、重載；雙分頁限制、失敗重試與關閉後補清理。執行相關 unit/UI/E2E、typecheck、build，記錄 sub-agent review 與已知限制。
     - Commit：`test: Verify persistent editing workflow`。
+    - 進度紀錄（2026-10-24）：已新增多大題、巢狀選項、圖片、表格及未勾選題目的整合 fixture；加入完整 session 的持久化 unit test 與編輯、跨大題移動、undo/redo、重載 E2E；README 已更新操作、儲存與清理限制。unit/UI 105/105、typecheck、build 及 E2E 列舉 40 cases 通過。匯入後的編輯情境由既有匯入與編輯測試分別涵蓋，完整串接尚待真實瀏覽器整合驗收；Phase 7 與 Milestone 2 保持待驗。
 
 ## Milestone 3 — 排版預覽與列印／PDF
 

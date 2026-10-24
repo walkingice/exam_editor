@@ -1,7 +1,7 @@
 # 試卷編輯器
 
 這是依 [SPEC.md](SPEC.md) 開發的純前端試卷編輯器。目前已完成 Milestone 1
-及 Phase 4、Phase 5。已可建立、列表、開啟及刪除
+及 Phase 4、Phase 5、Phase 6。已可建立、列表、開啟及刪除
 本機 Project、匯入 DOCX，並在有寫入權的 workspace 編輯文件；功能順序與
 驗證紀錄見 [PLANS.md](PLANS.md)。
 
@@ -56,6 +56,7 @@ Playwright 已設定 Chromium、Firefox、獨立測試 context、由測試工具
 server，以及失敗時保留 trace／screenshot。`test-results/` 與
 `playwright-report/` 已由 Git 忽略。使用者指定後，Chromium／Firefox
 共 28 個 E2E 案例已通過，包含 Phase 5 的文字格式、表格與圖片重載。
+Phase 7 新增的清理與完整編輯 session E2E 案例尚未執行。
 
 ## 目錄與目前限制
 
@@ -69,12 +70,15 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 - `docs/`：套件與授權紀錄。
 
 首頁可選擇 DOCX 匯入；轉換中可取消，完成後開啟「試卷內容」。持有該 Project
-寫入權的分頁可編輯文字、表格與 PNG/JPEG 圖片，其他分頁唯讀。圖片刪除後的 Blob
-暫時保留以供 undo；孤立資產的清理待 Phase 7 實作。
+寫入權的分頁可編輯文字、表格與 PNG/JPEG 圖片、勾選題目並跨大題拖曳；其他分頁唯讀。
+名稱與內容自動儲存，畫面會顯示儲存狀態，失敗時可重試。圖片刪除後的 Blob
+在編輯期間保留以供 undo；離開 workspace 或關閉分頁時，成功儲存後清理未引用圖片。
+若關閉時清理未完成，下次取得寫入權會在建立編輯 history 前補做。瀏覽器關閉時的
+非同步儲存是 best effort，最後一筆編輯不保證完成；進入 browser 暫存不清理圖片。
 匯入警告保存在目前 browser session，關閉 browser 後不會保留；請在匯入後立即校對。
 Word 原始版面、原始分頁不保證保留。公式、文字方塊、圖形、浮動物件可能遺失或改變順序；
 匯入後請對照原稿。六類合成 DOCX 測試資料及預期結果見 [docs/fixtures.md](docs/fixtures.md)。
-題目勾選與拖曳、DOCX 匯出、預覽與列印尚未實作。本機資料不等於永久備份。
+DOCX 匯出、預覽與列印尚未實作。本機資料不等於永久備份。
 
 DOCX 匯入解析器的限制：單一 DOCX 20 MiB、單張圖片 10 MiB／4,000 萬像素、
 圖片總量 30 MiB。圖片僅支援 PNG/JPEG，其他格式會顯示警告。
