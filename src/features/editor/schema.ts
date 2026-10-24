@@ -117,7 +117,7 @@ const SourceListShortcut = Extension.create({
 });
 
 export const editingExtensions = [
-  StarterKit.configure({ orderedList: false, horizontalRule: false }),
+  StarterKit.configure({ orderedList: false, horizontalRule: false, dropcursor: false }),
   ExamHorizontalRule,
   ExamAttributes,
   AssetImage,

@@ -201,9 +201,13 @@ describe('read-only document', () => {
       ] },
     ] },
     ] });
+    let editor: Editor | undefined;
     render(<ReadOnlyEditor projectId="first" content={content}
-      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable />);
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable
+      onEditor={(value) => { editor = value; }} />);
     const handle = await screen.findByRole('button', { name: '移動題目 a' });
+    expect(editor!.extensionManager.extensions.some((extension) => extension.name === 'dropCursor'))
+      .toBe(false);
     const values = new Map<string, string>();
     const dataTransfer = { types: ['application/x-exam-question'],
       setData: (type: string, value: string) => { values.set(type, value); },
