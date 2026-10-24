@@ -2,6 +2,7 @@
   font-family: system-ui, -apple-system, "Noto Sans TC", sans-serif;
   color: #17233a;
   background: #f5f7fa;
+  --workspace-header-height: 60px;
 }
 
 body { margin: 0; }
@@ -14,14 +15,14 @@ li { margin: 10px 0; }
   display: flex;
   align-items: center;
   gap: 28px;
-  position: relative;
-  left: 50%;
+  position: sticky;
+  top: 0;
+  z-index: 3;
   width: 100vw;
   box-sizing: border-box;
-  margin: -32px 0 24px;
+  margin: -32px calc(50% - 50vw) 24px;
   padding: 0 max(24px, calc((100vw - 920px) / 2));
-  min-height: 60px;
-  transform: translateX(-50%);
+  min-height: var(--workspace-header-height);
   color: #fff;
   background: #304448;
 }
@@ -66,12 +67,12 @@ li { margin: 10px 0; }
   content: "";
 }
 @media (max-width: 640px) {
+  :root { --workspace-header-height: 88px; }
   .workspace-header {
     flex-wrap: wrap;
     gap: 8px 18px;
     margin-bottom: 20px;
     padding: 10px 20px 0;
-    min-height: 0;
   }
   .workspace-home { order: 0; width: auto; padding-bottom: 0; }
   .workspace-header h1 { order: 1; flex: 1 1 calc(100% - 110px); font-size: 1.1rem; }
@@ -94,7 +95,8 @@ li { margin: 10px 0; }
     margin-left: -172px;
   }
 }
-.content-editor-controls { position: sticky; top: 12px; max-height: calc(100vh - 24px);
+.content-editor-controls { position: sticky; top: calc(var(--workspace-header-height) + 12px);
+  max-height: calc(100vh - var(--workspace-header-height) - 24px);
   overflow-y: auto; padding: 8px; border: 1px solid #d7dee8; border-radius: 8px;
   background: #f5f7fa; }
 .editor-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
@@ -270,7 +272,7 @@ li { margin: 10px 0; }
 .settings-summary [role="alert"] { color: #a32323; }
 @media (max-width: 700px) {
   .content-editor-layout { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .content-editor-controls { z-index: 2; top: 8px; max-height: 40vh; }
+  .content-editor-controls { z-index: 2; top: calc(var(--workspace-header-height) + 8px); max-height: 40vh; }
   .content-editor-controls .editor-toolbar { flex-direction: row; }
   .content-editor-controls .toolbar-group { flex: 1 1 132px; }
   .content-editor-controls .image-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
