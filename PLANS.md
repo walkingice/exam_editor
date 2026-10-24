@@ -318,21 +318,21 @@ type Asset = {
     - 進度紀錄（2026-10-24）：已加入 B4／A4 與直橫向有效尺寸計算，並在 workspace 提供設定 UI 與 autosave。輸入限制為邊距 0–100 mm、字級 6–72 pt、行距 0.5–4，內容寬高須大於 0。單元／UI 測試涵蓋尺寸、非法值、儲存失敗與重新開啟；頁面設定重載 E2E 在 Chromium／Firefox 均通過。
     - 驗收紀錄（2026-10-24）：使用者指定執行測試後，unit/UI 113/113、typecheck、build 通過。E2E 43/44 通過；使用者指定略過失敗的 Chromium 跨大題拖曳案例（Firefox 該案例通過）。依此完成 Phase 8；被略過案例不記為通過。
 
-- [ ] **Phase 9 — 唯讀預覽與局部格式**
+- [x] **Phase 9 — 唯讀預覽與局部格式**
 
-  - [ ] **Step 9.1 — 建立連續預覽 Tab**
+  - [x] **Step 9.1 — 建立連續預覽 Tab**
     - 目標：只顯示輸出投影且切換 Tab 不遺失來源編輯狀態。
     - 實作：試卷內容保留完整 editor session；預覽用獨立 readonly renderer/instance，套用紙張內容寬度、邊距、字級、行距。不提供頁碼、文字輸入、貼上或題目拖曳。保留來源 editor selection 與 history；預覽 renderer 不觸發來源 autosave，圖片共用 resolver。
     - 驗證：UI/E2E 切換前後未儲存編輯、selection 附近內容與圖片不丟失；預覽鍵盤、paste 不改 JSON；只顯示勾選題目，兩清單樣式一致。
     - Commit：`feat: Add readonly layout preview`。
-    - 進度紀錄（2026-10-24）：已加入連續預覽 Tab、獨立唯讀 renderer、紙張內容區排版及共用圖片 resolver；來源 editor 切換時保持掛載，預覽使用目前來源的輸出投影。unit/UI、typecheck、build 與 E2E 列舉已執行；真實 browser 案例尚未執行，故本 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：Chromium／Firefox 的未儲存內容預覽、唯讀鍵盤操作、切回來源與 undo 案例通過。`npm test` 116/116、typecheck、build 通過；完整 E2E 47/48 通過，唯一失敗為既有 Chromium 跨大題拖曳案例，Firefox 通過。sub-agent review/testing 通過；本 step 驗收完成。
 
-  - [ ] **Step 9.2 — 透過來源 ID 修改局部格式**
+  - [x] **Step 9.2 — 透過來源 ID 修改局部格式**
     - 目標：預覽可調段落對齊／間距及圖片寬度，文字保持不可編輯。
     - 實作：預覽選取節點後使用工具列，依穩定 ID 找回完整來源節點，用窄範圍 transaction 更新格式屬性。為新增屬性補 schema defaults、validation 和持久化；設定圖片寬度上限，避免超出內容區。失效 ID 顯示錯誤而非寫錯節點；未來文字編輯可沿用映射，但本次不開放。
     - 驗證：測試局部格式只改指定節點、過濾後 index 不導致誤寫、未勾選題目內容未變、重開後還原；確認未引入第二份持久化 JSON。
     - Commit：`feat: Edit preview formatting by source ID`。
-    - 進度紀錄（2026-10-24）：已加入預覽節點選取、來源 ID 格式更新、段落對齊／段後間距及圖片寬度限制；格式屬性納入 schema 驗證和既有 autosave。單元測試涵蓋被過濾題目造成的索引差異、失效 ID 與圖片上限；重開 E2E 已列舉。真實 browser 案例尚未執行，故本 step 保持待驗。
+    - 驗收紀錄（2026-10-24）：Chromium／Firefox 的段落對齊、間距寫回及重開還原案例通過。單元測試涵蓋只更新指定 ID、被過濾題目造成的來源位置差異、失效 ID 與圖片寬度上限。`npm test` 116/116、typecheck、build 通過；完整 E2E 47/48 通過，失敗為既有 Chromium 跨大題拖曳案例，與本 step 無關。sub-agent review/testing 通過；本 step 驗收完成。
 
 - [ ] **Phase 10 — 列印／PDF 與 Milestone 3 驗收**
 
