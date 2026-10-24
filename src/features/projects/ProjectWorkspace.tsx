@@ -3,6 +3,7 @@ import { ProjectOwnership, WriteAccessError, type ProjectLease } from '../../dat
 import { ProjectRepository, type ProjectBundle } from '../../data/repository';
 import { onProjectDeleted } from '../../data/projectEvents';
 import { ReadOnlyEditor } from '../editor/ReadOnlyEditor';
+import { readImportWarnings } from '../import-docx/importNotices';
 
 export function ProjectWorkspace({ projectId, repository, ownership }: {
   projectId: string; repository: ProjectRepository; ownership: ProjectOwnership;
@@ -71,6 +72,10 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
       <button onClick={() => void open(() => false)}>重試</button></>}
     {status === 'ready' && bundle && <>
       <h1>{bundle.project.name}</h1>
+      {readImportWarnings(projectId).length > 0 && <section aria-label="匯入提醒">
+        <p>匯入文件需人工校對：</p>
+        <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+      </section>}
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         <button onClick={() => void takeOver()}>重新取得寫入權</button></>}
       <h2>試卷內容</h2>
