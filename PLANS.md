@@ -184,11 +184,12 @@ type Asset = {
     - Commit：`feat: Parse DOCX content and image assets`。
     - 驗證紀錄（2026-10-24）：`npm test`（8 files／40 tests）、`npm run typecheck`、`npm run build:smoke`、`npm run build` 通過。真實 DOCX 文字／PNG 與 JPEG 圖片 header、偽裝副檔名、損壞內容、圖片大小／像素／總量、不支援格式、取消及 Mammoth warning/error 均有測試；adapter 不呼叫 repository。sub-agent review/testing 通過；review 提出的 Mammoth 隱藏圖片錯誤已修正。browser bundle smoke 已含 importer；尚未接入 UI，也未執行真實 browser 測試。
 
-  - [ ] **Step 3.2 — 清理 HTML 並正規化 JSON**
+  - [x] **Step 3.2 — 清理 HTML 並正規化 JSON**
     - 目標：匯入資料符合安全要求及題目模型。
     - 實作：使用 DOMPurify 明確 tag/attribute allowlist；只允許 importer 建立的資產引用，不保留任意 remote URL、事件屬性或危險標籤。透過共用 editor schema 解析 sanitized HTML，再正規化 unordered lists、ID、selected。保留標題、段落、marks、表格及圖片順序；普通文字題號不猜測拆題，無法確認的歸屬記警告。
     - 驗證：sanitizer 測試 script、事件 handler、不可信 URL；normalization 測試有序清單、巢狀選項、混合表格圖片與中文；相同 fixture 可重複產生語意相同的文件。
     - Commit：`feat: Sanitize and normalize DOCX imports`。
+    - 驗證紀錄（2026-10-24）：`npm test`（9 files／46 tests）、`npm run typecheck`、`npm run build` 通過。測試涵蓋 script、事件、URL、偽造資產引用、ordered／巢狀清單、中文、marks、表格圖片順序、合併儲存格、對齊與重複匯入語意。sub-agent review/testing 通過；review 提出的偽造 attribute 與段落內圖片警告已修正。尚未執行真實 browser 驗證。
 
   - [ ] **Step 3.3 — 串接交易匯入 UI**
     - 目標：匯入成功才顯示完整 Project，取消或失敗不留下殘缺資料。
