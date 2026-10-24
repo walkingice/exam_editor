@@ -35,7 +35,7 @@ const ExamAttributes = Extension.create({
   },
 });
 
-const AssetImage = Image.extend({
+export const AssetImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),

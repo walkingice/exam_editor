@@ -4,6 +4,7 @@ import { ProjectOwnership } from '../data/ownership';
 import { ProjectRepository } from '../data/repository';
 import { ProjectHome } from '../features/projects/ProjectHome';
 import { ProjectWorkspace } from '../features/projects/ProjectWorkspace';
+import './styles.css';
 
 const ownership = new ProjectOwnership();
 const repository = new ProjectRepository(new ExamDatabase(), ownership);

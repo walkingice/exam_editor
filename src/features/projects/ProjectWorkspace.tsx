@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ProjectOwnership, WriteAccessError, type ProjectLease } from '../../data/ownership';
 import { ProjectRepository, type ProjectBundle } from '../../data/repository';
 import { onProjectDeleted } from '../../data/projectEvents';
+import { ReadOnlyEditor } from '../editor/ReadOnlyEditor';
 
 export function ProjectWorkspace({ projectId, repository, ownership }: {
   projectId: string; repository: ProjectRepository; ownership: ProjectOwnership;
@@ -73,7 +74,7 @@ export function ProjectWorkspace({ projectId, repository, ownership }: {
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         <button onClick={() => void takeOver()}>重新取得寫入權</button></>}
       <h2>試卷內容</h2>
-      <p>空白試卷已建立。文件內容將於下一步顯示。</p>
+      <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository} />
     </>}
   </main>;
 }

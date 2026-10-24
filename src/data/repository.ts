@@ -49,6 +49,13 @@ export class ProjectRepository {
     return projects;
   }
 
+  async getAsset(projectId: string, assetId: string): Promise<Asset | null> {
+    const asset = await this.database.assets.get(assetId);
+    if (!asset || asset.projectId !== projectId) return null;
+    validateAsset(asset);
+    return asset;
+  }
+
   async save(bundle: ProjectBundle): Promise<void> {
     validateBundle(bundle);
     await this.authority.run(bundle.project.id, () => this.database.transaction('rw', this.database.projects,
