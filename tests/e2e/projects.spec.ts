@@ -39,6 +39,41 @@ test('persists page settings after reloading the workspace', async ({ page }) =>
   await expect(page.getByLabel('輸出清單')).toHaveValue('unordered');
 });
 
+test('previews unsaved content without changing the source editor', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  const source = page.getByRole('tabpanel').first().locator('.ProseMirror');
+  await source.fill('Unsaved preview text');
+  await page.getByRole('tab', { name: '排版預覽' }).click();
+  const preview = page.getByRole('tabpanel', { name: '排版預覽' });
+  await expect(preview).toContainText('Unsaved preview text');
+  await expect(preview.locator('.ProseMirror')).toHaveAttribute('contenteditable', 'false');
+  await preview.locator('.ProseMirror').press('A');
+  await expect(preview).toContainText('Unsaved preview text');
+  await page.getByRole('tab', { name: '試卷內容' }).click();
+  await expect(source).toContainText('Unsaved preview text');
+  await source.press('ControlOrMeta+z');
+  await expect(source).not.toContainText('Unsaved preview text');
+});
+
+test('persists preview paragraph formatting on its source node', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  const source = page.getByRole('tabpanel').first().locator('.ProseMirror');
+  await source.fill('Format this paragraph');
+  await page.getByRole('tab', { name: '排版預覽' }).click();
+  const preview = page.getByRole('tabpanel', { name: '排版預覽' });
+  await preview.getByText('Format this paragraph').click();
+  await preview.getByLabel('對齊').selectOption('center');
+  await preview.getByLabel('段後間距 (mm)').fill('5');
+  await expect(preview.getByText('Format this paragraph')).toHaveAttribute('data-spacing-after-mm', '5');
+  await expect(page.getByRole('status')).toContainText('已儲存');
+  await page.reload();
+  await page.getByRole('tab', { name: '排版預覽' }).click();
+  await expect(page.getByRole('tabpanel', { name: '排版預覽' })
+    .getByText('Format this paragraph')).toHaveAttribute('data-spacing-after-mm', '5');
+});
+
 test('prevents another tab from deleting until ownership changes', async ({ context, page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();

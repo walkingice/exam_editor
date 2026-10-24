@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { ProjectLease, type ProjectOwnership } from '../../data/ownership';
 import type { ProjectBundle, ProjectRepository } from '../../data/repository';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS } from '../../domain/types';
+import { normalizeDocument } from '../../domain/document';
 import { ProjectWorkspace } from './ProjectWorkspace';
 
 const editorProps = vi.hoisted(() => ({
@@ -141,4 +142,32 @@ it('saves page settings, reports failures, and restores them after reopening', a
   view.unmount();
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   expect(await screen.findByLabelText('紙張')).toHaveValue('A4');
+});
+
+it('shows selected output while keeping the source editor mounted across tabs', async () => {
+  const current = bundle('first');
+  current.document.content = normalizeDocument({ type: 'doc', content: [{ type: 'bulletList',
+    content: [
+      { type: 'listItem', attrs: { selected: true },
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Included' }] }] },
+      { type: 'listItem', attrs: { selected: false },
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Excluded' }] }] },
+    ] }] });
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  const sourceEditor = screen.getByTestId('editor');
+  const editor = { getJSON: () => current.document.content } as Editor;
+  editorProps.current.at(-1)?.onEditor?.(editor);
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
+  expect(screen.getAllByTestId('editor')).toHaveLength(2);
+  expect(sourceEditor).toBeInTheDocument();
+  expect(screen.getByRole('tabpanel', { name: '排版預覽' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: '試卷內容' }));
+  expect(screen.getByTestId('editor')).toBe(sourceEditor);
+  expect(repository.save).not.toHaveBeenCalled();
 });

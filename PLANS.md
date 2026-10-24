@@ -325,12 +325,14 @@ type Asset = {
     - 實作：試卷內容保留完整 editor session；預覽用獨立 readonly renderer/instance，套用紙張內容寬度、邊距、字級、行距。不提供頁碼、文字輸入、貼上或題目拖曳。保留來源 editor selection 與 history；預覽 renderer 不觸發來源 autosave，圖片共用 resolver。
     - 驗證：UI/E2E 切換前後未儲存編輯、selection 附近內容與圖片不丟失；預覽鍵盤、paste 不改 JSON；只顯示勾選題目，兩清單樣式一致。
     - Commit：`feat: Add readonly layout preview`。
+    - 進度紀錄（2026-10-24）：已加入連續預覽 Tab、獨立唯讀 renderer、紙張內容區排版及共用圖片 resolver；來源 editor 切換時保持掛載，預覽使用目前來源的輸出投影。unit/UI、typecheck、build 與 E2E 列舉已執行；真實 browser 案例尚未執行，故本 step 保持待驗。
 
   - [ ] **Step 9.2 — 透過來源 ID 修改局部格式**
     - 目標：預覽可調段落對齊／間距及圖片寬度，文字保持不可編輯。
     - 實作：預覽選取節點後使用工具列，依穩定 ID 找回完整來源節點，用窄範圍 transaction 更新格式屬性。為新增屬性補 schema defaults、validation 和持久化；設定圖片寬度上限，避免超出內容區。失效 ID 顯示錯誤而非寫錯節點；未來文字編輯可沿用映射，但本次不開放。
     - 驗證：測試局部格式只改指定節點、過濾後 index 不導致誤寫、未勾選題目內容未變、重開後還原；確認未引入第二份持久化 JSON。
     - Commit：`feat: Edit preview formatting by source ID`。
+    - 進度紀錄（2026-10-24）：已加入預覽節點選取、來源 ID 格式更新、段落對齊／段後間距及圖片寬度限制；格式屬性納入 schema 驗證和既有 autosave。單元測試涵蓋被過濾題目造成的索引差異、失效 ID 與圖片上限；重開 E2E 已列舉。真實 browser 案例尚未執行，故本 step 保持待驗。
 
 - [ ] **Phase 10 — 列印／PDF 與 Milestone 3 驗收**
 
