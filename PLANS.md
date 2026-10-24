@@ -136,7 +136,7 @@ type Asset = {
     - Commit：`docs: Document setup and testing workflow`。
     - 驗證紀錄（2026-10-24）：README 已列出環境、命令、目錄與限制；sub-agent review 通過。testing 依 README 執行 `npm ci`、`npm run typecheck`、`npm test`、`npm run build:smoke`、`npm run build`、`npm run test:e2e -- --list` 均通過。dev HTTP 已在 Step 0.1 驗證；production preview 回傳 HTTP 200，建置資產含 Hello World，server 已停止。未啟動瀏覽器；實際畫面、E2E 與 Playwright webServer 啟停待指定後驗證。
 
-- [ ] **Phase 1 — 文件 schema 與儲存基礎**
+- [x] **Phase 1 — 文件 schema 與儲存基礎**
 
   - [x] **Step 1.1 — 建立 domain 型別與 editor schema**
     - 目標：匯入與編輯共用同一套合法文件結構。
@@ -152,12 +152,12 @@ type Asset = {
     - Commit：`feat: Add transactional project storage`。
     - 驗證紀錄（2026-10-24）：`npm test`（3 files／14 tests）、`npm run typecheck`、`npm run build` 通過。使用 fake-indexeddb 獨立資料庫測試 CRUD、建立及更新失敗 rollback、刪除連帶資產、version 1 fixture migration、未來版本拒絕讀取／修改／刪除。sub-agent review/testing 均通過；尚無 UI，未執行 browser 驗證。
 
-  - [ ] **Step 1.3 — 建立單一分頁寫入權**
+  - [x] **Step 1.3 — 建立單一分頁寫入權**
     - 目標：從首次提供 CRUD 起就避免同 Project 被多個分頁同時修改。
     - 實作：建立 `data/` ownership service，依 projectId 使用 browser 支援的互斥機制（優先評估 Web Locks）；所有 repository mutation 包含刪除與資產清理皆驗證寫入權。失去權限就停止寫入；重新取得後重讀資料。若環境不支援可靠互斥，明確禁止寫入並提示，不以單純 localStorage flag 假裝有鎖。
     - 驗證：此時尚無 Project UI，使用僅供測試的 browser harness 暴露 repository／ownership 操作，以兩個同 origin pages 驗證只一個 writer、第二分頁不可刪除、關閉 owner 後重新取得並讀到最新資料；單元測試失去權限時拒絕 mutation。harness 不納入 production build。
     - Commit：`feat: Enforce single-tab project writes`。
-    - 進度紀錄（2026-10-24）：Web Locks ownership service、repository mutation guard、測試 harness 與兩分頁 Playwright 案例已實作。`npm test`（4 files／18 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Vite harness HTML 與模組的本機 HTTP 回應成功。sub-agent review/testing 均通過，失權後續寫入拒絕的問題已補回歸測試。真實 Chromium／Firefox 兩分頁測試依 SPEC 待使用者明確指定，故 step 與 Phase 1 保持未完成。若既有 Dexie 交易進行中同時遭外部強制收回 Web Lock，該交易仍可能完成；目前未使用 `steal`。
+    - 驗證紀錄（2026-10-24）：Web Locks ownership service、repository mutation guard、測試 harness 與兩分頁 Playwright 案例已實作。`npm test`（4 files／18 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list` 通過；Vite harness HTML 與模組的本機 HTTP 回應成功。sub-agent review/testing 均通過，失權後續寫入拒絕的問題已補回歸測試。使用者回報安裝 browser binaries 並通過 Step 1.3 的 Playwright 測試；本機 `test-results/.last-run.json` 記錄 `status: passed`、`failedTests: []`。此回合未重跑瀏覽器測試。若既有 Dexie 交易進行中同時遭外部強制收回 Web Lock，該交易仍可能完成；目前未使用 `steal`。
 
 - [ ] **Phase 2 — Project 首頁與唯讀 workspace**
 
