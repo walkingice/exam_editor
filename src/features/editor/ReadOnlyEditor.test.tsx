@@ -72,6 +72,57 @@ describe('read-only document', () => {
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.selected).toBe(true);
   });
 
+  it('persists top-level question selection with history and stable IDs', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'bulletList', content: [{ type: 'listItem', content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Question' }] },
+        { type: 'bulletList', content: [{ type: 'listItem', content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'Option' }] },
+        ] }] },
+      ] }] },
+    ] });
+    let editor: Editor | undefined;
+    const view = render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const checkbox = await screen.findByRole('checkbox');
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    expect(checkbox).toBeChecked();
+    const id = content.content?.[0].content?.[0].attrs?.id;
+    fireEvent.click(checkbox);
+    expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs)
+      .toMatchObject({ id, selected: false });
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(screen.getByRole('checkbox')).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: '重做' }));
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    const saved = normalizeDocument(editor!.getJSON());
+    view.rerender(<ReadOnlyEditor projectId="first" content={saved}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} />);
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+    expect(saved.content?.[0].content?.[0].attrs?.id).toBe(id);
+  });
+
+  it('toggles a question after earlier text shifts its position without moving selection', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'Intro' }] },
+      { type: 'bulletList', content: [{ type: 'listItem', content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Question' }] },
+      ] }] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    const checkbox = await screen.findByRole('checkbox');
+    editor!.commands.insertContentAt(2, ' more words');
+    editor!.commands.setTextSelection(3);
+    const selection = editor!.state.selection.from;
+    fireEvent.click(checkbox);
+    expect((editor!.getJSON() as JSONContent).content?.[1].content?.[0].attrs?.selected).toBe(false);
+    expect(editor!.state.selection.from).toBe(selection);
+  });
+
   it('maps Markdown input shortcuts to heading and unordered lists', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
     let editor: Editor | undefined;

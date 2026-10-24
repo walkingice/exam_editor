@@ -108,6 +108,25 @@ test('keeps rich text marks after reloading', async ({ page }) => {
   await expect(editor.locator('strong')).toHaveText('Marked question');
 });
 
+test('keeps question selection and IDs after reopening', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await page.locator('.ProseMirror').fill('Selected question');
+  await page.getByRole('button', { name: '項目清單' }).click();
+  const item = page.locator('.ProseMirror > ul > li');
+  await expect(item.getByRole('checkbox')).toBeChecked();
+  const id = await item.getAttribute('data-node-id');
+  await item.getByRole('checkbox').uncheck();
+  await page.getByRole('button', { name: '復原' }).click();
+  await expect(item.getByRole('checkbox')).toBeChecked();
+  await page.getByRole('button', { name: '重做' }).click();
+  await expect(item.getByRole('checkbox')).not.toBeChecked();
+  await page.getByRole('link', { name: '返回首頁' }).click();
+  await page.getByRole('link', { name: '未命名試卷' }).click();
+  await expect(item.getByRole('checkbox')).not.toBeChecked();
+  await expect(item).toHaveAttribute('data-node-id', id!);
+});
+
 test('keeps an edited table after reloading', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();

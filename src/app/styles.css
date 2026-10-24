@@ -25,3 +25,5 @@ li { margin: 10px 0; }
 .exam-document table { border-collapse: collapse; max-width: 100%; }
 .exam-document td, .exam-document th { border: 1px solid #9da9b9; padding: 6px 10px; }
 .exam-image img { max-width: 100%; height: auto; }
+.question-control { display: inline-block; margin-right: 6px; }
+.question-control input { vertical-align: middle; }

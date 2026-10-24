@@ -3,6 +3,7 @@ import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
+import { QuestionControls } from './questionControls';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
@@ -79,4 +80,5 @@ export const editingExtensions = [
   TableHeader,
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   SourceListShortcut,
+  QuestionControls,
 ];

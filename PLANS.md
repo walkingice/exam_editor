@@ -266,6 +266,7 @@ type Asset = {
     - 實作：用 NodeView 或等價 editor UI 顯示 checkbox，透過 transaction 更新 selected；內嵌選項不顯示題目 checkbox。普通段落可透過清單工具轉成題目；新增題目 selected=true。維持 checkbox 與文字 selection 的互動，加入 history，完整來源仍保留未勾選題目。
     - 驗證：UI 測試新增、取消勾選、undo/redo、巢狀選項不獨立勾選；重載後 ID 與狀態不變。
     - Commit：`feat: Add persistent question selection`。
+    - 進度紀錄（2026-10-24）：最外層題目已顯示 checkbox，transaction 更新 selected；內嵌選項不顯示 checkbox。已加入狀態、ID、undo/redo、編輯前文後切換與 selection 的 UI 測試，以及重新開啟的 E2E 案例。`npm test`（15 files／90 tests）、`npm run typecheck`、`npm run build`、`npm run test:e2e -- --list`（30 cases）通過。sub-agent review 發現的舊位置問題已修正並複審通過；testing 獨立通過。依 SPEC 未執行真實瀏覽器，重開持久化 E2E 待指定，因此 step 保持待驗。
 
   - [ ] **Step 6.2 — 整題拖曳與跨大題移動**
     - 目標：一次移動完整題目，不能遺失子內容或改變題目 ID。
