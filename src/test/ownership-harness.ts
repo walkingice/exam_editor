@@ -41,6 +41,16 @@ const harness = {
         blob: new Blob([bytes], { type: 'image/png' }) }],
     });
   },
+  async addUnusedImage(projectId: string) {
+    await repository.addAsset({ id: `unused-${projectId}`, projectId, mimeType: 'image/png',
+      blob: new Blob(['unused'], { type: 'image/png' }) });
+  },
+  async assetIds(projectId: string) {
+    return (await repository.get(projectId))?.assets.map((asset) => asset.id).sort() ?? [];
+  },
+  async leaveCleanupPending(projectId: string) {
+    await repository.beginSession(projectId);
+  },
   async createQuestionSections(projectId: string) {
     const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLytQAAAABJRU5ErkJggg==';
     const bytes = Uint8Array.from(atob(png), (character) => character.charCodeAt(0));
@@ -64,6 +74,25 @@ const harness = {
       assets: [{ id: `image-${projectId}`, projectId, mimeType: 'image/png',
         blob: new Blob([bytes], { type: 'image/png' }) }],
     });
+  },
+  async createMilestone2Fixture(projectId: string) {
+    await harness.createQuestionSections(projectId);
+    const bundle = await repository.get(projectId);
+    if (!bundle) throw new Error('Fixture project is missing');
+    const content = structuredClone(bundle.document.content);
+    content.content![1].content![0].content!.push({ type: 'table', content: [
+      { type: 'tableRow', content: [{ type: 'tableCell', content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Table answer' }] },
+      ] }] },
+    ] });
+    content.content!.push({ type: 'bulletList', content: [{ type: 'listItem',
+      attrs: { selected: false }, content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Unselected question' }] },
+        { type: 'image', attrs: { assetId: `image-${projectId}`, alt: 'Shared image' } },
+      ] }] });
+    bundle.document.content = normalizeDocument(content);
+    bundle.project.name = 'Milestone two fixture';
+    await repository.save(bundle);
   },
   async rename(projectId: string, name: string) {
     const bundle = await repository.get(projectId);
