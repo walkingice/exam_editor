@@ -367,11 +367,14 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         {printError && <><p role="alert">{printError}</p>
           <button onClick={() => void printExam()}>重試列印</button></>}
       </div>}
-      {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
-        saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
-      {saveError && <><p role="alert">{saveError}</p>
-        {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
-          重試儲存</button>}</>}
+      {(lease || saveError) && <aside className="workspace-save-status" aria-label="儲存狀態"
+        data-state={saveState}>
+        {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
+          saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
+        {saveError && <><p role="alert">{saveError}</p>
+          {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
+            重試儲存</button>}</>}
+      </aside>}
       <div role="tabpanel" hidden={tab !== 'content'} className="content-panel">
       {readImportWarnings(projectId).length > 0 && <details aria-label="匯入提醒">
         <summary>匯入文件需人工校對</summary>

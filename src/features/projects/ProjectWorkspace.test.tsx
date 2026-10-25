@@ -198,6 +198,8 @@ it('preserves an unsaved BFCache session after its lease expires', async () => {
   expect(repository.beginSession).toHaveBeenCalledOnce();
   expect(screen.getByRole('heading', { name: 'Unsaved' })).toBeInTheDocument();
   expect(screen.getByText(/請先複製內容/)).toBeInTheDocument();
+  expect(screen.getByRole('complementary', { name: '儲存狀態' }))
+    .toHaveTextContent('未儲存的編輯無法自動恢復。');
   expect(screen.queryByRole('button', { name: '重新取得寫入權' })).toBeNull();
 });
 
@@ -228,6 +230,9 @@ it('saves page settings, reports failures, and restores them after reopening', a
   fireEvent.change(screen.getByLabelText('紙張'), { target: { value: 'A4' } });
   await act(async () => { await vi.waitFor(() => expect(save).toHaveBeenCalledOnce()); });
   expect(await screen.findByText('儲存失敗')).toBeInTheDocument();
+  const saveStatus = screen.getByRole('complementary', { name: '儲存狀態' });
+  expect(saveStatus).toHaveAttribute('data-state', 'error');
+  expect(saveStatus).toContainElement(screen.getByRole('button', { name: '重試儲存' }));
   fireEvent.click(screen.getByRole('button', { name: '重試儲存' }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
   expect(stored.project.pageSettings.paperSize).toBe('A4');
@@ -253,6 +258,8 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   } as unknown as ProjectOwnership;
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
+  const saveStatus = screen.getByRole('complementary', { name: '儲存狀態' });
+  expect(saveStatus).toHaveAttribute('data-state', 'saved');
   const sourceEditor = screen.getByTestId('editor');
   expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
@@ -267,11 +274,13 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   const settings = screen.getByRole('region', { name: '頁面設定' });
   expect(settings.parentElement).toBe(previewPanel);
   expect(settings.nextElementSibling).toHaveClass('preview-scroll');
+  expect(screen.getByRole('complementary', { name: '儲存狀態' })).toBe(saveStatus);
   expect(screen.getByRole('button', { name: '列印 / PDF' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('tab', { name: '試卷內容' }));
   expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
   expect(screen.getByTestId('editor')).toBe(sourceEditor);
+  expect(screen.getByRole('complementary', { name: '儲存狀態' })).toBe(saveStatus);
   expect(repository.save).not.toHaveBeenCalled();
 });
 
