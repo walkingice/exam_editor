@@ -34,6 +34,17 @@ describe('DOCX text mapping', () => {
     expect(unordered.numbering).not.toContain('w:val="decimal"');
   });
 
+  it('exports mixed question list styles from item settings', async () => {
+    const ordered = { ...question('編號題'), attrs: { listStyle: 'ordered' } };
+    const unordered = { ...question('項目題'), attrs: { listStyle: 'unordered' } };
+    const source = { type: 'doc', content: [{ type: 'bulletList',
+      content: [ordered, unordered, ordered] }] };
+    const { xml, numbering } = await unpack(source, 'unordered');
+    expect(xml.indexOf('編號題')).toBeLessThan(xml.indexOf('項目題'));
+    expect(numbering).toContain('w:val="decimal"');
+    expect(numbering).toContain('w:val="bullet"');
+  });
+
   it('supports an empty output and preserves unsupported block text with warnings', async () => {
     const { xml, warnings } = await unpack({ type: 'doc', content: [{ type: 'blockquote', content: [paragraph('引言')] },
       { type: 'bulletList', content: [question('隱藏', false)] }] });

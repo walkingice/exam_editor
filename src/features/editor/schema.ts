@@ -48,6 +48,16 @@ const ExamAttributes = Extension.create({
           },
         },
       },
+      {
+        types: ['listItem', 'bulletList'],
+        attributes: {
+          listStyle: {
+            default: null,
+            parseHTML: (element) => element.getAttribute('data-list-style'),
+            renderHTML: ({ listStyle }) => listStyle ? { 'data-list-style': listStyle } : {},
+          },
+        },
+      },
     ];
   },
 });
@@ -112,7 +122,8 @@ export const examSchema = getSchema(examExtensions);
 const SourceListShortcut = Extension.create({
   name: 'sourceListShortcut',
   addInputRules() {
-    return [wrappingInputRule({ find: /^1\.\s$/, type: this.editor.schema.nodes.bulletList })];
+    return [wrappingInputRule({ find: /^1\.\s$/, type: this.editor.schema.nodes.bulletList,
+      getAttributes: () => ({ listStyle: 'ordered' }) })];
   },
 });
 

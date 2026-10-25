@@ -15,11 +15,21 @@ export function projectOutput(source: JSONContent, style: OutputListStyle): JSON
       if (node.type !== 'bulletList') return [copy(node)];
       const selected = node.content?.filter((item) => item.attrs?.selected === true) ?? [];
       if (!selected.length) return [];
-      const start = nextNumber;
-      nextNumber += selected.length;
-      return [{ ...copy(node), type: style === 'ordered' ? 'orderedList' : 'bulletList',
-        attrs: style === 'ordered' ? { ...node.attrs, start } : { ...node.attrs },
-        content: selected.map(copy) }];
+      const groups: JSONContent[] = [];
+      for (const item of selected) {
+        const itemStyle = item.attrs?.listStyle ?? node.attrs?.listStyle ?? style;
+        const previous = groups.at(-1);
+        if (itemStyle === 'unordered') nextNumber = 1;
+        if (previous?.type === (itemStyle === 'ordered' ? 'orderedList' : 'bulletList')) {
+          previous.content?.push(copy(item));
+        } else {
+          groups.push({ ...copy(node), type: itemStyle === 'ordered' ? 'orderedList' : 'bulletList',
+            attrs: itemStyle === 'ordered' ? { ...node.attrs, start: nextNumber } : { ...node.attrs },
+            content: [copy(item)] });
+        }
+        if (itemStyle === 'ordered') nextNumber++;
+      }
+      return groups;
     }),
   };
 }

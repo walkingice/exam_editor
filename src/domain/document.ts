@@ -89,6 +89,10 @@ function checkNode(
     ? typeof attrs.selected !== 'boolean' : attrs.selected != null)) {
     throw new Error('Invalid question selection');
   }
+  if (['listItem', 'bulletList'].includes(node.type) && attrs.listStyle != null
+    && !['ordered', 'unordered'].includes(attrs.listStyle as string)) {
+    throw new Error('Invalid list style');
+  }
   if (node.type !== 'listItem' && parentIsDoc && idTypes.has(node.type)
     && attrs.selected != null && typeof attrs.selected !== 'boolean') {
     throw new Error('Invalid item selection');

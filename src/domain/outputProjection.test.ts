@@ -3,6 +3,21 @@ import { normalizeDocument } from './document';
 import { collectAssetIds } from './assetReferences';
 import { projectOutput } from './outputProjection';
 
+it('projects each selected item with its own list style', () => {
+  const source = normalizeDocument({ type: 'doc', content: [{ type: 'bulletList', content: [
+    { type: 'listItem', attrs: { listStyle: 'ordered' }, content: [{ type: 'paragraph' }] },
+    { type: 'listItem', attrs: { selected: false, listStyle: 'ordered' },
+      content: [{ type: 'paragraph' }] },
+    { type: 'listItem', attrs: { listStyle: 'unordered' }, content: [{ type: 'paragraph' }] },
+    { type: 'listItem', attrs: { listStyle: 'ordered' }, content: [{ type: 'paragraph' }] },
+  ] }] });
+  const output = projectOutput(source, 'ordered');
+  expect(output.content?.map((node) => node.type))
+    .toEqual(['orderedList', 'bulletList', 'orderedList']);
+  expect(output.content?.[0].attrs?.start).toBe(1);
+  expect(output.content?.[2].attrs?.start).toBe(1);
+});
+
 it('filters top-level questions and restarts numbering after ordinary items', () => {
   const source = normalizeDocument({ type: 'doc', content: [
     { type: 'heading', content: [{ type: 'text', text: 'Part one' }] },
