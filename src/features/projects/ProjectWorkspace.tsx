@@ -6,6 +6,7 @@ import { ReadOnlyEditor } from '../editor/ReadOnlyEditor';
 import { readImportWarnings } from '../import-docx/importNotices';
 import { normalizeDocument } from '../../domain/document';
 import type { Editor } from '@tiptap/core';
+import { redoNoScroll, undoNoScroll } from '@tiptap/pm/history';
 import type { JSONContent } from '@tiptap/core';
 import { EditingSession, type SaveState } from '../editor/EditingSession';
 import { ensureNodeIds } from '../editor/ensureNodeIds';
@@ -20,6 +21,7 @@ import { countPrintImages, createPrintCss, waitForPrintAssets } from '../layout/
 
 import { ExportDocxButton } from '../export-docx/ExportDocxButton';
 import { AIAllModal } from '../editor/AIAllModal';
+import { runHistory } from '../editor/EditorToolbar';
 import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
 type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
@@ -371,6 +373,13 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         data-state={saveState}>
         {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
           saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
+        {tab === 'content' && lease?.isActive && sourceEditor && <div className="workspace-history"
+          role="group" aria-label="編輯記錄">
+          <button type="button" title="復原" aria-label="復原"
+            onClick={() => runHistory(sourceEditor, undoNoScroll)}>復原</button>
+          <button type="button" title="重做" aria-label="重做"
+            onClick={() => runHistory(sourceEditor, redoNoScroll)}>重做</button>
+        </div>}
         {saveError && <><p role="alert">{saveError}</p>
           {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
             重試儲存</button>}</>}
@@ -381,7 +390,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
       </details>}
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
-        assetResolver={assetResolver}
+        assetResolver={assetResolver} showHistory={false}
         editable={!!lease?.isActive} onEditor={(editor) => {
           if (session.current?.projectId === projectId) {
             session.current.editor = editor;

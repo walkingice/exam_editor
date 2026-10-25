@@ -88,7 +88,7 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
 }
 
 export function ReadOnlyEditor({ projectId, content, repository, editable = false, onChange, onEditor,
-  canInsertImage, preview = false, assetResolver }: {
+  canInsertImage, preview = false, assetResolver, showHistory = true }: {
   projectId: string; content: JSONContent; repository: ProjectRepository;
   editable?: boolean;
   onChange?: (editor: Editor) => void;
@@ -96,6 +96,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   canInsertImage?: (editor: Editor) => boolean;
   preview?: boolean;
   assetResolver?: AssetResolver;
+  showHistory?: boolean;
 }) {
   const callbacks = useRef({ onChange, onEditor, canInsertImage });
   callbacks.current = { onChange, onEditor, canInsertImage };
@@ -177,7 +178,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
 
   return <div className={editable && editor ? 'content-editor-layout' : undefined}>
     {editable && editor && <aside className="content-editor-controls" aria-label="編輯工具">
-      <EditorToolbar editor={editor} />
+      <EditorToolbar editor={editor} showHistory={showHistory} />
       <ImageToolbar editor={editor} onInsert={(file) => insertLocalImage(
         file, projectId, editor, repository,
         () => active.current && editor.isEditable && !editor.isDestroyed

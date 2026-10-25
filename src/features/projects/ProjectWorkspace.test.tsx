@@ -18,7 +18,7 @@ vi.mock('../export-docx/downloadDocument', async (original) => ({
 const editorProps = vi.hoisted(() => ({
   current: [] as Array<{ onChange?: (editor: Editor) => void;
     onEditor?: (editor: Editor) => void; editable?: boolean;
-    preview?: boolean; content?: JSONContent }>,
+    preview?: boolean; content?: JSONContent; showHistory?: boolean }>,
 }));
 
 vi.mock('../editor/ReadOnlyEditor', () => ({
@@ -37,6 +37,26 @@ function bundle(id: string): ProjectBundle {
 }
 
 afterEach(() => { cleanup(); vi.useRealTimers(); editorProps.current.length = 0; });
+
+it('places history controls after the save status on the content tab', async () => {
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  expect(editorProps.current[0]).toMatchObject({ showHistory: false });
+  act(() => editorProps.current[0].onEditor?.({ isEditable: true,
+    getJSON: () => bundle('first').document.content } as Editor));
+  const status = screen.getByRole('complementary', { name: '儲存狀態' });
+  expect(status.children[0]).toHaveTextContent('已儲存');
+  expect(status.children[1]).toHaveAttribute('aria-label', '編輯記錄');
+  expect(status.children[1].querySelectorAll('button')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
+  expect(screen.queryByRole('group', { name: '編輯記錄' })).toBeNull();
+});
 
 it('opens the whole-document AI modal from the content tab', async () => {
   window.localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, 'test-key');

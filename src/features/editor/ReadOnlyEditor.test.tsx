@@ -120,6 +120,7 @@ describe('read-only document', () => {
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
     await screen.findByText('Question');
+    expect(screen.getByRole('group', { name: '分隔頁' })).toHaveClass('toolbar-page-break');
     editor!.commands.setTextSelection({ from: 1, to: 9 });
     fireEvent.click(screen.getByRole('button', { name: '粗體' }));
     expect(editor!.getJSON().content?.[0].content?.[0].marks?.[0].type).toBe('bold');

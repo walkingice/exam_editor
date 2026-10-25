@@ -21,7 +21,7 @@ function activeListStyle(editor: Editor): string | null {
   return null;
 }
 
-function runHistory(editor: Editor, command: typeof undoNoScroll): void {
+export function runHistory(editor: Editor, command: typeof undoNoScroll): void {
   editor.view.focus();
   command(editor.state, editor.view.dispatch);
 }
@@ -39,7 +39,9 @@ function FormatIcon({ label }: { label: string }) {
   </svg>;
 }
 
-export function EditorToolbar({ editor }: { editor: Editor }) {
+export function EditorToolbar({ editor, showHistory = true }: {
+  editor: Editor; showHistory?: boolean;
+}) {
   const [, update] = useState(0);
   useEffect(() => {
     const refresh = () => update((value) => value + 1);
@@ -87,7 +89,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     { label: '文字樣式', tools: tools.slice(4, 7), columns: 3 },
     { label: '清單', tools: tools.slice(7, 9), columns: 2 },
     { label: '文字對齊', tools: tools.slice(9, 12), columns: 3 },
-    { label: '編輯記錄', tools: tools.slice(12), columns: 2 },
+    ...(showHistory ? [{ label: '編輯記錄', tools: tools.slice(12), columns: 2 }] : []),
   ];
 
   return <div role="toolbar" aria-label="文字編輯工具列" className="editor-toolbar">
@@ -100,7 +102,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           : { 左對齊: '靠左', 中對齊: '置中', 右對齊: '靠右' }[tool.label] ?? tool.label}
       </button>)}
     </div>)}
-    <div role="group" aria-label="分隔頁" className="toolbar-group">
+    <div role="group" aria-label="分隔頁" className="toolbar-group toolbar-page-break">
       <button type="button" title="插入分隔頁" aria-label="插入分隔頁"
         disabled={focusedItemIndex(editor) === null}
         onMouseDown={(event) => event.preventDefault()}

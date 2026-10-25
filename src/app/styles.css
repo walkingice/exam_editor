@@ -278,6 +278,8 @@ li { margin: 10px 0; }
 .workspace-save-status [role="status"] { font-weight: 700; }
 .workspace-save-status [role="alert"] { margin-top: 8px; font-size: .85rem; }
 .workspace-save-status button { margin: 8px 0 0; }
+.workspace-history { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.workspace-history button { min-width: 0; padding: 5px 2px; }
 .workspace-save-status[data-state="error"] { border-color: #c66868; }
 @media (min-width: 1288px) {
   .workspace-save-status { right: calc((100vw - 920px) / 2 - 176px); }
@@ -343,6 +345,11 @@ li { margin: 10px 0; }
   white-space: nowrap;
 }
 .content-editor-controls .table-toolbar {
+  border-top: 1px solid #d7dee8;
+  padding-top: 8px;
+  margin-top: 2px;
+}
+.content-editor-controls .toolbar-page-break {
   border-top: 1px solid #d7dee8;
   padding-top: 8px;
   margin-top: 2px;
