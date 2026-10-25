@@ -62,6 +62,12 @@ it('prints two columns with spanning headers and a divider', () => {
   expect(createPrintCss({ ...DEFAULT_PAGE_SETTINGS, columns: undefined })).toContain('column-count: 1');
 });
 
+it('starts a new printed page at each page break item', () => {
+  const css = createPrintCss(DEFAULT_PAGE_SETTINGS);
+  expect(css).toContain('#exam-print-root .exam-page-break');
+  expect(css).toMatch(/\.exam-page-break[^}]*break-after:\s*page/);
+});
+
 
 it('counts nested document images', () => {
   expect(countPrintImages({ type: 'doc', content: [

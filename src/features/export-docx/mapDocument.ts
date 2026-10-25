@@ -36,6 +36,7 @@ export async function mapBlock(node: JSONContent, context: MappingContext, depth
   if (node.type === 'paragraph' || node.type === 'heading') return [mapParagraph(node, context.warnings, context.settings)];
   if (node.type === 'bulletList' || node.type === 'orderedList') return mapList(node, context, depth, widthMm);
   if (node.type === 'horizontalRule') return [new Paragraph({ thematicBreak: true })];
+  if (node.type === 'pageBreak') return [new Paragraph({ pageBreakBefore: true })];
   if (node.type === 'image') return [await context.image(node, widthMm)];
   if (node.type === 'table') return [await mapTable(node, (child, cellWidth) =>
     mapBlock(child, context, depth, cellWidth), context.warnings, widthMm)];

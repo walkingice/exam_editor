@@ -338,6 +338,9 @@ li { margin: 10px 0; }
 .content-panel .ai-item-panel-actions .ai-apply-button:hover:not(:disabled) { background: #1e603b; }
 .content-panel .ai-item-panel-actions .ai-apply-button:disabled { cursor: not-allowed; opacity: .55; }
 .content-panel .exam-document .ProseMirror > .document-item-shell:last-child { margin-bottom: 0 !important; }
+.content-panel .exam-page-break .document-item-border { background: #eef3f8; color: #43536a; }
+.preview-paper .exam-page-break { break-after: page; page-break-after: always;
+  column-span: all; border-bottom: 2px dashed #8a9bb0; color: #526176; text-align: center; }
 .content-panel .exam-document .ProseMirror ul {
   counter-reset: content-item;
 }
