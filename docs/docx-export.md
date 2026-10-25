@@ -20,7 +20,8 @@ Tables preserve row/cell content, horizontal and vertical merges, and header
 rows. Browser-specific cell widths are replaced with equal logical columns
 and produce a warning. Complex CSS and exact browser table layout are not
 preserved. Nested tables end with a required empty paragraph in the parent
-cell. Word and LibreOffice rendering still require Phase 12 manual acceptance.
+cell. Word and LibreOffice rendering has not been manually verified; that
+acceptance is not part of the current delivery scope.
 
 Only referenced PNG/JPEG assets are read and embedded. Repeated references
 share one asset read per export. Missing, unsupported, or invalid referenced

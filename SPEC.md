@@ -1,6 +1,6 @@
 # 試卷編輯器規格
 
-本文件描述目前實作的產品行為、資料約束及驗收邊界。操作與開發方式見 [README.md](README.md)；尚待實測的項目見 [PLANS.md](PLANS.md)。實作存在不代表已完成跨瀏覽器或 Office 的人工驗收。
+本文件描述目前實作的產品行為、資料約束及驗收邊界。操作與開發方式見 [README.md](README.md)；尚待實測的項目見 [PLANS.md](PLANS.md)。Chromium／Firefox 完整流程回歸已由使用者確認完成；Office 人工驗收已決定不執行，不能據此宣稱實際相容性。
 
 ## 1. 產品流程
 
@@ -37,7 +37,7 @@
 - 提供標題 1–3、段落、粗體、斜體、底線、編號／項目符號清單、清除文字格式、undo／redo、表格與圖片工具。匯入可保留 heading 1–6。常用 Markdown shortcuts 可建立 heading 與清單。
 - 文字可設定字體與字級；字體選單顯示預設與最近使用字體。支援 `queryLocalFonts` 的瀏覽器可在授權後偵測本機字體。可用「修改全部格式」對全文文字設定字體／字級或清除既有 marks。
 - 可插入與編輯表格，增刪列欄及整表；可插入、調整或刪除 PNG/JPEG 圖片。項目可勾選、拖曳排序，並可在目前項目後插入分隔頁。文字、結構、格式及排序操作支援 undo／redo。
-- 內容 Tab 提供單項與「修改全部內容」Gemini 改寫。設定頁儲存使用者提供的 API key、model 與預設 prompt；User Input 在各 AI 面板共用。單項請求包含該項文字，產生的純文字由使用者按「套用」後取代項目內容。全文請求包含所有有文字項目的 ID 與文字，驗證回傳 ID 與內容後，以單一 transaction 套用。AI 結果可能使項目原有文字格式消失；套用前須由使用者判斷。
+- 內容 Tab 提供單項與「修改全部內容」Gemini 改寫。設定頁儲存使用者提供的 API key、model 與預設 prompt；User Input 在各 AI 面板共用。單項請求包含該項文字，產生的純文字由使用者按「套用」後取代項目內容。全文請求包含所有有文字項目的 ID 與文字，驗證回傳 ID 與內容後，立即以單一 transaction 套用，沒有結果預覽。AI 結果可能使項目原有文字格式消失；全文修改後須檢查結果，必要時復原。
 - AI 由瀏覽器直接呼叫 Gemini REST API，API key 與設定以明文保存在 `localStorage`。只有使用者主動觸發時才傳送 prompt、修改方向及所需文字／ID；不傳送圖片 Blob。模型列表 Refresh 只讀 API 第一頁，回傳的列表不持久化。
 
 ## 6. 排版預覽與頁面設定
@@ -61,6 +61,6 @@
 
 ## 8. 驗證與不納入範圍
 
-Vitest 與 React Testing Library 驗證資料正規化、寫入權、資產、編輯操作、輸出投影、匯入及 DOCX 映射；Playwright 案例涵蓋 Chromium／Firefox 的工作流程。依目前驗收規則，只有使用者明確指定時才啟動真實瀏覽器。完整 E2E 回歸、原生列印／PDF 及 Word／LibreOffice 實際開檔編輯仍待驗收，不得以測試檔存在或 DOCX 結構檢查代替。待辦與證據要求見 [PLANS.md](PLANS.md)。
+Vitest 與 React Testing Library 驗證資料正規化、寫入權、資產、編輯操作、輸出投影、匯入及 DOCX 映射；Playwright 案例涵蓋 Chromium／Firefox 的工作流程，完整回歸已由使用者確認完成。依目前驗收規則，只有使用者明確指定時才啟動真實瀏覽器。原生列印／PDF 仍待驗收；Word／LibreOffice 實際開檔編輯不列為交付條件，也沒有實測相容性結論。待辦見 [PLANS.md](PLANS.md)。
 
 目前不提供雲端帳號、跨裝置同步、多人協作、OCR、Word 完整版面還原、原生公式編輯、網頁自動精準分頁、預覽文字編輯、直接下載 PDF 或 Project 完整備份還原。

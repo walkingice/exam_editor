@@ -26,8 +26,8 @@ and Tiptap ship their own declarations. No separate `@types` package is needed.
 `npm run build:smoke` bundles the document dependencies as a separate browser
 target. It passed without a Node-only external module warning; the output is
 ignored by Git. Vite emitted a `use client` directive warning from
-`@tiptap/react`; runtime behavior remains unverified until browser testing is
-explicitly requested. This is a build check, not a live browser execution.
+`@tiptap/react`; this smoke build alone does not verify runtime behavior.
+Chromium and Firefox workflow regression was subsequently confirmed by the user.
 
 Sources: [Tiptap StarterKit](https://tiptap.dev/docs/editor/extensions/functionality/starterkit),
 [Tiptap core license](https://github.com/ueberdosis/tiptap/tree/main/packages/core),

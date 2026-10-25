@@ -26,7 +26,7 @@ npm run dev
 
 首頁的「設定」可儲存自己的 Gemini API key、model 與預設 prompt，或用 Refresh 讀取可用 model。這些設定存於目前瀏覽器的 `localStorage`；API key 以明文保存。設定 key 後，可在「試卷內容」對單一項目產生改寫建議並按「套用」，或用「修改全部內容」一次改寫有文字的項目。User Input 會在各面板共用並儲存在 `localStorage`。
 
-AI 請求由瀏覽器直接送到 Gemini；單項改寫送出該項目文字，全文改寫會送出各個有文字項目的文字與 ID。請先檢查回傳內容再使用，尤其是全文改寫會一次套用。圖片不會隨請求上傳。
+AI 請求由瀏覽器直接送到 Gemini；單項改寫送出該項目文字，全文改寫會送出各個有文字項目的文字與 ID。單項改寫可先看 Result 再按「套用」；全文改寫成功後會直接套用，請檢查修改結果，必要時使用復原。圖片不會隨請求上傳。
 
 ## 開發與驗證
 
@@ -47,7 +47,7 @@ npx playwright install chromium firefox
 npm run test:e2e
 ```
 
-不用啟動瀏覽器即可列出案例：`npm run test:e2e -- --list`。目前完整 E2E、原生列印／PDF 及 Word／LibreOffice 實際開檔編輯，仍需依 [PLANS.md](PLANS.md)、[列印驗收紀錄](docs/print-verification.md)與 [Office 驗收紀錄](docs/office-verification.md) 完成驗收；自動化測試不能代替這些人工檢查。
+不用啟動瀏覽器即可列出案例：`npm run test:e2e -- --list`。使用者已確認 Chromium／Firefox 完整流程回歸完成；原生列印／PDF 仍待依 [PLANS.md](PLANS.md)與[列印驗收紀錄](docs/print-verification.md)檢查。Word／LibreOffice 人工驗收已決定不執行，因此 DOCX 實際 Office 相容性沒有實測結論。
 
 ## 程式結構
 
