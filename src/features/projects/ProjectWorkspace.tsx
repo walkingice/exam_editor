@@ -19,6 +19,8 @@ import { updateSourceFormat, type FormatChange } from '../layout/updateSourceFor
 import { countPrintImages, createPrintCss, waitForPrintAssets } from '../layout/printDocument';
 
 import { ExportDocxButton } from '../export-docx/ExportDocxButton';
+import { AIAllModal } from '../editor/AIAllModal';
+import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
 type EditorIdentity = { projectId: string; revision: number; editor: Editor | null };
 
@@ -64,6 +66,8 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [editingName, setEditingName] = useState(false);
   const [pageSettings, setPageSettings] = useState<PageSettings | null>(null);
   const [tab, setTab] = useState<'content' | 'preview'>('content');
+  const [showAIAll, setShowAIAll] = useState(false);
+  const [sourceEditor, setSourceEditor] = useState<Editor | null>(null);
   const [previewRevision, setPreviewRevision] = useState(0);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const [formatError, setFormatError] = useState('');
@@ -103,6 +107,8 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const open = useCallback(async (cancelled: () => boolean) => {
     const attempt = ++generation.current;
     setStatus('loading');
+    setSourceEditor(null);
+    setShowAIAll(false);
     setReadOnlyReason('');
     try {
       const acquired = await ownership.acquireLatest(projectId, () => repository.beginSession(projectId))
@@ -331,7 +337,13 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
-      <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
+      <div className="workspace-section-heading">
+        <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
+        {tab === 'content' && <button type="button" onClick={() => setShowAIAll(true)}
+          disabled={!lease?.isActive || !sourceEditor
+            || !window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)?.trim()}>
+          全部修改✨</button>}
+      </div>
       {tab === 'preview' && pageSettings && <div className="workspace-actions">
         <ExportDocxButton key={projectId} snapshot={() => ({
           content: session.current?.editor?.getJSON() ?? bundle.document.content,
@@ -356,11 +368,16 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
         assetResolver={assetResolver}
         editable={!!lease?.isActive} onEditor={(editor) => {
-          if (session.current?.projectId === projectId) session.current.editor = editor;
+          if (session.current?.projectId === projectId) {
+            session.current.editor = editor;
+            setSourceEditor(editor);
+          }
         }} onChange={recordChange} canInsertImage={(editor) =>
           session.current?.projectId === projectId && session.current.editor === editor
           && !!activeLease.current?.isActive} />
       </div>
+      {showAIAll && sourceEditor && <AIAllModal editor={sourceEditor}
+        onClose={() => setShowAIAll(false)} />}
       {tab === 'preview' && previewContent && pageSettings && page &&
         <div role="tabpanel" aria-label="排版預覽" className="preview-scroll">
           {formatError && <p role="alert">{formatError}</p>}

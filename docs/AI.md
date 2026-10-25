@@ -16,6 +16,8 @@ This document records the current AI settings and the intended integration path 
 
 On the 「試卷內容」 page, an item AI button is enabled when a saved API key exists. The button sits inside the item border and toggles an inline panel for that item. Multiple panels can stay open. Each displays the fixed Default Prompt, a reusable User Input saved immediately in browser localStorage and synchronized across open panels, and an initially empty Result. The item's visible content is included in the request without duplicating it in the panel. Refresh sends these fields to the selected Gemini model through `generateContent`; another request cannot start for that item while one is pending. Apply replaces the item's content through an editor transaction, while Cancel collapses the panel without changing the document. A generated response is plain text, so applying it to a table or image replaces that item with a paragraph.
 
+The content tab also provides 「全部修改✨」 when editing is available and an API key is saved. Its modal shares the fixed prompt and saved User Input with item panels. One `generateContent` request sends each nonempty text item with its stable ID and requests structured JSON containing the same IDs. The response must contain exactly one nonempty result for every sent ID. Valid results are applied in a single editor transaction, then the modal closes. Invalid or incomplete responses leave the document unchanged and show an error.
+
 The intended browser request follows the same direct REST pattern as model discovery:
 
 ```text
