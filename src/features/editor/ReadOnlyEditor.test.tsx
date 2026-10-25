@@ -74,7 +74,7 @@ describe('read-only document', () => {
     expect(editor!.getJSON().content?.[0].attrs?.textAlign).toBe('center');
   });
 
-  it('creates only unordered source lists from toolbar commands', async () => {
+  it('sets the list style on each source item from toolbar commands', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
       content: [{ type: 'text', text: 'Question' }] }] });
     let editor: Editor | undefined;
@@ -82,8 +82,11 @@ describe('read-only document', () => {
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
     await screen.findByText('Question');
-    fireEvent.click(screen.getByRole('button', { name: '項目清單' }));
+    fireEvent.click(screen.getByRole('button', { name: '編號清單' }));
     expect(editor!.getJSON().content?.[0].type).toBe('bulletList');
+    expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.listStyle).toBe('ordered');
+    fireEvent.click(screen.getByRole('button', { name: '項目符號清單' }));
+    expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.listStyle).toBe('unordered');
     expect(editor!.schema.nodes.orderedList).toBeUndefined();
     expect(ensureNodeIds(editor!)).toBe(true);
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.selected).toBe(true);
@@ -349,6 +352,9 @@ describe('read-only document', () => {
       expect(editor!.view.someProp('handleTextInput', (handler) =>
         handler(editor!.view, position, position, ' ', () => editor!.state.tr))).toBe(true);
       expect(editor!.getJSON().content?.[0].type).toBe(expected);
+      if (prefix === '1.') {
+        expect((editor!.getJSON() as JSONContent).content?.[0].attrs?.listStyle).toBe('ordered');
+      }
     }
   });
 

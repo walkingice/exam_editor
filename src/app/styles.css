@@ -275,6 +275,13 @@ li { margin: 10px 0; }
   padding-left: 96px;
   counter-increment: content-item;
 }
+.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"] {
+  counter-increment: none;
+  counter-set: content-item 0;
+}
+.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"]::before {
+  content: '*';
+}
 .content-panel .exam-document .ProseMirror li::before {
   content: counter(content-item) '.';
   position: absolute;

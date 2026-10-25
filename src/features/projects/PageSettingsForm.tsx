@@ -66,13 +66,6 @@ export function PageSettingsForm({ settings, onChange }: {
           {numeric('lineHeight', '行距', settings.lineHeight, 0.5, 4, '0.1')}
         </div>
       </fieldset>
-      <fieldset className="settings-group">
-        <legend>輸出清單</legend>
-        <label>樣式 <select value={settings.outputListStyle} onChange={(event) =>
-          commit({ ...settings, outputListStyle: event.target.value as PageSettings['outputListStyle'] })}>
-          <option value="ordered">編號</option><option value="unordered">項目符號</option>
-        </select></label>
-      </fieldset>
     </div>
     <div className="settings-summary">
       <p>內容區域：{dimensions.contentWidthMm} × {dimensions.contentHeightMm} mm</p>

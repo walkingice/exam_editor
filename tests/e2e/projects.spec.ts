@@ -28,7 +28,6 @@ test('persists page settings after reloading the workspace', async ({ page }) =>
   await page.getByLabel('方向').selectOption('landscape');
   await page.getByLabel('左邊距 (mm)').fill('20');
   await page.getByLabel('字級 (pt)').fill('14');
-  await page.getByLabel('輸出清單').selectOption('unordered');
   await expect(page.getByRole('status')).toContainText('尚未儲存');
   await expect(page.getByRole('status')).toContainText('已儲存');
   await page.reload();
@@ -36,7 +35,7 @@ test('persists page settings after reloading the workspace', async ({ page }) =>
   await expect(page.getByLabel('方向')).toHaveValue('landscape');
   await expect(page.getByLabel('左邊距 (mm)')).toHaveValue('20');
   await expect(page.getByLabel('字級 (pt)')).toHaveValue('14');
-  await expect(page.getByLabel('輸出清單')).toHaveValue('unordered');
+  await expect(page.getByLabel('輸出清單')).toHaveCount(0);
 });
 
 test('previews unsaved content without changing the source editor', async ({ page }) => {
