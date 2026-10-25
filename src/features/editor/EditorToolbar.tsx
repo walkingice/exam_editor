@@ -6,6 +6,12 @@ import { focusedItemIndex, insertPageBreak } from './insertPageBreak';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
 
+function activeListStyle(editor: Editor): string | null {
+  if (!editor.isActive('bulletList')) return null;
+  return editor.getAttributes('listItem').listStyle
+    ?? editor.getAttributes('bulletList').listStyle;
+}
+
 function runHistory(editor: Editor, command: typeof undoNoScroll): void {
   editor.view.focus();
   command(editor.state, editor.view.dispatch);
@@ -49,10 +55,9 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     { label: '底線', active: () => editor.isActive('underline'),
       run: () => editor.chain().focus().toggleUnderline().run() },
     ...([['編號清單', 'ordered'], ['項目符號清單', 'unordered']] as const).map(([label, style]) => ({
-      label, active: () => editor.isActive('bulletList')
-        && editor.getAttributes('listItem').listStyle === style,
+      label, active: () => activeListStyle(editor) === style,
       run: () => {
-        if (editor.isActive('bulletList') && editor.getAttributes('listItem').listStyle === style) {
+        if (activeListStyle(editor) === style) {
           editor.chain().focus().toggleBulletList().run();
           return;
         }

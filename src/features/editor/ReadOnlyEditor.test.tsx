@@ -153,6 +153,34 @@ describe('read-only document', () => {
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.selected).toBe(true);
   });
 
+  it('highlights the list style when selection moves between items', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'bulletList', attrs: { listStyle: 'ordered' }, content: [
+        { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'First' }] }] },
+        { type: 'listItem', attrs: { listStyle: 'unordered' }, content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'Second' }] },
+        ] },
+      ] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('First');
+    const positions = new Map<string, number>();
+    editor!.state.doc.descendants((node, pos) => {
+      if (node.isText) positions.set(node.text!, pos);
+    });
+    const ordered = screen.getByRole('button', { name: '編號清單' });
+    const unordered = screen.getByRole('button', { name: '項目符號清單' });
+    act(() => { editor!.commands.setTextSelection(positions.get('First')!); });
+    expect(ordered).toHaveAttribute('aria-pressed', 'true');
+    expect(unordered).toHaveAttribute('aria-pressed', 'false');
+    act(() => { editor!.commands.setTextSelection(positions.get('Second')!); });
+    expect(ordered).toHaveAttribute('aria-pressed', 'false');
+    expect(unordered).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('persists top-level question selection with history and stable IDs', async () => {
     const content = normalizeDocument({ type: 'doc', content: [
       { type: 'bulletList', content: [{ type: 'listItem', content: [
