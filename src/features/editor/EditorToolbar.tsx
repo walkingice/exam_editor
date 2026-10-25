@@ -3,7 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { redoNoScroll, undoNoScroll } from '@tiptap/pm/history';
 import { TableToolbar } from './TableToolbar';
 import { focusedItemIndex, insertPageBreak } from './insertPageBreak';
-import { fontSizes, validFontFamily } from './fontStyles';
+import { fontLabel, fontSizes, validFontFamily } from './fontStyles';
 import { fontOptions, readRecentFonts, rememberFont } from './fontCatalog';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
@@ -202,10 +202,10 @@ export function EditorToolbar({ editor, showHistory = true }: {
           onChange={(event) => setStyle('fontFamily', event.target.value)}>
           <option value="" disabled>選擇字體</option>
           {availableFonts.recent.length > 0 && <optgroup label="最近使用">
-            {availableFonts.recent.map((font) => <option key={font} value={font}>{font}</option>)}
+            {availableFonts.recent.map((font) => <option key={font} value={font}>{fontLabel(font)}</option>)}
           </optgroup>}
           <optgroup label={installedFonts ? '本機字體' : '預設字體'}>
-            {availableFonts.others.map((font) => <option key={font} value={font}>{font}</option>)}
+            {availableFonts.others.map((font) => <option key={font} value={font}>{fontLabel(font)}</option>)}
           </optgroup>
         </select>
         {fontStatus && <span role="status">{fontStatus}</span>}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { fontOptions, readRecentFonts, rememberFont } from './fontCatalog';
-import { fontSizes, validFontFamily } from './fontStyles';
+import { fontLabel, fontSizes, validFontFamily } from './fontStyles';
 import { applyAllFormat } from './applyAllFormat';
 
 export function AllFormatModal({ editor, onClose }: { editor: Editor; onClose: () => void }) {
@@ -48,10 +48,10 @@ export function AllFormatModal({ editor, onClose }: { editor: Editor; onClose: (
         onChange={(event) => setFontFamily(event.target.value)}>
         <option value="">不變更</option>
         {availableFonts.recent.length > 0 && <optgroup label="最近使用">
-          {availableFonts.recent.map((font) => <option key={font} value={font}>{font}</option>)}
+          {availableFonts.recent.map((font) => <option key={font} value={font}>{fontLabel(font)}</option>)}
         </optgroup>}
         <optgroup label={installedFonts ? '本機字體' : '預設字體'}>
-          {availableFonts.others.map((font) => <option key={font} value={font}>{font}</option>)}
+          {availableFonts.others.map((font) => <option key={font} value={font}>{fontLabel(font)}</option>)}
         </optgroup>
       </select>
       {fontStatus && <p role="status">{fontStatus}</p>}

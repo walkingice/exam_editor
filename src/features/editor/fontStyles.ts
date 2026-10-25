@@ -1,5 +1,15 @@
 export const fontFamilies = ['Noto Sans TC', 'Noto Serif TC', 'Microsoft JhengHei',
-  'Arial', 'Times New Roman'];
+  'PMingLiU', 'SimSun', 'SimHei', '標楷體', 'Arial', 'Times New Roman'];
+
+const fontLabels: Record<string, string> = {
+  PMingLiU: '新細明體',
+  SimSun: '宋體',
+  SimHei: '黑體',
+};
+
+export function fontLabel(font: string): string {
+  return fontLabels[font] ?? font;
+}
 export const fontSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72];
 
 export function validFontFamily(value: unknown): value is string {
