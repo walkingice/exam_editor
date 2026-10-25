@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { moveDocumentItem, type DocumentItemTarget } from './moveDocumentItem';
+import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
 export const questionDragType = 'application/x-exam-question';
 
@@ -78,6 +79,9 @@ export function itemActions(view: EditorView, id: string): HTMLElement {
   ai.textContent = '✨';
   ai.title = `AI 項目 ${id}`;
   ai.setAttribute('aria-label', ai.title);
+  ai.disabled = !view.editable || !window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)?.trim();
+  ai.addEventListener('click', () => view.dom.dispatchEvent(new CustomEvent('exam-ai-open',
+    { bubbles: true, detail: id })));
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.textContent = '❌';

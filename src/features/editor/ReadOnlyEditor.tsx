@@ -14,12 +14,15 @@ import { ResizableImage } from './ResizableImage';
 import { insertLocalImage } from './insertLocalImage';
 import { clearDocumentItemDropIndicator, deleteDocumentItem, refreshItemControls, setDocumentItemDragData } from './questionControls';
 import { itemNodeView } from './itemNodeView';
+import { AIItemModal } from './AIItemModal';
+import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
 function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewProps & {
   resolver: AssetResolver; preview: boolean;
 }) {
   const [resolved, setResolved] = useState<{ assetId: string; handle: AssetHandle } | null>(null);
   const [errorAssetId, setErrorAssetId] = useState<string | null>(null);
+  const hasApiKey = !!window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)?.trim();
   const assetId = node.attrs.assetId as string;
 
   useEffect(() => {
@@ -72,7 +75,10 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
       : errorAssetId === assetId ? <span role="img" aria-label="缺少圖片">找不到圖片：{assetId}</span>
         : <span>圖片載入中…</span>}</div>
     {!preview && isDocumentItem && <span className="document-item-actions" contentEditable={false}>
-      <button type="button" title={`AI 項目 ${dragId}`} aria-label={`AI 項目 ${dragId}`}>✨</button>
+      <button type="button" title={`AI 項目 ${dragId}`} aria-label={`AI 項目 ${dragId}`}
+        disabled={!editor.isEditable || !hasApiKey}
+        onClick={() => editor.view.dom.dispatchEvent(new CustomEvent('exam-ai-open',
+          { bubbles: true, detail: dragId }))}>✨</button>
       <button type="button" title={`刪除項目 ${dragId}`} aria-label={`刪除項目 ${dragId}`}
         onClick={() => deleteDocumentItem(editor.view, dragId)}>❌</button>
     </span>}
@@ -92,6 +98,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   const callbacks = useRef({ onChange, onEditor, canInsertImage });
   callbacks.current = { onChange, onEditor, canInsertImage };
   const active = useRef(false);
+  const [aiItemId, setAiItemId] = useState<string | null>(null);
   const ownedResolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
   ), [projectId, repository]);
@@ -127,6 +134,13 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
     if (editor && !editor.isDestroyed) editor.commands.setContent(content, { emitUpdate: false });
   }, [content, editor]);
   useEffect(() => () => ownedResolver.dispose(), [ownedResolver]);
+  useEffect(() => {
+    if (!editor) return;
+    const open = (event: Event) => setAiItemId((event as CustomEvent<string>).detail);
+    const dom = editor.view.dom;
+    dom.addEventListener('exam-ai-open', open);
+    return () => dom.removeEventListener('exam-ai-open', open);
+  }, [editor]);
 
   return <div className={editable && editor ? 'content-editor-layout' : undefined}>
     {editable && editor && <aside className="content-editor-controls" aria-label="編輯工具">
@@ -140,5 +154,7 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
     <div aria-label="試卷文件" className="exam-document">
       <EditorContent editor={editor} />
     </div>
+    {editor && aiItemId && <AIItemModal editor={editor} itemId={aiItemId}
+      onClose={() => setAiItemId(null)} />}
   </div>;
 }
