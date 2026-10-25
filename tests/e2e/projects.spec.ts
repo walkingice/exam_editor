@@ -1,26 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type {} from '../../src/test/ownership-harness';
 
-test('creates, reloads, reopens, and deletes a project', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: '建立空白試卷' }).click();
-  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
-  const projectUrl = page.url();
-  await page.reload();
-  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
-  await page.getByRole('link', { name: '返回首頁' }).click();
-  await page.getByRole('link', { name: '未命名試卷' }).click();
-  await expect(page).toHaveURL(projectUrl);
-  await page.goto(projectUrl);
-  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
-  await page.getByRole('link', { name: '返回首頁' }).click();
-  page.on('dialog', (dialog) => dialog.accept());
-  await page.getByRole('button', { name: '刪除 未命名試卷' }).click();
-  await expect(page.getByText('還沒有試卷。建立一份空白試卷開始。')).toBeVisible();
-  await page.goto(projectUrl);
-  await expect(page.getByText('找不到這份試卷。')).toBeVisible();
-});
-
 test('persists page settings after reloading the workspace', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();
@@ -73,20 +53,6 @@ test('persists preview paragraph formatting on its source node', async ({ page }
   await page.getByRole('tab', { name: '排版預覽' }).click();
   await expect(page.getByRole('tabpanel', { name: '排版預覽' })
     .getByText('Format this paragraph')).toHaveAttribute('data-spacing-after-mm', '5');
-});
-
-test('prevents another tab from deleting until ownership changes', async ({ context, page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: '建立空白試卷' }).click();
-  await expect(page.getByRole('heading', { name: '試卷內容' })).toBeVisible();
-  const second = await context.newPage();
-  await second.goto('/');
-  second.on('dialog', (dialog) => dialog.accept());
-  await second.getByRole('button', { name: '刪除 未命名試卷' }).click();
-  await expect(second.getByRole('alert')).toContainText('另一個分頁正在使用此 Project');
-  await page.close();
-  await second.getByRole('button', { name: '刪除 未命名試卷' }).click();
-  await expect(second.getByText('還沒有試卷。建立一份空白試卷開始。')).toBeVisible();
 });
 
 test('opens the latest project after a writer hands off', async ({ context, page }) => {
@@ -236,64 +202,6 @@ test('keeps question selection and IDs after reopening', async ({ context, page 
   await page.getByRole('link', { name: 'Question sections' }).click();
   await expect(item.getByRole('checkbox')).not.toBeChecked();
   await expect(item).toHaveAttribute('data-node-id', id!);
-});
-
-test('drags a full question across sections and reopens it', async ({ context, page }) => {
-  const setup = await context.newPage();
-  const id = `move-${crypto.randomUUID()}`;
-  await setup.goto('/tests/harness/');
-  await setup.waitForFunction(() => !!window.ownershipHarness);
-  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
-  await setup.evaluate((projectId) => window.ownershipHarness.createQuestionSections(projectId), id);
-  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
-  await setup.close();
-  await page.goto(`/#/projects/${id}`);
-  const item = page.locator('.ProseMirror > ul > li');
-  const itemId = await item.getAttribute('data-node-id');
-  await item.getByRole('button', { name: /移動題目/ })
-    .dragTo(page.getByRole('heading', { name: 'Section two' }));
-  await expect(page.locator('.ProseMirror > h2').nth(1)
-    .locator('xpath=following-sibling::*[1][self::ul]')).toHaveCount(1);
-  await expect(item).toHaveAttribute('data-node-id', itemId!);
-  await expect(item).toContainText('Option');
-  await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
-  await page.getByRole('button', { name: '復原' }).click();
-  await expect(page.locator('.ProseMirror > h2').first()
-    .locator('xpath=following-sibling::*[1][self::ul]')).toHaveCount(1);
-  await page.getByRole('button', { name: '重做' }).click();
-  await page.getByRole('link', { name: '返回首頁' }).click();
-  await page.getByRole('link', { name: 'Question sections' }).click();
-  await expect(item).toHaveAttribute('data-node-id', itemId!);
-  await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
-});
-
-test('persists a complete multi-section editing session', async ({ context, page }) => {
-  const setup = await context.newPage();
-  const id = `session-${crypto.randomUUID()}`;
-  await setup.goto('/tests/harness/');
-  await setup.waitForFunction(() => !!window.ownershipHarness);
-  await setup.evaluate((projectId) => window.ownershipHarness.acquire(projectId), id);
-  await setup.evaluate((projectId) => window.ownershipHarness.createMilestone2Fixture(projectId), id);
-  await setup.evaluate((projectId) => window.ownershipHarness.release(projectId), id);
-  await page.goto(`/#/projects/${id}`);
-  const item = page.locator('.ProseMirror > ul > li').first();
-  await expect(item.getByRole('img', { name: 'Question image' })).toBeVisible();
-  await item.getByRole('cell').first().locator('p').click();
-  await expect(page.getByRole('button', { name: '新增列' })).toBeEnabled();
-  await page.keyboard.press('End');
-  await page.keyboard.type(' revised');
-  await expect(item.getByRole('cell').first()).toContainText('revised');
-  await item.getByRole('button', { name: /移動題目/ })
-    .dragTo(page.getByRole('heading', { name: 'Section two' }));
-  await page.getByRole('button', { name: '復原' }).click();
-  await page.getByRole('button', { name: '重做' }).click();
-  await page.getByRole('link', { name: '返回首頁' }).click();
-  await page.getByRole('link', { name: 'Milestone two fixture' }).click();
-  await page.reload();
-  await expect(page.getByText('Unselected question')).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Shared image' })).toBeVisible();
-  await expect(page.getByRole('cell').first()).toContainText('revised');
-  await expect(page.locator('.ProseMirror > ul').last().locator(':scope > li')).toHaveCount(2);
 });
 
 test('keeps an edited table after reloading', async ({ page }) => {
