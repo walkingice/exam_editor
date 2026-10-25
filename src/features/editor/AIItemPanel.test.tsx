@@ -33,8 +33,8 @@ it('expands inside the item, saves the direction, and applies the Gemini result'
   expect(screen.getByLabelText('Result')).toHaveValue('');
   fireEvent.change(screen.getByLabelText('User Input'), { target: { value: '改成海洋情境' } });
   expect(window.localStorage.getItem(AI_USER_INPUT_STORAGE_KEY)).toBe('改成海洋情境');
-  fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
-  expect(screen.getByRole('button', { name: '處理中…' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'AI 改寫' }));
+  expect(screen.getByRole('button', { name: 'AI 改寫中…' })).toBeDisabled();
   expect(fetchMock).toHaveBeenCalledOnce();
   const [url, options] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
   expect(url).toContain('/models/gemini-test:generateContent');
@@ -43,7 +43,7 @@ it('expands inside the item, saves the direction, and applies the Gemini result'
     .toContain('修改方向： 改成海洋情境\n\n原本題目：\n\n原本題目');
   finish({ ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: '海洋題目' }] } }] }) } as Response);
   await waitFor(() => expect(screen.getByLabelText('Result')).toHaveValue('海洋題目'));
-  fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+  fireEvent.click(screen.getByRole('button', { name: '套用' }));
   expect(screen.queryByRole('region', { name: 'AI 修改項目 item-1' })).not.toBeInTheDocument();
   expect(screen.getByText('海洋題目')).toBeInTheDocument();
 });

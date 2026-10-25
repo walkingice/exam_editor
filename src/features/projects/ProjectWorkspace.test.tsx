@@ -7,6 +7,7 @@ import { createEmptyDocument, DEFAULT_PAGE_SETTINGS } from '../../domain/types';
 import { normalizeDocument } from '../../domain/document';
 import { ProjectWorkspace } from './ProjectWorkspace';
 import { createDocxDownload, downloadBlob } from '../export-docx/downloadDocument';
+import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
 vi.mock('../export-docx/downloadDocument', async (original) => ({
   ...await original<typeof import('../export-docx/downloadDocument')>(),
@@ -35,6 +36,27 @@ function bundle(id: string): ProjectBundle {
 }
 
 afterEach(() => { cleanup(); vi.useRealTimers(); editorProps.current.length = 0; });
+
+it('opens the whole-document AI modal from the content tab', async () => {
+  window.localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, 'test-key');
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  const button = screen.getByRole('button', { name: '全部修改✨' });
+  expect(button).toBeDisabled();
+  act(() => editorProps.current[0].onEditor?.({ isEditable: true } as Editor));
+  expect(button).toBeEnabled();
+  fireEvent.click(button);
+  expect(screen.getByRole('dialog', { name: '全部修改' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '取消' }));
+  expect(screen.queryByRole('dialog', { name: '全部修改' })).not.toBeInTheDocument();
+  window.localStorage.removeItem(GEMINI_API_KEY_STORAGE_KEY);
+});
 
 it('cancels a title edit without changing the project name', async () => {
   const repository = { get: vi.fn(async () => bundle('first')),
