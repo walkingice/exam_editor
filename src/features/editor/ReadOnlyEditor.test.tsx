@@ -138,6 +138,65 @@ describe('read-only document', () => {
     expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
   });
 
+  it('applies font controls to selected text and the focused line only', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First line' }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'Second line' }] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('First line');
+    const font = screen.getByRole('combobox', { name: '字體' });
+    const size = screen.getByRole('combobox', { name: '字體大小' });
+    expect(font.compareDocumentPosition(screen.getByRole('button', { name: '清除格式' }))
+      & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    editor!.commands.setTextSelection({ from: 1, to: 6 });
+    fireEvent.change(font, { target: { value: 'Arial' } });
+    expect(editor!.getJSON().content?.[0].content).toMatchObject([
+      { text: 'First', marks: [{ type: 'fontFamily', attrs: { fontFamily: 'Arial' } }] },
+      { text: ' line' },
+    ]);
+    const second = editor!.getJSON().content?.[1];
+    editor!.commands.setTextSelection(14);
+    act(() => { editor!.view.focus(); });
+    expect(editor!.isFocused).toBe(true);
+    fireEvent.pointerDown(size);
+    size.focus();
+    fireEvent.change(size, { target: { value: '18pt' } });
+    expect(editor!.getJSON().content?.[1].content).toMatchObject([
+      { text: 'Second line', marks: [{ type: 'fontSize', attrs: { fontSize: '18pt' } }] },
+    ]);
+    expect(editor!.getJSON().content?.[0].content?.[1].marks).toBeUndefined();
+    expect(second).not.toEqual(editor!.getJSON().content?.[1]);
+    fireEvent.pointerDown(font);
+    font.focus();
+    fireEvent.change(font, { target: { value: 'Noto Sans TC' } });
+    expect(editor!.getJSON().content?.[1].content?.[0].marks).toMatchObject([
+      { type: 'fontFamily', attrs: { fontFamily: 'Noto Sans TC' } },
+      { type: 'fontSize', attrs: { fontSize: '18pt' } },
+    ]);
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    outside.focus();
+    const afterLeavingToolbar = editor!.getJSON();
+    font.focus();
+    fireEvent.change(font, { target: { value: 'Arial' } });
+    expect(editor!.getJSON()).toEqual(afterLeavingToolbar);
+    outside.remove();
+    editor!.commands.setTextSelection(14);
+    act(() => { editor!.view.focus(); editor!.view.dom.blur(); });
+    expect(editor!.isFocused).toBe(false);
+    const before = editor!.getJSON();
+    fireEvent.change(font, { target: { value: 'Arial' } });
+    expect(editor!.getJSON()).toEqual(before);
+    editor!.commands.setTextSelection({ from: 1, to: 6 });
+    fireEvent.click(screen.getByRole('button', { name: '清除格式' }));
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
+    expect(editor!.getJSON().content?.[1].content?.[0].marks).toHaveLength(2);
+  });
+
   it('sets the list style on each source item from toolbar commands', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
       content: [{ type: 'text', text: 'Question' }] }] });
