@@ -19,6 +19,11 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
   const shell = type === 'listItem' ? document.createElement('div') : outer;
   const border = document.createElement('div');
   border.className = 'document-item-border';
+  if (type === 'heading' && [1, 2, 3].includes(node.attrs.level)) {
+    border.classList.add('document-item-border-heading');
+  } else if (type === 'listItem') {
+    border.classList.add('document-item-border-list');
+  }
   const contentDOM = type === 'codeBlock' ? document.createElement('code')
     : type === 'table' ? document.createElement('tbody')
       : type === 'paragraph' && !topLevel ? document.createElement('span') : semantic;

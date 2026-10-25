@@ -387,6 +387,8 @@ li { margin: 10px 0; }
   border-radius: 6px;
   background: #fff;
 }
+.content-panel .exam-document .document-item-border-heading { border-width: 3px; border-style: double; }
+.content-panel .exam-document .document-item-border-list { border-style: dotted; }
 .content-panel .ProseMirror[contenteditable="true"] .document-item-shell
   > .document-item-border > :first-child { margin-right: 68px; }
 .content-panel .ai-item-panel-host:empty { display: none; }
