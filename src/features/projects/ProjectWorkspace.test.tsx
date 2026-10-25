@@ -68,15 +68,34 @@ it('opens the whole-document AI modal from the content tab', async () => {
   } as unknown as ProjectOwnership;
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
-  const button = screen.getByRole('button', { name: '全部修改✨' });
+  const button = screen.getByRole('button', { name: '修改全部內容' });
   expect(button).toBeDisabled();
   act(() => editorProps.current[0].onEditor?.({ isEditable: true } as Editor));
   expect(button).toBeEnabled();
   fireEvent.click(button);
-  expect(screen.getByRole('dialog', { name: '全部修改' })).toBeInTheDocument();
+  expect(screen.getByRole('dialog', { name: '修改全部內容' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: '取消' }));
-  expect(screen.queryByRole('dialog', { name: '全部修改' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('dialog', { name: '修改全部內容' })).not.toBeInTheDocument();
   window.localStorage.removeItem(GEMINI_API_KEY_STORAGE_KEY);
+});
+
+it('opens and cancels the whole-document format modal', async () => {
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  const button = screen.getByRole('button', { name: '修改全部格式' });
+  expect(button).toBeDisabled();
+  act(() => editorProps.current[0].onEditor?.({ isEditable: true } as Editor));
+  expect(button).toBeEnabled();
+  fireEvent.click(button);
+  expect(screen.getByRole('dialog', { name: '修改全部格式' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '取消' }));
+  expect(screen.queryByRole('dialog', { name: '修改全部格式' })).not.toBeInTheDocument();
 });
 
 it('cancels a title edit without changing the project name', async () => {

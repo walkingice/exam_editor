@@ -65,8 +65,8 @@ export function AIAllModal({ editor, onClose }: { editor: Editor; onClose: () =>
 
   return <div className="settings-backdrop" role="presentation">
     <section className="settings-modal ai-all-modal" role="dialog" aria-modal="true"
-      aria-label="全部修改" onKeyDown={(event) => { if (event.key === 'Escape') onClose(); }}>
-      <h2>全部修改✨</h2>
+      aria-label="修改全部內容" onKeyDown={(event) => { if (event.key === 'Escape') onClose(); }}>
+      <h2>修改全部內容</h2>
       <details className="ai-default-prompt">
         <summary>顯示提示詞</summary>
         <div>{getAIPrompt()}</div>

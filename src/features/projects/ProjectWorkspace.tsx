@@ -21,6 +21,7 @@ import { countPrintImages, createPrintCss, waitForPrintAssets } from '../layout/
 
 import { ExportDocxButton } from '../export-docx/ExportDocxButton';
 import { AIAllModal } from '../editor/AIAllModal';
+import { AllFormatModal } from '../editor/AllFormatModal';
 import { runHistory } from '../editor/EditorToolbar';
 import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
@@ -82,6 +83,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [pageSettings, setPageSettings] = useState<PageSettings | null>(null);
   const [tab, setTab] = useState<'content' | 'preview'>('content');
   const [showAIAll, setShowAIAll] = useState(false);
+  const [showAllFormat, setShowAllFormat] = useState(false);
   const [sourceEditor, setSourceEditor] = useState<Editor | null>(null);
   const [previewRevision, setPreviewRevision] = useState(0);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
@@ -124,6 +126,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     setStatus('loading');
     setSourceEditor(null);
     setShowAIAll(false);
+    setShowAllFormat(false);
     setReadOnlyReason('');
     try {
       const acquired = await ownership.acquireLatest(projectId, () => repository.beginSession(projectId))
@@ -355,10 +358,12 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
       <div className="workspace-section-heading">
         <h2>{tab === 'content' ? '試卷內容' : '排版預覽'}</h2>
-        {tab === 'content' && <button type="button" onClick={() => setShowAIAll(true)}
+        {tab === 'content' && <div className="workspace-heading-actions"><button type="button" onClick={() => setShowAIAll(true)}
           disabled={!lease?.isActive || !sourceEditor
             || !window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)?.trim()}>
-          全部修改✨</button>}
+          修改全部內容</button>
+          <button type="button" onClick={() => setShowAllFormat(true)}
+            disabled={!lease?.isActive || !sourceEditor}>修改全部格式</button></div>}
       </div>
       {tab === 'preview' && pageSettings && <div className="workspace-actions">
         <ExportDocxButton key={projectId} snapshot={() => ({
@@ -402,6 +407,8 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       </div>
       {showAIAll && sourceEditor && <AIAllModal editor={sourceEditor}
         onClose={() => setShowAIAll(false)} />}
+      {showAllFormat && sourceEditor && <AllFormatModal editor={sourceEditor}
+        onClose={() => setShowAllFormat(false)} />}
       {tab === 'preview' && previewContent && pageSettings && page &&
         <div role="tabpanel" aria-label="排版預覽"
           className={lease?.isActive ? 'preview-layout' : 'preview-layout preview-layout-readonly'}>
