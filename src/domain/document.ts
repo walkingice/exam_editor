@@ -1,5 +1,6 @@
 import type { JSONContent } from '@tiptap/core';
 import { examSchema } from '../features/editor/schema';
+import { validFontFamily, validFontSize } from '../features/editor/fontStyles';
 
 const idTypes = new Set(['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
   'codeBlock', 'horizontalRule', 'pageBreak']);
@@ -72,6 +73,11 @@ function checkNode(
   }
   if (node.marks?.some((mark) => !mark.type || !markTypes.has(mark.type))) {
     throw new Error('Unsupported document mark');
+  }
+  if (node.marks?.some((mark) =>
+    (mark.type === 'fontFamily' && !validFontFamily(mark.attrs?.fontFamily))
+    || (mark.type === 'fontSize' && !validFontSize(mark.attrs?.fontSize)))) {
+    throw new Error('Invalid font style');
   }
   const attrs = node.attrs ?? {};
   const allowed = examSchema.nodes[node.type].spec.attrs ?? {};

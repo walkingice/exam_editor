@@ -1,4 +1,4 @@
-import { Extension, Node, getSchema, wrappingInputRule } from '@tiptap/core';
+import { Extension, Mark, Node, getSchema, wrappingInputRule } from '@tiptap/core';
 import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
@@ -10,6 +10,7 @@ import CodeBlock from '@tiptap/extension-code-block';
 import { ListItem } from '@tiptap/extension-list';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { itemActions, itemControl, QuestionControls } from './questionControls';
+import { validFontFamily, validFontSize } from './fontStyles';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
@@ -64,6 +65,39 @@ const ExamAttributes = Extension.create({
         },
       },
     ];
+  },
+});
+
+const FontFamily = Mark.create({
+  name: 'fontFamily',
+  addAttributes() {
+    return { fontFamily: { default: null } };
+  },
+  parseHTML() {
+    return [{ tag: 'span[style]', consuming: false, getAttrs: (element) => {
+      const fontFamily = (element as HTMLElement).style.fontFamily.replace(/^['"]|['"]$/g, '');
+      return validFontFamily(fontFamily) ? { fontFamily } : false;
+    } }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', { style: `font-family: ${HTMLAttributes.fontFamily}` }, 0];
+  },
+});
+
+const FontSize = Mark.create({
+  name: 'fontSize',
+  addAttributes() {
+    return { fontSize: { default: null } };
+  },
+  parseHTML() {
+    return [{ tag: 'span[style]', consuming: false, getAttrs: (element) => {
+      const fontSize = /(?:^|;)\s*font-size\s*:\s*([^;]+)/i
+        .exec((element as HTMLElement).getAttribute('style') ?? '')?.[1].trim();
+      return validFontSize(fontSize) ? { fontSize } : false;
+    } }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', { style: `font-size: ${HTMLAttributes.fontSize}` }, 0];
   },
 });
 
@@ -153,6 +187,8 @@ const PageBreak = Node.create({
 
 export const examExtensions = [
   StarterKit,
+  FontFamily,
+  FontSize,
   ExamAttributes,
   PageBreak,
   AssetImage,
@@ -181,6 +217,8 @@ const SourceListShortcut = Extension.create({
 export const editingExtensions = [
   StarterKit.configure({ orderedList: false, horizontalRule: false, dropcursor: false,
     paragraph: false, heading: false, listItem: false, blockquote: false, codeBlock: false }),
+  FontFamily,
+  FontSize,
   Paragraph,
   Heading,
   ListItem,

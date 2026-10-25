@@ -3,19 +3,26 @@ import { AlignmentType, HeadingLevel, Paragraph, TextRun } from 'docx';
 import type { IParagraphOptions } from 'docx';
 import type { PageSettings } from '../../domain/types';
 import { paragraphSpacing } from './formatMapper';
+import { validFontFamily, validFontSize } from '../editor/fontStyles';
 
 export function textRuns(node: JSONContent, warnings: Set<string>): TextRun[] {
   if (node.type === 'hardBreak') return [new TextRun({ break: 1 })];
   if (node.type !== 'text') return (node.content ?? []).flatMap((child) => textRuns(child, warnings));
   const marks = new Set(node.marks?.map((mark) => mark.type));
+  const fontFamily = node.marks?.find((mark) => mark.type === 'fontFamily')?.attrs?.fontFamily;
+  const fontSize = node.marks?.find((mark) => mark.type === 'fontSize')?.attrs?.fontSize;
+  if (fontFamily != null && !validFontFamily(fontFamily)) warnings.add('Unsupported font family; text was preserved.');
+  if (fontSize != null && !validFontSize(fontSize)) warnings.add('Unsupported font size; text was preserved.');
   for (const mark of marks) {
-    if (!['bold', 'italic', 'underline', 'strike', 'code'].includes(mark)) {
+    if (!['bold', 'italic', 'underline', 'strike', 'code', 'fontFamily', 'fontSize'].includes(mark)) {
       warnings.add(`Unsupported text style: ${mark}; text was preserved.`);
     }
   }
   return [new TextRun({ text: node.text ?? '', bold: marks.has('bold'),
     italics: marks.has('italic'), underline: marks.has('underline') ? {} : undefined,
-    strike: marks.has('strike'), font: marks.has('code') ? 'Courier New' : undefined })];
+    strike: marks.has('strike'), font: validFontFamily(fontFamily) ? fontFamily
+      : (marks.has('code') ? 'Courier New' : undefined),
+    size: validFontSize(fontSize) ? Number.parseFloat(fontSize) * 2 : undefined })];
 }
 
 export function paragraphOptions(node: JSONContent, warnings: Set<string>): IParagraphOptions {

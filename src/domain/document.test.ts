@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateJSON } from '@tiptap/core';
+import { generateHTML, generateJSON } from '@tiptap/core';
 import { examExtensions } from '../features/editor/schema';
 import { normalizeDocument, validateDocument } from './document';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS, validatePageSettings } from './types';
@@ -58,6 +58,27 @@ describe('exam document schema', () => {
     const parsed = generateJSON('<ol><li><p>Question</p></li></ol>', examExtensions);
     const content = normalizeDocument(parsed);
     expect(content.content?.[0].content?.[0].attrs?.selected).toBe(true);
+  });
+
+  it('parses valid inline fonts and rejects invalid font attributes', () => {
+    const parsed = generateJSON('<p><span style="font-family: Arial; font-size: 18pt">Styled</span>'
+      + '<span style="font-size: 18px">Ignored</span></p>', examExtensions);
+    expect(parsed.content?.[0].content?.[0].marks).toMatchObject([
+      { type: 'fontFamily', attrs: { fontFamily: 'Arial' } },
+      { type: 'fontSize', attrs: { fontSize: '18pt' } },
+    ]);
+    expect(parsed.content?.[0].content?.[1].marks).toBeUndefined();
+    expect(() => normalizeDocument(parsed)).not.toThrow();
+    const roundTrip = generateJSON(generateHTML(parsed, examExtensions), examExtensions);
+    expect(roundTrip.content?.[0].content?.[0].marks).toEqual(parsed.content?.[0].content?.[0].marks);
+    for (const mark of [
+      { type: 'fontFamily', attrs: { fontFamily: 'Unknown' } },
+      { type: 'fontSize', attrs: { fontSize: '18px' } },
+      { type: 'fontSize', attrs: { fontSize: 'abc' } },
+    ]) {
+      expect(() => normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+        content: [{ type: 'text', text: 'X', marks: [mark] }] }] })).toThrow('Invalid font style');
+    }
   });
 
   it('accepts older document items without a selection attribute', () => {

@@ -1,7 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { paragraph, question, unpack } from './testHelpers';
+import { textRuns } from './textMapper';
 
 describe('DOCX text mapping', () => {
+  it('exports selected font family and size as run formatting', async () => {
+    const source = { type: 'doc', content: [{ type: 'paragraph', content: [{
+      type: 'text', text: 'Styled', marks: [
+        { type: 'fontFamily', attrs: { fontFamily: 'Arial' } },
+        { type: 'fontSize', attrs: { fontSize: '18pt' } },
+      ],
+    }] }] };
+    const { xml, warnings } = await unpack(source);
+    expect(xml).toContain('w:ascii="Arial"');
+    expect(xml).toContain('<w:sz w:val="36"');
+    expect(warnings).toEqual([]);
+  });
+
+  it('preserves text and warns when font marks are invalid', async () => {
+    const source = { type: 'doc', content: [{ type: 'paragraph', content: [{
+      type: 'text', text: 'Styled', marks: [
+        { type: 'fontFamily', attrs: { fontFamily: 'Unknown' } },
+        { type: 'fontSize', attrs: { fontSize: '18px' } },
+      ],
+    }] }] };
+    const warnings = new Set<string>();
+    expect(textRuns(source.content[0].content[0], warnings)).toHaveLength(1);
+    expect(warnings).toContain('Unsupported font family; text was preserved.');
+    expect(warnings).toContain('Unsupported font size; text was preserved.');
+  });
+
   it('exports editable Chinese, headings, marks, breaks, and alignment without mutating source', async () => {
     const source = { type: 'doc', content: [{ type: 'heading', attrs: { level: 2 },
       content: [{ type: 'text', text: '中文試卷' }] }, { type: 'paragraph', attrs: { textAlign: 'center' },
