@@ -370,7 +370,7 @@ li { margin: 10px 0; }
   margin-top: 2px;
 }
 .content-editor-controls .image-toolbar { display: grid; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #d7dee8; }
-.content-editor-controls .image-toolbar button { margin: 0; min-height: 32px; }
+.content-editor-controls .image-toolbar button { justify-self: start; margin: 0; min-height: 32px; }
 .content-editor-controls .image-toolbar label { display: grid; gap: 4px; overflow-wrap: anywhere; }
 .content-editor-controls .image-toolbar input { max-width: 100%; }
 .editor-toolbar button[aria-pressed="true"] { background: #174e91; color: #fff; }
