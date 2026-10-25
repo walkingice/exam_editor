@@ -317,7 +317,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const selectedNode = includesNodeId(previewContent, selectedPreviewId)
     ? findEditorNode(session.current?.editor, selectedPreviewId) : null;
 
-  return <main>
+  return <main className="project-workspace">
     {status === 'loading' && <p>載入中…</p>}
     {status === 'missing' && <p>找不到這份試卷。</p>}
     {status === 'error' && <><p role="alert">{error}</p>
