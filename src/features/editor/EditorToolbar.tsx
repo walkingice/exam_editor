@@ -26,12 +26,12 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   }, [editor]);
 
   const tools: Tool[] = [
-    { label: '段落', active: () => editor.isActive('paragraph'),
-      run: () => editor.chain().focus().setParagraph().run() },
     ...([1, 2, 3] as const).map((level) => ({
       label: `標題 ${level}`, active: () => editor.isActive('heading', { level }),
       run: () => editor.chain().focus().toggleHeading({ level }).run(),
     })),
+    { label: '內文', active: () => editor.isActive('paragraph'),
+      run: () => editor.chain().focus().setParagraph().run() },
     { label: '粗體', active: () => editor.isActive('bold'),
       run: () => editor.chain().focus().toggleBold().run() },
     { label: '斜體', active: () => editor.isActive('italic'),
