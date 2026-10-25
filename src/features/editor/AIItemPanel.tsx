@@ -100,8 +100,6 @@ export function AIItemPanel({ editor, itemId, onClose }: {
         window.localStorage.setItem(AI_USER_INPUT_STORAGE_KEY, event.target.value);
         window.dispatchEvent(new CustomEvent('exam-ai-input', { detail: event.target.value }));
       }} />
-      <label htmlFor={`ai-content-${itemId}`}>Content</label>
-      <textarea id={`ai-content-${itemId}`} value={content} readOnly rows={4} />
       <label htmlFor={`ai-result-${itemId}`}>Result</label>
       <textarea id={`ai-result-${itemId}`} value={result} readOnly rows={4} />
       {error && <p role="alert">{error}</p>}

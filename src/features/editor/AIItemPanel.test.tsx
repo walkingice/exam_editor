@@ -29,7 +29,7 @@ it('expands inside the item, saves the direction, and applies the Gemini result'
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(screen.getByRole('region', { name: 'AI 修改項目 item-1' })
     .closest('.document-item-border')).toBeInTheDocument();
-  expect(screen.getByLabelText('Content')).toHaveValue('原本題目');
+  expect(screen.queryByLabelText('Content')).not.toBeInTheDocument();
   expect(screen.getByLabelText('Result')).toHaveValue('');
   fireEvent.change(screen.getByLabelText('User Input'), { target: { value: '改成海洋情境' } });
   expect(window.localStorage.getItem(AI_USER_INPUT_STORAGE_KEY)).toBe('改成海洋情境');
