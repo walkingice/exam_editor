@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { ProjectRepository } from '../../data/repository';
 import { GEMINI_API_KEY_STORAGE_KEY, GEMINI_MODEL_STORAGE_KEY,
-  AI_USER_INPUT_STORAGE_KEY } from '../../shared/storageKeys';
+  AI_DEFAULT_PROMPT_STORAGE_KEY, AI_USER_INPUT_STORAGE_KEY } from '../../shared/storageKeys';
 import { ReadOnlyEditor } from './ReadOnlyEditor';
 import type { Editor } from '@tiptap/core';
 
@@ -16,6 +16,20 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.localStorage.clear();
 it('disables AI when no API key is saved', async () => {
   render(<ReadOnlyEditor projectId="project" content={content} repository={repository} editable />);
   expect(await screen.findByRole('button', { name: 'AI 項目 item-1' })).toBeDisabled();
+});
+
+it('shows and sends the saved Default Prompt', async () => {
+  window.localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, 'test-key');
+  window.localStorage.setItem(AI_DEFAULT_PROMPT_STORAGE_KEY, '自訂提示詞');
+  const fetchMock = vi.fn(() => new Promise<Response>(() => {}));
+  vi.stubGlobal('fetch', fetchMock);
+  render(<ReadOnlyEditor projectId="project" content={content} repository={repository} editable />);
+  fireEvent.click(await screen.findByRole('button', { name: 'AI 項目 item-1' }));
+  expect(screen.getByText('自訂提示詞')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'AI 改寫' }));
+  const [, options] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+  expect(JSON.parse(options.body as string)
+    .contents[0].parts[0].text).toContain('自訂提示詞');
 });
 
 it('expands inside the item, saves the direction, and applies the Gemini result', async () => {

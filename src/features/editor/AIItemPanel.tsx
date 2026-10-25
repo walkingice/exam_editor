@@ -3,14 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { AI_USER_INPUT_STORAGE_KEY, GEMINI_API_KEY_STORAGE_KEY,
   GEMINI_MODEL_STORAGE_KEY } from '../../shared/storageKeys';
 import { DEFAULT_GEMINI_MODELS } from '../projects/geminiModels';
-
-export const DEFAULT_AI_PROMPT = `你是一位台灣國中小學教師，正在準備考試題目。
-為了把題目變得有趣，我會給你一個題目，以及修改的方向。
-
-不改變題目的語意，測驗目的，也盡量不改變題目的形式符號，僅替換題目內的名詞或情境，讓題目更貼近我提供的修改方向。
-
-直接回應修改的內容，不加上任何的贅詞、問候語、心得。
-`;
+import { getAIPrompt } from '../../shared/aiPrompt';
 
 function findItem(editor: Editor, id: string) {
   let found: { position: number; node: typeof editor.state.doc } | null = null;
@@ -70,7 +63,7 @@ export function AIItemPanel({ editor, itemId, onClose }: {
     setResult('');
     setError('');
     try {
-      const prompt = `${DEFAULT_AI_PROMPT}\n\n修改方向： ${userInput}\n\n原本題目：\n\n${content}`;
+      const prompt = `${getAIPrompt()}\n\n修改方向： ${userInput}\n\n原本題目：\n\n${content}`;
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
@@ -94,7 +87,7 @@ export function AIItemPanel({ editor, itemId, onClose }: {
       onKeyDown={(event) => { if (event.key === 'Escape') onClose(); }}>
       <details id={`ai-default-prompt-${itemId}`} className="ai-default-prompt">
         <summary>顯示提示詞</summary>
-        <div>{DEFAULT_AI_PROMPT}</div>
+        <div>{getAIPrompt()}</div>
       </details>
       <label htmlFor={`ai-user-input-${itemId}`}>User Input</label>
       <textarea id={`ai-user-input-${itemId}`} ref={inputRef} value={userInput} rows={3} onChange={(event) => {

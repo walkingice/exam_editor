@@ -4,7 +4,9 @@ import { ProjectLease, type ProjectOwnership } from '../data/ownership';
 import type { ProjectRepository, ProjectBundle } from '../data/repository';
 import { notifyProjectDeleted } from '../data/projectEvents';
 import { createEmptyDocument, DEFAULT_PAGE_SETTINGS } from '../domain/types';
-import { GEMINI_API_KEY_STORAGE_KEY, GEMINI_MODEL_STORAGE_KEY } from '../shared/storageKeys';
+import { AI_DEFAULT_PROMPT_STORAGE_KEY, GEMINI_API_KEY_STORAGE_KEY,
+  GEMINI_MODEL_STORAGE_KEY } from '../shared/storageKeys';
+import { DEFAULT_AI_PROMPT } from '../shared/aiPrompt';
 import { App } from './App';
 
 const records = new Map<string, ProjectBundle>();
@@ -44,6 +46,22 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('project navigation', () => {
+  it('saves and resets the Default Prompt through settings', async () => {
+    window.location.hash = '#/settings';
+    render(<App projects={repository} writes={ownership} />);
+    const prompt = await screen.findByLabelText('Default Prompt');
+    expect(prompt).toHaveValue(DEFAULT_AI_PROMPT);
+    fireEvent.change(prompt, { target: { value: '自訂提示詞' } });
+    fireEvent.click(screen.getByRole('button', { name: '儲存設定' }));
+    expect(window.localStorage.getItem(AI_DEFAULT_PROMPT_STORAGE_KEY)).toBe('自訂提示詞');
+    fireEvent.click(await screen.findByRole('link', { name: '設定' }));
+    expect(await screen.findByLabelText('Default Prompt')).toHaveValue('自訂提示詞');
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(screen.getByLabelText('Default Prompt')).toHaveValue(DEFAULT_AI_PROMPT);
+    fireEvent.click(screen.getByRole('button', { name: '儲存設定' }));
+    expect(window.localStorage.getItem(AI_DEFAULT_PROMPT_STORAGE_KEY)).toBeNull();
+  });
+
   it('saves the Gemini API key in browser settings and links to setup help', async () => {
     render(<App projects={repository} writes={ownership} />);
     await screen.findByRole('button', { name: /建立空白試卷/ });

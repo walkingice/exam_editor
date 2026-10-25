@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Editor } from '@tiptap/core';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { AI_USER_INPUT_STORAGE_KEY, GEMINI_API_KEY_STORAGE_KEY,
+import { AI_DEFAULT_PROMPT_STORAGE_KEY, AI_USER_INPUT_STORAGE_KEY, GEMINI_API_KEY_STORAGE_KEY,
   GEMINI_MODEL_STORAGE_KEY } from '../../shared/storageKeys';
 import { editingExtensions } from './schema';
 import { AIAllModal } from './AIAllModal';
@@ -22,6 +22,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.localStorage.clear();
 it('maps a structured response by ID and applies all items in one transaction', async () => {
   window.localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, 'test-key');
   window.localStorage.setItem(GEMINI_MODEL_STORAGE_KEY, 'gemini-test');
+  window.localStorage.setItem(AI_DEFAULT_PROMPT_STORAGE_KEY, '自訂提示詞');
   let finish!: (response: Response) => void;
   const fetchMock = vi.fn(() => new Promise<Response>((resolve) => { finish = resolve; }));
   vi.stubGlobal('fetch', fetchMock);
@@ -29,6 +30,7 @@ it('maps a structured response by ID and applies all items in one transaction', 
   const dispatch = vi.spyOn(editor.view, 'dispatch');
   const onClose = vi.fn();
   render(<AIAllModal editor={editor} onClose={onClose} />);
+  expect(screen.getByText('自訂提示詞')).toBeInTheDocument();
   expect(screen.getByText('顯示提示詞').closest('details')).not.toHaveAttribute('open');
   expect(screen.getByLabelText('User Input')).toHaveAttribute('placeholder',
     '範例：把敘述換成寶可夢相關的文字');
@@ -39,6 +41,7 @@ it('maps a structured response by ID and applies all items in one transaction', 
   const [url, options] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
   expect(url).toContain('/models/gemini-test:generateContent');
   const body = JSON.parse(options.body as string);
+  expect(body.contents[0].parts[0].text).toContain('自訂提示詞');
   expect(body.generationConfig.responseMimeType).toBe('application/json');
   expect(body.contents[0].parts[0].text).toContain('"id":"second","content":"第二題"');
   finish({ ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text:

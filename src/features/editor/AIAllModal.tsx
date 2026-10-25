@@ -3,7 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { AI_USER_INPUT_STORAGE_KEY, GEMINI_API_KEY_STORAGE_KEY,
   GEMINI_MODEL_STORAGE_KEY } from '../../shared/storageKeys';
 import { DEFAULT_GEMINI_MODELS } from '../projects/geminiModels';
-import { DEFAULT_AI_PROMPT } from './AIItemPanel';
+import { getAIPrompt } from '../../shared/aiPrompt';
 import { applyAIItems, collectAIItems, type AIItem } from './aiBatchItems';
 
 const resultSchema = { type: 'OBJECT', properties: { items: { type: 'ARRAY',
@@ -37,7 +37,7 @@ export function AIAllModal({ editor, onClose }: { editor: Editor; onClose: () =>
     setLoading(true);
     setError('');
     try {
-      const prompt = `${DEFAULT_AI_PROMPT}\n\n修改方向： ${userInput}\n\n`+
+      const prompt = `${getAIPrompt()}\n\n修改方向： ${userInput}\n\n`+
         '請逐題改寫下列 items，只回傳 JSON。保留每個 id，不能新增、刪除或合併題目。\n\n'
         + JSON.stringify({ items: items.map(({ id, content }) => ({ id, content })) });
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -69,7 +69,7 @@ export function AIAllModal({ editor, onClose }: { editor: Editor; onClose: () =>
       <h2>全部修改✨</h2>
       <details className="ai-default-prompt">
         <summary>顯示提示詞</summary>
-        <div>{DEFAULT_AI_PROMPT}</div>
+        <div>{getAIPrompt()}</div>
       </details>
       <label htmlFor="ai-all-user-input">User Input</label>
       <textarea id="ai-all-user-input" ref={input} value={userInput} rows={3}

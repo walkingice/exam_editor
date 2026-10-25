@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { GEMINI_API_KEY_STORAGE_KEY, GEMINI_MODEL_STORAGE_KEY } from '../../shared/storageKeys';
+import { AI_DEFAULT_PROMPT_STORAGE_KEY, GEMINI_API_KEY_STORAGE_KEY,
+  GEMINI_MODEL_STORAGE_KEY } from '../../shared/storageKeys';
+import { DEFAULT_AI_PROMPT, getAIPrompt } from '../../shared/aiPrompt';
 import { DEFAULT_GEMINI_MODELS, fetchAvailableGeminiModels } from './geminiModels';
 
 export function SettingsPage() {
   const [geminiApiKey, setGeminiApiKey] = useState(() => window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY) ?? '');
   const [geminiModel, setGeminiModel] = useState(() => window.localStorage.getItem(GEMINI_MODEL_STORAGE_KEY) ?? DEFAULT_GEMINI_MODELS[0]);
+  const [defaultPrompt, setDefaultPrompt] = useState(getAIPrompt);
   const [availableModels, setAvailableModels] = useState<string[]>(DEFAULT_GEMINI_MODELS);
   const [modelsLoading, setModelsLoading] = useState(false);
   const [modelsError, setModelsError] = useState('');
@@ -13,6 +16,8 @@ export function SettingsPage() {
     if (geminiApiKey.trim()) window.localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, geminiApiKey.trim());
     else window.localStorage.removeItem(GEMINI_API_KEY_STORAGE_KEY);
     window.localStorage.setItem(GEMINI_MODEL_STORAGE_KEY, geminiModel);
+    if (defaultPrompt === DEFAULT_AI_PROMPT) window.localStorage.removeItem(AI_DEFAULT_PROMPT_STORAGE_KEY);
+    else window.localStorage.setItem(AI_DEFAULT_PROMPT_STORAGE_KEY, defaultPrompt);
     window.location.hash = '/';
   }
 
@@ -72,6 +77,17 @@ export function SettingsPage() {
           <button type="button" disabled={!geminiApiKey.trim() || modelsLoading} onClick={() => void reloadModels()}>
             <span aria-hidden="true">⟳</span> {modelsLoading ? '載入中…' : 'Refresh'}
           </button>
+        </div>
+      </div>
+      <div className="settings-field">
+        <div className="settings-field-description">
+          <label htmlFor="default-prompt">Default Prompt</label>
+          <p>修改 AI 改寫題目時使用的預設提示詞。</p>
+        </div>
+        <div className="settings-field-control settings-prompt-control">
+          <textarea id="default-prompt" rows={8} value={defaultPrompt}
+            onChange={(event) => setDefaultPrompt(event.target.value)} />
+          <button type="button" onClick={() => setDefaultPrompt(DEFAULT_AI_PROMPT)}>Reset</button>
         </div>
       </div>
       {modelsError && <p className="settings-error" role="alert">{modelsError}</p>}
