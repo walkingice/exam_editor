@@ -244,6 +244,29 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   expect(repository.save).not.toHaveBeenCalled();
 });
 
+it('keeps import review warnings collapsed in the content tab only', async () => {
+  sessionStorage.setItem('exam-import-warnings:first', JSON.stringify(['請校對題目順序。']));
+  const current = bundle('first');
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  const details = screen.getByLabelText('匯入提醒') as HTMLDetailsElement;
+  expect(details.open).toBe(false);
+  expect(screen.getByText('匯入文件需人工校對')).toBeInTheDocument();
+  expect(screen.queryByText('請校對題目順序。')).not.toBeVisible();
+  fireEvent.click(screen.getByText('匯入文件需人工校對'));
+  expect(details.open).toBe(true);
+  expect(screen.getByText('請校對題目順序。')).toBeVisible();
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
+  expect(screen.getByLabelText('匯入提醒')).not.toBeVisible();
+  expect(screen.queryByText('匯入文件需人工校對')).not.toBeVisible();
+  sessionStorage.removeItem('exam-import-warnings:first');
+});
+
 
 it('exports the latest editor content before its debounced save', async () => {
   vi.mocked(createDocxDownload).mockClear();

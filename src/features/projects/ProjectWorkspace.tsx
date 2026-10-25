@@ -328,10 +328,6 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
           </div>
         </div>
       </header>
-      {readImportWarnings(projectId).length > 0 && <section aria-label="匯入提醒">
-        <p>匯入文件需人工校對：</p>
-        <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
-      </section>}
       {!lease && <><p>{readOnlyReason || '此 Project 正由另一個分頁使用，目前為唯讀。'}</p>
         {saving.current?.saveState === 'saved' || !saving.current
           ? <button onClick={() => void takeOver()}>重新取得寫入權</button> : null}</>}
@@ -353,6 +349,10 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         {lease?.isActive && <button onClick={() => void saving.current?.flush().catch(() => {})}>
           重試儲存</button>}</>}
       <div role="tabpanel" hidden={tab !== 'content'} className="content-panel">
+      {readImportWarnings(projectId).length > 0 && <details aria-label="匯入提醒">
+        <summary>匯入文件需人工校對</summary>
+        <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+      </details>}
       <ReadOnlyEditor projectId={projectId} content={bundle.document.content} repository={repository}
         assetResolver={assetResolver}
         editable={!!lease?.isActive} onEditor={(editor) => {
