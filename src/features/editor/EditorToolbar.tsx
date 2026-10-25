@@ -180,7 +180,13 @@ export function EditorToolbar({ editor, showHistory = true }: {
     {groups.map((group) => <Fragment key={group.label}>
       {group.label === '清除格式' && <div role="group" aria-label="字體設定"
         className="toolbar-group toolbar-columns-1 toolbar-font-settings">
-        <label>字體 <select aria-label="字體" value={currentFont}
+        <div className="toolbar-font-heading"><span>字體</span>
+          <button type="button" className="toolbar-font-detect"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => { void detectFonts(); }} disabled={loadingFonts}
+            title="偵測本機字體" aria-label="偵測本機字體">偵測本機字體</button>
+        </div>
+        <select aria-label="字體" value={currentFont}
           onPointerDown={captureRange}
           onChange={(event) => setStyle('fontFamily', event.target.value)}>
           <option value="" disabled>選擇字體</option>
@@ -190,10 +196,7 @@ export function EditorToolbar({ editor, showHistory = true }: {
           <optgroup label={installedFonts ? '本機字體' : '預設字體'}>
             {availableFonts.others.map((font) => <option key={font} value={font}>{font}</option>)}
           </optgroup>
-        </select></label>
-        <button type="button" onMouseDown={(event) => event.preventDefault()}
-          onClick={() => { void detectFonts(); }} disabled={loadingFonts}
-          title="偵測本機字體" aria-label="偵測本機字體">偵測本機字體</button>
+        </select>
         {fontStatus && <span role="status">{fontStatus}</span>}
         <label>字體大小 <select aria-label="字體大小"
           value={editor.getAttributes('fontSize').fontSize ?? ''}

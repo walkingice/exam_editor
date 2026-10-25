@@ -346,6 +346,11 @@ li { margin: 10px 0; }
 }
 .toolbar-font-settings label { display: grid; gap: 4px; min-width: 0; }
 .toolbar-font-settings select { width: 100%; min-width: 0; }
+.toolbar-font-heading { display: flex; align-items: baseline; gap: 6px; }
+.content-editor-controls .toolbar-group .toolbar-font-detect {
+  min-height: 0; padding: 0; border: 0; background: none;
+  color: #315c50; font-size: .75rem; text-decoration: underline; cursor: pointer;
+}
 .toolbar-font-settings [role="status"] { font-size: .78rem; color: #526176; }
 .content-editor-controls .table-toolbar {
   border-top: 1px solid #d7dee8;

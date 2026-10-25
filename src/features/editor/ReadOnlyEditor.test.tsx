@@ -212,6 +212,8 @@ describe('read-only document', () => {
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
     await screen.findByText('Question');
+    expect(screen.getByRole('button', { name: '偵測本機字體' }).parentElement)
+      .toHaveClass('toolbar-font-heading');
     fireEvent.click(screen.getByRole('button', { name: '偵測本機字體' }));
     expect(await screen.findByRole('status')).toHaveTextContent('已載入 2 個本機字體');
     const font = screen.getByRole('combobox', { name: '字體' });
