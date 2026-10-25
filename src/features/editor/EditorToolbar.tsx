@@ -23,6 +23,16 @@ function focusedLineRange(editor: Editor): TextRange | null {
   return { from: selection.$from.start(), to: selection.$from.end() };
 }
 
+function clearInlineStyle(editor: Editor, focusedRange: TextRange | null): void {
+  if (!editor.isEditable) return;
+  const { selection } = editor.state;
+  const range = selection.empty
+    ? (editor.isFocused ? focusedLineRange(editor) : focusedRange)
+    : { from: selection.from, to: selection.to };
+  if (!range || range.from === range.to) return;
+  editor.view.dispatch(editor.state.tr.removeMark(range.from, range.to));
+}
+
 function applyTextStyle(editor: Editor, mark: 'fontFamily' | 'fontSize', value: string,
   captured: TextRange | null): boolean {
   const range = captured ?? styleRange(editor);
@@ -158,7 +168,8 @@ export function EditorToolbar({ editor, showHistory = true }: {
         editor.chain().focus().updateAttributes('listItem', { listStyle: style }).run();
       },
     })),
-    { label: '清除格式', run: () => editor.chain().focus().unsetAllMarks().run() },
+    { label: '清除格式', run: () => clearInlineStyle(editor,
+      toolbar.current?.contains(document.activeElement) ? focusedLine.current : null) },
     { label: '復原', run: () => runHistory(editor, undoNoScroll) },
     { label: '重做', run: () => runHistory(editor, redoNoScroll) },
   ];
@@ -209,7 +220,9 @@ export function EditorToolbar({ editor, showHistory = true }: {
       <div role="group" aria-label={group.label}
         className={`toolbar-group toolbar-columns-${group.columns}`}>
       {group.tools.map((tool) => <button key={tool.label} type="button"
-        title={tool.label} aria-label={tool.label} aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>
+        title={tool.label} aria-label={tool.label} aria-pressed={tool.active?.() ?? undefined}
+        onMouseDown={tool.label === '清除格式' ? (event) => event.preventDefault() : undefined}
+        onClick={tool.run}>
         {tool.label === '編號清單' ? '1.' : tool.label === '項目符號清單' ? '*'
           : ['粗體', '斜體', '底線'].includes(tool.label) ? <FormatIcon label={tool.label} />
           : tool.label}

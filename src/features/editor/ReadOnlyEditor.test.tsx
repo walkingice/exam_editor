@@ -141,6 +141,55 @@ describe('read-only document', () => {
     expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
   });
 
+  it('clears the focused line when no text is selected', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First', marks: [{ type: 'bold' }] }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'Second', marks: [{ type: 'italic' }] }] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Second');
+    editor!.commands.setTextSelection(10);
+    act(() => { editor!.view.focus(); });
+    fireEvent.mouseDown(screen.getByRole('button', { name: '清除格式' }));
+    fireEvent.click(screen.getByRole('button', { name: '清除格式' }));
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toEqual([{ type: 'bold' }]);
+    expect(editor!.getJSON().content?.[1].content?.[0].marks).toBeUndefined();
+  });
+
+  it('clears the focused line after keyboard focus moves to the toolbar', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Question', marks: [{ type: 'bold' }] }] }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    editor!.commands.setTextSelection(3);
+    act(() => { editor!.view.focus(); });
+    const clear = screen.getByRole('button', { name: '清除格式' });
+    act(() => { clear.focus(); });
+    expect(editor!.isFocused).toBe(false);
+    fireEvent.click(clear);
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
+  });
+
+  it('does nothing without a selection or focused item', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Question', marks: [{ type: 'bold' }] }] }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    editor!.commands.setTextSelection(3);
+    const before = editor!.getJSON();
+    fireEvent.click(screen.getByRole('button', { name: '清除格式' }));
+    expect(editor!.getJSON()).toEqual(before);
+  });
+
   it('applies font controls to selected text and the focused line only', async () => {
     const content = normalizeDocument({ type: 'doc', content: [
       { type: 'paragraph', content: [{ type: 'text', text: 'First line' }] },
