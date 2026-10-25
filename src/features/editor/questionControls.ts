@@ -54,14 +54,51 @@ export function itemControl(view: EditorView, id: string, question = false): HTM
   return control;
 }
 
+export function deleteDocumentItem(view: EditorView, id: string): void {
+  if (!view.editable) return;
+  const item = documentNodeAt(view, id);
+  if (!item) return;
+  const node = view.state.doc.nodeAt(item.position);
+  if (!node) return;
+  const resolved = view.state.doc.resolve(item.position);
+  const parent = resolved.parent;
+  const onlyListItem = node.type.name === 'listItem'
+    && parent.type.name === 'bulletList' && parent.childCount === 1;
+  const from = onlyListItem ? resolved.before(resolved.depth) : item.position;
+  const size = onlyListItem ? parent.nodeSize : node.nodeSize;
+  view.dispatch(view.state.tr.delete(from, from + size).scrollIntoView());
+}
+
+export function itemActions(view: EditorView, id: string): HTMLElement {
+  const actions = document.createElement('span');
+  actions.className = 'document-item-actions';
+  actions.contentEditable = 'false';
+  const ai = document.createElement('button');
+  ai.type = 'button';
+  ai.textContent = '✨';
+  ai.title = `AI 項目 ${id}`;
+  ai.setAttribute('aria-label', ai.title);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.textContent = '❌';
+  remove.title = `刪除項目 ${id}`;
+  remove.setAttribute('aria-label', remove.title);
+  remove.addEventListener('click', () => deleteDocumentItem(view, id));
+  actions.append(ai, remove);
+  return actions;
+}
+
 export function refreshItemControls(view: EditorView): void {
   view.dom.querySelectorAll<HTMLElement>(
     '.document-item-shell:not(.exam-image) > .document-item-control',
   ).forEach((control) => {
+    const shell = control.parentElement;
     const item = control.parentElement?.closest<HTMLElement>('[data-node-id]');
     const id = item?.getAttribute('data-node-id');
     if (id && item) control.replaceWith(itemControl(view, id,
       item.classList.contains('document-question-item')));
+    const actions = shell?.querySelector<HTMLElement>(':scope > .document-item-actions');
+    if (id && actions) actions.replaceWith(itemActions(view, id));
   });
 }
 

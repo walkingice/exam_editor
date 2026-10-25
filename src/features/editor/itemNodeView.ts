@@ -1,6 +1,6 @@
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { EditorView, NodeView } from '@tiptap/pm/view';
-import { itemControl } from './questionControls';
+import { itemActions, itemControl } from './questionControls';
 
 const tags: Record<string, string> = {
   paragraph: 'p', heading: 'h1', listItem: 'div', table: 'table',
@@ -26,7 +26,8 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
   border.append(semantic);
   if (topLevel) {
     shell.classList.add('document-item-shell');
-    shell.append(itemControl(view, node.attrs.id, type === 'listItem'), border);
+    shell.append(itemControl(view, node.attrs.id, type === 'listItem'), border,
+      itemActions(view, node.attrs.id));
     if (shell !== outer) {
       outer.classList.add('document-question-item');
       outer.append(shell);
@@ -55,5 +56,5 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
     updateAttrs(current);
     return true;
   }, stopEvent: (event) => !!(event.target instanceof Element
-    && event.target.closest('.document-item-control')) };
+    && event.target.closest('.document-item-control, .document-item-actions')) };
 }

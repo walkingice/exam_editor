@@ -9,7 +9,7 @@ import Blockquote from '@tiptap/extension-blockquote';
 import CodeBlock from '@tiptap/extension-code-block';
 import { ListItem } from '@tiptap/extension-list';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import { itemControl, QuestionControls } from './questionControls';
+import { itemActions, itemControl, QuestionControls } from './questionControls';
 
 const ExamAttributes = Extension.create({
   name: 'examAttributes',
@@ -104,10 +104,10 @@ const ExamHorizontalRule = HorizontalRule.extend({
       border.className = 'document-item-border';
       const rule = document.createElement('hr');
       border.append(rule);
-      dom.append(control, border);
+      dom.append(control, border, itemActions(editor.view, node.attrs.id));
       return { dom, update: (updatedNode) => {
         if (updatedNode.type !== node.type || updatedNode.attrs.id !== node.attrs.id) return false;
-        const checkbox = control.querySelector<HTMLInputElement>('input[type="checkbox"]');
+        const checkbox = dom.querySelector<HTMLInputElement>('input[type="checkbox"]');
         if (checkbox) checkbox.checked = updatedNode.attrs.selected !== false;
         return true;
       } };

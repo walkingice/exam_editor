@@ -20,6 +20,31 @@ afterEach(() => {
 });
 
 describe('read-only document', () => {
+  it('deletes the selected item and leaves AI without an action', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
+      { type: 'bulletList', content: [{ type: 'listItem', content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Question' }] },
+      ] }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'Last' }] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    const questionId = content.content?.[1].content?.[0].attrs?.id;
+    const ai = screen.getByRole('button', { name: `AI 項目 ${questionId}` });
+    expect(ai).toHaveTextContent('✨');
+    fireEvent.click(ai);
+    expect(editor!.getJSON().content).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: `刪除項目 ${questionId}` }));
+    expect(editor!.getJSON().content?.map((item) => item.type)).toEqual(['paragraph', 'paragraph']);
+    expect(screen.queryByText('Question')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(screen.getByText('Question')).toBeInTheDocument();
+  });
+
   it('updates item controls when editability changes', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
       content: [{ type: 'text', text: 'Item' }] }] });

@@ -12,7 +12,7 @@ import { EditorToolbar } from './EditorToolbar';
 import { ImageToolbar } from './ImageToolbar';
 import { ResizableImage } from './ResizableImage';
 import { insertLocalImage } from './insertLocalImage';
-import { clearDocumentItemDropIndicator, refreshItemControls, setDocumentItemDragData } from './questionControls';
+import { clearDocumentItemDropIndicator, deleteDocumentItem, refreshItemControls, setDocumentItemDragData } from './questionControls';
 import { itemNodeView } from './itemNodeView';
 
 function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewProps & {
@@ -71,6 +71,11 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
         }} />
       : errorAssetId === assetId ? <span role="img" aria-label="缺少圖片">找不到圖片：{assetId}</span>
         : <span>圖片載入中…</span>}</div>
+    {!preview && isDocumentItem && <span className="document-item-actions" contentEditable={false}>
+      <button type="button" title={`AI 項目 ${dragId}`} aria-label={`AI 項目 ${dragId}`}>✨</button>
+      <button type="button" title={`刪除項目 ${dragId}`} aria-label={`刪除項目 ${dragId}`}
+        onClick={() => deleteDocumentItem(editor.view, dragId)}>❌</button>
+    </span>}
   </NodeViewWrapper>;
 }
 
