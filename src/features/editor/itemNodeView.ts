@@ -13,11 +13,12 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
   const position = getPos();
   const topLevel = !!node.attrs.id && position !== undefined
     && view.state.doc.resolve(position).depth === (type === 'listItem' ? 1 : 0);
-  const outer = document.createElement(type === 'listItem' ? 'li' : 'div');
+  const semantic = document.createElement(type === 'heading' ? `h${node.attrs.level}` : tags[type]);
+  const outer = !topLevel && type !== 'listItem' ? semantic
+    : document.createElement(type === 'listItem' ? 'li' : 'div');
   const shell = type === 'listItem' ? document.createElement('div') : outer;
   const border = document.createElement('div');
   border.className = 'document-item-border';
-  const semantic = document.createElement(type === 'heading' ? `h${node.attrs.level}` : tags[type]);
   const contentDOM = type === 'codeBlock' ? document.createElement('code')
     : type === 'table' ? document.createElement('tbody') : semantic;
   if (contentDOM !== semantic) semantic.append(contentDOM);
@@ -29,7 +30,7 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
       outer.classList.add('document-question-item');
       outer.append(shell);
     }
-  } else outer.append(semantic);
+  } else if (outer !== semantic) outer.append(semantic);
 
   const updateAttrs = (current: ProseMirrorNode) => {
     if (current.attrs.id) outer.setAttribute('data-node-id', current.attrs.id);

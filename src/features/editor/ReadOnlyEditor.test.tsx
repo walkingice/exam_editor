@@ -187,6 +187,7 @@ describe('read-only document', () => {
     const shell = question.querySelector('.document-item-shell')!;
     expect(shell.querySelector('.document-item-control')?.parentElement).toBe(shell);
     expect(shell.querySelector('.document-item-border')?.parentElement).toBe(shell);
+    expect(shell.querySelector('.document-item-border > div')?.firstElementChild?.tagName).toBe('P');
     editor!.commands.insertContentAt(2, ' more words');
     editor!.commands.setTextSelection(3);
     const selection = editor!.state.selection.from;
