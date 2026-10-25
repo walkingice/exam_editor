@@ -3,6 +3,11 @@ import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
+import Paragraph from '@tiptap/extension-paragraph';
+import Heading from '@tiptap/extension-heading';
+import Blockquote from '@tiptap/extension-blockquote';
+import CodeBlock from '@tiptap/extension-code-block';
+import { ListItem } from '@tiptap/extension-list';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { itemControl, QuestionControls } from './questionControls';
 
@@ -92,10 +97,14 @@ const ExamHorizontalRule = HorizontalRule.extend({
     return ({ node, editor }) => {
       const dom = document.createElement('div');
       dom.className = 'exam-horizontal-rule';
+      dom.classList.add('document-item-shell');
       dom.setAttribute('data-node-id', node.attrs.id);
       const control = itemControl(editor.view, node.attrs.id);
+      const border = document.createElement('div');
+      border.className = 'document-item-border';
       const rule = document.createElement('hr');
-      dom.append(control, rule);
+      border.append(rule);
+      dom.append(control, border);
       return { dom, update: (updatedNode) => {
         if (updatedNode.type !== node.type || updatedNode.attrs.id !== node.attrs.id) return false;
         const checkbox = control.querySelector<HTMLInputElement>('input[type="checkbox"]');
@@ -133,7 +142,13 @@ const SourceListShortcut = Extension.create({
 });
 
 export const editingExtensions = [
-  StarterKit.configure({ orderedList: false, horizontalRule: false, dropcursor: false }),
+  StarterKit.configure({ orderedList: false, horizontalRule: false, dropcursor: false,
+    paragraph: false, heading: false, listItem: false, blockquote: false, codeBlock: false }),
+  Paragraph,
+  Heading,
+  ListItem,
+  Blockquote,
+  CodeBlock,
   ExamHorizontalRule,
   ExamAttributes,
   AssetImage,

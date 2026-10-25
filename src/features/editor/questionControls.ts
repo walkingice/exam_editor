@@ -1,7 +1,6 @@
 import { Extension } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
 import { Plugin } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { EditorView } from '@tiptap/pm/view';
 import { moveDocumentItem, type DocumentItemTarget } from './moveDocumentItem';
 
@@ -53,6 +52,17 @@ export function itemControl(view: EditorView, id: string, question = false): HTM
   control.append(label);
   if (view.editable) control.append(handle);
   return control;
+}
+
+export function refreshItemControls(view: EditorView): void {
+  view.dom.querySelectorAll<HTMLElement>(
+    '.document-item-shell:not(.exam-image) > .document-item-control',
+  ).forEach((control) => {
+    const item = control.parentElement?.closest<HTMLElement>('[data-node-id]');
+    const id = item?.getAttribute('data-node-id');
+    if (id && item) control.replaceWith(itemControl(view, id,
+      item.classList.contains('document-question-item')));
+  });
 }
 
 function dragHandle(view: EditorView, id: string, label: string): HTMLButtonElement {
@@ -177,31 +187,6 @@ export const QuestionControls = Extension.create({
     return [new Plugin({
       view: () => ({ destroy: clearDocumentItemDropIndicator }),
       props: {
-      decorations: (state) => {
-        const widgets: Decoration[] = [];
-        state.doc.forEach((node, offset) => {
-          if (node.type.name === 'bulletList') {
-            node.forEach((item, itemOffset) => {
-              const id = item.attrs.id as string;
-              widgets.push(Decoration.widget(offset + 2 + itemOffset,
-                (view) => itemControl(view, id, true), {
-                  key: `question-${id}-${item.attrs.selected}-${this.editor.isEditable}`,
-                  side: -1,
-                  stopEvent: () => true,
-                }));
-            });
-          } else if (node.attrs.id && !['image', 'horizontalRule'].includes(node.type.name)) {
-            const id = node.attrs.id as string;
-            widgets.push(Decoration.widget(offset + 1,
-              (view) => itemControl(view, id), {
-                key: `item-${id}-${node.attrs.selected}-${this.editor.isEditable}`,
-                side: -1,
-                stopEvent: () => true,
-              }));
-          }
-        });
-        return DecorationSet.create(state.doc, widgets);
-      },
       handleDOMEvents: {
         dragover: (view, event) => {
           if (!this.editor.isEditable || !event.dataTransfer?.types.includes(questionDragType)

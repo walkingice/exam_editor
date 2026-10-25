@@ -20,6 +20,23 @@ afterEach(() => {
 });
 
 describe('read-only document', () => {
+  it('updates item controls when editability changes', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+      content: [{ type: 'text', text: 'Item' }] }] });
+    const repository = { getAsset: vi.fn() } as unknown as ProjectRepository;
+    const view = (editable: boolean) => <ReadOnlyEditor projectId="first" content={content}
+      repository={repository} editable={editable} />;
+    const rendered = render(view(false));
+    const checkbox = await screen.findByRole('checkbox', { name: /選取項目/ });
+    expect(checkbox).toBeDisabled();
+    rendered.rerender(view(true));
+    expect(screen.getByRole('checkbox', { name: /選取項目/ })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /移動項目/ })).toBeInTheDocument();
+    rendered.rerender(view(false));
+    expect(screen.getByRole('checkbox', { name: /選取項目/ })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /移動項目/ })).not.toBeInTheDocument();
+  });
+
   it('allows an owner to edit and reports its editor instance', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
     let editor: Editor | undefined;
@@ -166,6 +183,10 @@ describe('read-only document', () => {
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
     const checkbox = await screen.findByRole('checkbox', { name: /選取題目/ });
+    const question = checkbox.closest('.document-question-item')!;
+    const shell = question.querySelector('.document-item-shell')!;
+    expect(shell.querySelector('.document-item-control')?.parentElement).toBe(shell);
+    expect(shell.querySelector('.document-item-border')?.parentElement).toBe(shell);
     editor!.commands.insertContentAt(2, ' more words');
     editor!.commands.setTextSelection(3);
     const selection = editor!.state.selection.from;
@@ -293,8 +314,11 @@ describe('read-only document', () => {
     ] });
     render(<ReadOnlyEditor projectId="first" content={content}
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable />);
-    const handle = (await screen.findByRole('heading', { name: /Title/ }))
-      .querySelector('button[aria-label^="移動項目"]')!;
+    const shell = (await screen.findByRole('heading', { name: /Title/ }))
+      .closest('.document-item-shell')!;
+    const handle = shell.querySelector('button[aria-label^="移動項目"]')!;
+    expect(shell.querySelector('.document-item-control')?.parentElement).toBe(shell);
+    expect(shell.querySelector('.document-item-border')?.parentElement).toBe(shell);
     expect(screen.getAllByRole('button', { name: /移動項目/ })).toHaveLength(6);
     const values = new Map<string, string>();
     const dataTransfer = { types: ['application/x-exam-question'],

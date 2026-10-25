@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor } from '@tiptap/react';
 import type { JSONContent } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
+import type { Node } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { closeHistory } from '@tiptap/pm/history';
 import { ProjectRepository } from '../../data/repository';
@@ -11,7 +12,8 @@ import { EditorToolbar } from './EditorToolbar';
 import { ImageToolbar } from './ImageToolbar';
 import { ResizableImage } from './ResizableImage';
 import { insertLocalImage } from './insertLocalImage';
-import { clearDocumentItemDropIndicator, setDocumentItemDragData } from './questionControls';
+import { clearDocumentItemDropIndicator, refreshItemControls, setDocumentItemDragData } from './questionControls';
+import { itemNodeView } from './itemNodeView';
 
 function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewProps & {
   resolver: AssetResolver; preview: boolean;
@@ -40,7 +42,7 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
   const position = getPos();
   const isDocumentItem = typeof position === 'number'
     && editor.state.doc.resolve(position).depth === 0;
-  return <NodeViewWrapper as="div" className="exam-image" data-node-id={dragId}>
+  return <NodeViewWrapper as="div" className="exam-image document-item-shell" data-node-id={dragId}>
     {!preview && isDocumentItem && <span className="document-item-control" contentEditable={false}>
       <label><input type="checkbox" aria-label={`選取項目 ${dragId}`}
         checked={itemSelected} disabled={!editor.isEditable}
@@ -56,7 +58,7 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
         onDragStart={(event) => setDocumentItemDragData(event.dataTransfer, dragId)}
         onDragEnd={clearDocumentItemDropIndicator} />}
     </span>}
-    {resolved?.assetId === assetId
+    <div className="document-item-border">{resolved?.assetId === assetId
       ? <ResizableImage src={resolved.handle.url} alt={node.attrs.alt || '試卷圖片'}
         widthMm={node.attrs.widthMm} editable={!preview && editor.isEditable}
         onResize={(widthMm) => {
@@ -68,7 +70,7 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
             { ...current.attrs, widthMm }));
         }} />
       : errorAssetId === assetId ? <span role="img" aria-label="缺少圖片">找不到圖片：{assetId}</span>
-        : <span>圖片載入中…</span>}
+        : <span>圖片載入中…</span>}</div>
   </NodeViewWrapper>;
 }
 
@@ -94,13 +96,23 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
       addNodeView() {
         return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} preview={preview} />);
       },
-    }) : extension), [preview, resolver]);
+    }) : !preview && ['paragraph', 'heading', 'listItem', 'table', 'blockquote', 'codeBlock']
+      .includes(extension.name) ? (extension as Node).extend({
+        addNodeView() {
+          return ({ node, getPos, editor }) => itemNodeView(editor.view, node, getPos);
+        },
+      }) : extension), [preview, resolver]);
   const editor = useEditor({ extensions, content, editable, immediatelyRender: false,
     onUpdate: ({ editor: current }) => callbacks.current.onChange?.(current),
     onCreate: ({ editor: current }) => callbacks.current.onEditor?.(current),
   }, [extensions]);
 
-  useEffect(() => { editor?.setEditable(editable); }, [editable, editor]);
+  useEffect(() => {
+    if (!editor) return;
+    const changed = editor.isEditable !== editable;
+    editor.setEditable(editable);
+    if (changed && editor.isInitialized) refreshItemControls(editor.view);
+  }, [editable, editor]);
   useEffect(() => {
     active.current = true;
     return () => { active.current = false; };
