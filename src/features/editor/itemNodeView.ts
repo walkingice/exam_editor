@@ -20,7 +20,8 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
   const border = document.createElement('div');
   border.className = 'document-item-border';
   const contentDOM = type === 'codeBlock' ? document.createElement('code')
-    : type === 'table' ? document.createElement('tbody') : semantic;
+    : type === 'table' ? document.createElement('tbody')
+      : type === 'paragraph' && !topLevel ? document.createElement('span') : semantic;
   if (contentDOM !== semantic) semantic.append(contentDOM);
   border.append(semantic);
   if (topLevel) {
