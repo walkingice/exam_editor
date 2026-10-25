@@ -458,8 +458,10 @@ li { margin: 10px 0; }
   list-style: none;
 }
 .preview-scroll { overflow-x: auto; padding: 16px 0; }
+.preview-scroll .preview-paper + .preview-paper { margin-top: 20px; }
 .preview-paper { box-sizing: border-box; max-width: none; margin: 0 auto;
   background: #fff; box-shadow: 0 2px 12px #17233a24; }
+.preview-paper .preview-content { height: 100%; overflow: auto; }
 .preview-paper .exam-document { min-height: 0; padding: 0; border: 0;
   border-radius: 0; line-height: inherit; }
 .preview-paper[data-orientation="landscape"] .preview-content > div,

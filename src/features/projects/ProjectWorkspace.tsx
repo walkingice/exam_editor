@@ -47,6 +47,19 @@ function includesNodeId(node: JSONContent | null, id: string | null): boolean {
     || !!node.content?.some((child) => includesNodeId(child, id)));
 }
 
+function previewPages(content: JSONContent): JSONContent[] {
+  const pages: JSONContent[] = [];
+  let items: JSONContent[] = [];
+  for (const item of content.content ?? []) {
+    if (item.type === 'pageBreak') {
+      pages.push({ ...content, content: items });
+      items = [];
+    } else items.push(item);
+  }
+  pages.push({ ...content, content: items });
+  return pages;
+}
+
 export function ProjectWorkspace({ projectId, repository, ownership, registerGuard }: {
   projectId: string; repository: ProjectRepository; ownership: ProjectOwnership;
   registerGuard?: (callback: (() => Promise<boolean>) | null) => void;
@@ -300,6 +313,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     return source && pageSettings ? projectOutput(source, pageSettings.outputListStyle) : null;
   }, [bundle, pageSettings, previewRevision, tab]);
   const page = pageSettings ? pageDimensions(pageSettings) : null;
+  const pages = previewContent ? previewPages(previewContent) : [];
   const selectedNode = includesNodeId(previewContent, selectedPreviewId)
     ? findEditorNode(session.current?.editor, selectedPreviewId) : null;
 
@@ -384,9 +398,11 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
           {selectedNode && lease?.isActive && <PreviewFormatToolbar
             key={selectedPreviewId} type={selectedNode.type} attrs={selectedNode.attrs}
             maxWidthMm={page.contentWidthMm} onChange={changePreviewFormat} />}
-          <div className="preview-paper" data-columns={pageSettings.columns ?? 1}
+          {pages.map((pageContent, index) => <div key={index} className="preview-paper"
+            data-columns={pageSettings.columns ?? 1}
             data-orientation={pageSettings.orientation} style={{ width: `${page.widthMm}mm`,
-            minHeight: `${page.heightMm}mm`, padding: `${pageSettings.marginsMm.top}mm ${pageSettings.marginsMm.right}mm ${pageSettings.marginsMm.bottom}mm ${pageSettings.marginsMm.left}mm`,
+            height: `${page.heightMm}mm`, minHeight: `${page.heightMm}mm`,
+            padding: `${pageSettings.marginsMm.top}mm ${pageSettings.marginsMm.right}mm ${pageSettings.marginsMm.bottom}mm ${pageSettings.marginsMm.left}mm`,
             fontSize: `${pageSettings.defaultFontSizePt}pt`, lineHeight: pageSettings.lineHeight }}
             onClick={(event) => {
               const element = event.target instanceof Element ? event.target : null;
@@ -395,11 +411,11 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
             }}>
             <div className="preview-content" style={pageSettings.orientation === 'landscape'
               ? { height: `${page.contentHeightMm}mm` } : undefined}>
-            <ReadOnlyEditor projectId={projectId} content={previewContent}
+            <ReadOnlyEditor projectId={projectId} content={pageContent}
               assetResolver={assetResolver}
               repository={repository} preview />
             </div>
-          </div>
+          </div>)}
         </div>}
       {printSnapshot && <>
         <style>{createPrintCss(printSnapshot.settings)}</style>

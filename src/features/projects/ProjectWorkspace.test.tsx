@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { Editor } from '@tiptap/core';
+import type { Editor, JSONContent } from '@tiptap/core';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ProjectLease, type ProjectOwnership } from '../../data/ownership';
 import type { ProjectBundle, ProjectRepository } from '../../data/repository';
@@ -17,7 +17,8 @@ vi.mock('../export-docx/downloadDocument', async (original) => ({
 
 const editorProps = vi.hoisted(() => ({
   current: [] as Array<{ onChange?: (editor: Editor) => void;
-    onEditor?: (editor: Editor) => void; editable?: boolean }>,
+    onEditor?: (editor: Editor) => void; editable?: boolean;
+    preview?: boolean; content?: JSONContent }>,
 }));
 
 vi.mock('../editor/ReadOnlyEditor', () => ({
@@ -292,6 +293,39 @@ it('keeps import review warnings collapsed in the content tab only', async () =>
   expect(screen.getByLabelText('匯入提醒')).not.toBeVisible();
   expect(screen.queryByText('匯入文件需人工校對')).not.toBeVisible();
   sessionStorage.removeItem('exam-import-warnings:first');
+});
+
+it.each([
+  ['A4', 'portrait', '210mm', '297mm'],
+  ['TW_B4', 'landscape', '379mm', '265mm'],
+] as const)('splits %s %s preview into physical pages at page breaks', async (
+  paperSize, orientation, width, height,
+) => {
+  const current = bundle('first');
+  current.project.pageSettings = { ...DEFAULT_PAGE_SETTINGS, paperSize, orientation };
+  current.document.content = normalizeDocument({ type: 'doc', content: [
+    { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
+    { type: 'pageBreak' },
+    { type: 'paragraph', content: [{ type: 'text', text: 'Second' }] },
+  ] });
+  const repository = { get: vi.fn(async () => current), beginSession: vi.fn(async () => current),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  fireEvent.click(await screen.findByRole('tab', { name: '排版預覽' }));
+  const papers = document.querySelectorAll<HTMLElement>('.preview-paper');
+  expect(papers).toHaveLength(2);
+  for (const paper of papers) {
+    expect(paper.style.width).toBe(width);
+    expect(paper.style.height).toBe(height);
+    expect(paper.style.minHeight).toBe(height);
+    expect(paper.querySelectorAll('[data-testid="editor"]')).toHaveLength(1);
+  }
+  const pages = editorProps.current.filter((props) => props.preview).map((props) => props.content);
+  expect(pages.map((page) => page?.content?.map((node) => node.type)))
+    .toEqual([['paragraph'], ['paragraph']]);
 });
 
 
