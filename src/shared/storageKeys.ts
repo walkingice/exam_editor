@@ -3,3 +3,4 @@ export const GEMINI_API_KEY_STORAGE_KEY = `${STORAGE_PREFIX_KEY}_api_key`;
 export const GEMINI_MODEL_STORAGE_KEY = `${STORAGE_PREFIX_KEY}_model`;
 export const AI_USER_INPUT_STORAGE_KEY = `${STORAGE_PREFIX_KEY}_ai_user_input`;
 export const AI_DEFAULT_PROMPT_STORAGE_KEY = `${STORAGE_PREFIX_KEY}_ai_default_prompt`;
+export const RECENT_FONTS_STORAGE_KEY = `${STORAGE_PREFIX_KEY}_recent_fonts`;

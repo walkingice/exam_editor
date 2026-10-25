@@ -19,7 +19,7 @@ describe('DOCX text mapping', () => {
   it('preserves text and warns when font marks are invalid', async () => {
     const source = { type: 'doc', content: [{ type: 'paragraph', content: [{
       type: 'text', text: 'Styled', marks: [
-        { type: 'fontFamily', attrs: { fontFamily: 'Unknown' } },
+        { type: 'fontFamily', attrs: { fontFamily: 'Arial; color: red' } },
         { type: 'fontSize', attrs: { fontSize: '18px' } },
       ],
     }] }] };

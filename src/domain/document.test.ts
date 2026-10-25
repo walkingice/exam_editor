@@ -71,8 +71,12 @@ describe('exam document schema', () => {
     expect(() => normalizeDocument(parsed)).not.toThrow();
     const roundTrip = generateJSON(generateHTML(parsed, examExtensions), examExtensions);
     expect(roundTrip.content?.[0].content?.[0].marks).toEqual(parsed.content?.[0].content?.[0].marks);
+    const localFont = generateJSON('<p><span style="font-family: &quot;Example Serif&quot;">X</span></p>',
+      examExtensions);
+    expect(generateJSON(generateHTML(localFont, examExtensions), examExtensions)
+      .content?.[0].content?.[0].marks).toEqual(localFont.content?.[0].content?.[0].marks);
     for (const mark of [
-      { type: 'fontFamily', attrs: { fontFamily: 'Unknown' } },
+      { type: 'fontFamily', attrs: { fontFamily: 'Arial; color: red' } },
       { type: 'fontSize', attrs: { fontSize: '18px' } },
       { type: 'fontSize', attrs: { fontSize: 'abc' } },
     ]) {

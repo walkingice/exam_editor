@@ -80,7 +80,7 @@ const FontFamily = Mark.create({
     } }];
   },
   renderHTML({ HTMLAttributes }) {
-    return ['span', { style: `font-family: ${HTMLAttributes.fontFamily}` }, 0];
+    return ['span', { style: `font-family: ${JSON.stringify(HTMLAttributes.fontFamily)}` }, 0];
   },
 });
 
