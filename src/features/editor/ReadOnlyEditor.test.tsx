@@ -352,8 +352,9 @@ describe('read-only document', () => {
       expect(editor!.view.someProp('handleTextInput', (handler) =>
         handler(editor!.view, position, position, ' ', () => editor!.state.tr))).toBe(true);
       expect(editor!.getJSON().content?.[0].type).toBe(expected);
-      if (prefix === '1.') {
-        expect((editor!.getJSON() as JSONContent).content?.[0].attrs?.listStyle).toBe('ordered');
+      if (prefix === '-' || prefix === '1.') {
+        expect((editor!.getJSON() as JSONContent).content?.[0].attrs?.listStyle)
+          .toBe(prefix === '-' ? 'unordered' : 'ordered');
       }
     }
   });

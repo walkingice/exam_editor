@@ -275,11 +275,13 @@ li { margin: 10px 0; }
   padding-left: 96px;
   counter-increment: content-item;
 }
-.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"] {
+.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"],
+.content-panel .exam-document .ProseMirror > ul[data-list-style="unordered"] > li:not([data-list-style="ordered"]) {
   counter-increment: none;
   counter-set: content-item 0;
 }
-.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"]::before {
+.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"]::before,
+.content-panel .exam-document .ProseMirror > ul[data-list-style="unordered"] > li:not([data-list-style="ordered"])::before {
   content: '*';
 }
 .content-panel .exam-document .ProseMirror li::before {

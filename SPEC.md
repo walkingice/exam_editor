@@ -95,7 +95,7 @@ MVP 必須支援：
 - 未來的 AI 功能會擷取一段試卷文字，與 prompt 一起送至 Gemini model，再將生成內容放回試卷；截取、prompt 與插入方式尚未定案。設定、model list 更新與 API 呼叫細節見 [docs/AI.md](docs/AI.md)。
 - 使用適合閱讀的單欄連續文件，不顯示紙張尺寸；提供所見即所得編輯，不是 Markdown source editor。
 - 工具列提供 heading 1–3、段落、粗體／斜體／底線、編號與項目符號清單、左／中／右對齊及 undo/redo；匯入支援 heading 1–6。表格可插入 2×2 表格、編輯儲存格、增刪列欄與刪除整表；圖片可插入／刪除，並提供題目 checkbox 與項目拖曳。
-- 支援 Markdown-like shortcuts；`#` 可建立 heading，`- ` 可建立清單，`1. ` 可建立編號清單。
+- 支援 Markdown-like shortcuts；`#` 可建立 heading，`- ` 可建立項目符號清單，`1. ` 可建立編號清單。
 - 文字及結構編輯支援 undo/redo；修改、勾選與排序後重新開啟須保持一致。
 
 ### 排版預覽

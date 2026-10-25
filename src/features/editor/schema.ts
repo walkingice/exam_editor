@@ -121,9 +121,14 @@ export const examSchema = getSchema(examExtensions);
 
 const SourceListShortcut = Extension.create({
   name: 'sourceListShortcut',
+  priority: 1000,
   addInputRules() {
-    return [wrappingInputRule({ find: /^1\.\s$/, type: this.editor.schema.nodes.bulletList,
-      getAttributes: () => ({ listStyle: 'ordered' }) })];
+    return [
+      wrappingInputRule({ find: /^1\.\s$/, type: this.editor.schema.nodes.bulletList,
+        getAttributes: () => ({ listStyle: 'ordered' }) }),
+      wrappingInputRule({ find: /^[-*+]\s$/, type: this.editor.schema.nodes.bulletList,
+        getAttributes: () => ({ listStyle: 'unordered' }) }),
+    ];
   },
 });
 
