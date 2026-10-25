@@ -105,7 +105,7 @@ export function ProjectHome({ repository, ownership, importer = importProject }:
     </a>
     <header className="home-intro">
       <p className="home-eyebrow">EXAM STUDIO</p>
-      <h1>把想法，整理成一份好試卷。</h1>
+      <h1>試卷編輯器</h1>
       <p className="home-description">建立新試卷，或匯入既有的 DOCX 文件，接著就能開始編輯。</p>
     </header>
     <section className="home-actions" aria-label="建立或匯入試卷">
