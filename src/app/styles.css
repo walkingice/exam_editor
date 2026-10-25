@@ -259,7 +259,7 @@ li { margin: 10px 0; }
   position: relative;
   box-sizing: border-box;
   margin: 0 0 10px !important;
-  padding: 0 0 0 48px;
+  padding: 0 76px 0 48px;
 }
 .content-panel .exam-document .document-item-border {
   box-sizing: border-box;
@@ -323,6 +323,24 @@ li { margin: 10px 0; }
   margin: 0;
 }
 .content-panel .document-item-control input { width: 16px; height: 16px; margin: 0; }
+.content-panel .document-item-actions {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  display: flex;
+  gap: 4px;
+}
+.content-panel .document-item-actions button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+.content-panel .document-item-actions button:hover { background: #eef2f7; }
+.exam-document .ProseMirror[contenteditable="false"] .document-item-actions { display: none; }
 .content-panel .question-drag-handle {
   width: 20px;
   height: 28px;
