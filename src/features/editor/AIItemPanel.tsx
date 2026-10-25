@@ -93,21 +93,25 @@ export function AIItemPanel({ editor, itemId, onClose }: {
   return <section className="ai-item-panel" role="region" aria-label={`AI 修改項目 ${itemId}`}
       onKeyDown={(event) => { if (event.key === 'Escape') onClose(); }}>
       <label htmlFor={`ai-default-prompt-${itemId}`}>Default Prompt</label>
-      <textarea id={`ai-default-prompt-${itemId}`} value={DEFAULT_AI_PROMPT} readOnly rows={5} />
+      <details id={`ai-default-prompt-${itemId}`} className="ai-default-prompt">
+        <summary>顯示 Default Prompt</summary>
+        <div>{DEFAULT_AI_PROMPT}</div>
+      </details>
       <label htmlFor={`ai-user-input-${itemId}`}>User Input</label>
       <textarea id={`ai-user-input-${itemId}`} ref={inputRef} value={userInput} rows={3} onChange={(event) => {
         setUserInput(event.target.value);
         window.localStorage.setItem(AI_USER_INPUT_STORAGE_KEY, event.target.value);
         window.dispatchEvent(new CustomEvent('exam-ai-input', { detail: event.target.value }));
-      }} />
+      }} placeholder="範例：把敘述換成寶可夢相關的文字" />
       <label htmlFor={`ai-result-${itemId}`}>Result</label>
       <textarea id={`ai-result-${itemId}`} value={result} readOnly rows={4} />
       {error && <p role="alert">{error}</p>}
       <div className="ai-item-panel-actions">
         <button type="button" disabled={loading} onClick={() => void refresh()}>
-          {loading ? '處理中…' : 'Refresh'}</button>
+          {loading ? 'AI 改寫中…' : 'AI 改寫'}</button>
         <button type="button" disabled={!result || loading || !item || !editor.isEditable}
-          onClick={() => { if (applyResult(editor, itemId, result)) onClose(); }}>Apply</button>
+          className="ai-apply-button"
+          onClick={() => { if (applyResult(editor, itemId, result)) onClose(); }}>套用</button>
         <button type="button" onClick={onClose}>Cancel</button>
       </div>
     </section>;
