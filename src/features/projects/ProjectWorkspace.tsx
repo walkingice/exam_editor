@@ -61,6 +61,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
   const [saveError, setSaveError] = useState('');
   const [name, setName] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [editingName, setEditingName] = useState(false);
   const [pageSettings, setPageSettings] = useState<PageSettings | null>(null);
   const [tab, setTab] = useState<'content' | 'preview'>('content');
   const [previewRevision, setPreviewRevision] = useState(0);
@@ -132,6 +133,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       setSaveState('saved');
       setName(next?.project.name ?? '');
       setDisplayName(next?.project.name ?? '');
+      setEditingName(false);
       setPageSettings(next?.project.pageSettings ?? null);
       setLease(activeLease.current);
       setBundle(next);
@@ -224,9 +226,15 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     try {
       saving.current?.rename(name);
       if (saving.current) setDisplayName(saving.current.snapshot.project.name);
+      setEditingName(false);
     } catch (cause) {
       setSaveError(cause instanceof Error ? cause.message : '更名失敗');
     }
+  }
+
+  function cancelRename() {
+    setName(displayName);
+    setEditingName(false);
   }
 
   function changePageSettings(settings: PageSettings) {
@@ -298,7 +306,20 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       <header className="workspace-header">
         <a className="workspace-home" href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
         <div className="workspace-header-content">
-          <h1>{displayName}</h1>
+          <div className="workspace-title">
+            {editingName ? <input aria-label="試卷名稱" autoFocus value={name}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') rename();
+                if (event.key === 'Escape') cancelRename();
+              }} /> : <h1>{displayName}</h1>}
+            {lease?.isActive && (editingName
+              ? <><button type="button" className="workspace-rename" onClick={rename}>儲存</button>
+                <button type="button" className="workspace-rename" onClick={cancelRename}>
+                  取消</button></>
+              : <button type="button" className="workspace-rename" onClick={() => setEditingName(true)}>
+                更名</button>)}
+          </div>
           <div role="tablist" aria-label="Workspace tabs" className="workspace-tabs">
             <button role="tab" aria-selected={tab === 'content'} onClick={() => setTab('content')}>
               試卷內容</button>
@@ -307,9 +328,6 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
           </div>
         </div>
       </header>
-      {lease && <div><label>試卷名稱 <input value={name}
-        onChange={(event) => setName(event.target.value)} /></label>
-        <button onClick={rename}>更名</button></div>}
       {readImportWarnings(projectId).length > 0 && <section aria-label="匯入提醒">
         <p>匯入文件需人工校對：</p>
         <ul>{readImportWarnings(projectId).map((warning, index) => <li key={index}>{warning}</li>)}</ul>

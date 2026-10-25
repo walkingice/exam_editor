@@ -169,8 +169,9 @@ describe('project navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: /建立空白試卷/ }));
     await screen.findByRole('heading', { name: '試卷內容' });
     const projectUrl = window.location.hash;
-    fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
     fireEvent.click(screen.getByRole('button', { name: '更名' }));
+    fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+    fireEvent.click(screen.getByRole('button', { name: '儲存' }));
     window.location.hash = '#/';
     await waitFor(() => expect(window.location.hash).toBe(projectUrl));
     expect(screen.getByRole('heading', { name: 'Changed' })).toBeInTheDocument();

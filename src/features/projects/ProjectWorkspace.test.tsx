@@ -36,6 +36,22 @@ function bundle(id: string): ProjectBundle {
 
 afterEach(() => { cleanup(); vi.useRealTimers(); editorProps.current.length = 0; });
 
+it('cancels a title edit without changing the project name', async () => {
+  const repository = { get: vi.fn(async () => bundle('first')),
+    beginSession: vi.fn(async () => bundle('first')),
+    finishSession: vi.fn(async () => {}), save: vi.fn(async () => {}) } as unknown as ProjectRepository;
+  const ownership = { acquireLatest: vi.fn(async (id: string,
+    read: () => Promise<ProjectBundle | null>) => ({ lease: new ProjectLease(id), value: await read() })),
+  } as unknown as ProjectOwnership;
+  render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
+  await screen.findByRole('heading', { name: 'first' });
+  fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+  fireEvent.click(screen.getByRole('button', { name: '取消' }));
+  expect(screen.getByRole('heading', { name: 'first' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '更名' })).toBeInTheDocument();
+});
+
 it('updates preview orientation, columns, and usable height without changing the source', async () => {
   const current = bundle('first');
   const originalContent = structuredClone(current.document.content);
@@ -104,8 +120,9 @@ it('flushes on BFCache entry while retaining assets for the live history', async
   } as unknown as ProjectOwnership;
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
-  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
   fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+  fireEvent.click(screen.getByRole('button', { name: '儲存' }));
   await act(async () => {
     const event = new Event('pagehide') as PageTransitionEvent;
     Object.defineProperty(event, 'persisted', { value: true });
@@ -125,8 +142,9 @@ it('keeps cleanup pending when the closing flush fails', async () => {
   } as unknown as ProjectOwnership;
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
-  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
   fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Changed' } });
+  fireEvent.click(screen.getByRole('button', { name: '儲存' }));
   await act(async () => { window.dispatchEvent(new Event('pagehide')); });
   await waitFor(() => expect(repository.save).toHaveBeenCalledOnce());
   expect(repository.finishSession).not.toHaveBeenCalled();
@@ -143,8 +161,9 @@ it('preserves an unsaved BFCache session after its lease expires', async () => {
   } as unknown as ProjectOwnership;
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
-  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Unsaved' } });
   fireEvent.click(screen.getByRole('button', { name: '更名' }));
+  fireEvent.change(screen.getByLabelText('試卷名稱'), { target: { value: 'Unsaved' } });
+  fireEvent.click(screen.getByRole('button', { name: '儲存' }));
   await act(async () => { window.dispatchEvent(new Event('pagehide')); });
   await waitFor(() => expect(repository.save).toHaveBeenCalledOnce());
   lease.invalidate();

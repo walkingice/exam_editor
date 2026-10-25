@@ -118,7 +118,6 @@ li { margin: 10px 0; }
   background: #304448;
 }
 .workspace-header h1 {
-  flex: 1;
   min-width: 0;
   margin: 0;
   overflow: hidden;
@@ -127,6 +126,12 @@ li { margin: 10px 0; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.workspace-title { display: flex; min-width: 0; align-items: center; gap: 8px; flex: 1; }
+.workspace-title input { width: min(360px, 48vw); min-width: 120px; padding: 5px 8px;
+  border: 1px solid #b8c8c5; border-radius: 4px; color: #26383b; font: inherit; }
+.workspace-rename { flex: 0 0 auto; padding: 3px 6px; border: 0; color: #d5e2df;
+  background: transparent; font-size: 0.75rem; text-decoration: underline; }
+.workspace-rename:hover, .workspace-rename:focus-visible { color: #fff; }
 .workspace-home {
   position: absolute;
   left: 24px;
@@ -175,7 +180,8 @@ li { margin: 10px 0; }
   }
   .workspace-home { left: 20px; top: 16px; }
   .workspace-header-content { flex-wrap: wrap; gap: 8px 18px; padding-top: 30px; }
-  .workspace-header h1 { order: 1; flex: 1 1 100%; font-size: 1.1rem; }
+  .workspace-title { order: 1; flex: 1 1 100%; }
+  .workspace-header h1 { flex: 1; font-size: 1.1rem; }
   .workspace-tabs { order: 2; height: 44px; }
 }
 .exam-document {
