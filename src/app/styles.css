@@ -358,6 +358,10 @@ li { margin: 10px 0; }
 .content-panel .question-drag-handle:active { cursor: grabbing; }
 .content-panel .exam-document .document-item-border > :first-child { margin-top: 0; }
 .content-panel .exam-document .document-item-border > :last-child { margin-bottom: 0; }
+.content-panel .exam-document .document-question-item > .document-item-shell
+  > .document-item-border > div > p:first-child { margin-top: 0; }
+.content-panel .exam-document .document-question-item > .document-item-shell
+  > .document-item-border > div > p:last-child { margin-bottom: 0; }
 .content-panel .exam-document .document-item-border > ul {
   display: grid;
   gap: 8px;
