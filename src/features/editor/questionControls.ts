@@ -66,7 +66,7 @@ export function deleteDocumentItem(view: EditorView, id: string): void {
     && parent.type.name === 'bulletList' && parent.childCount === 1;
   const from = onlyListItem ? resolved.before(resolved.depth) : item.position;
   const size = onlyListItem ? parent.nodeSize : node.nodeSize;
-  view.dispatch(view.state.tr.delete(from, from + size).scrollIntoView());
+  view.dispatch(view.state.tr.delete(from, from + size));
 }
 
 export function itemActions(view: EditorView, id: string): HTMLElement {

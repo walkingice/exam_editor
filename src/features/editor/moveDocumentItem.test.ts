@@ -1,5 +1,5 @@
 import { Editor, type JSONContent } from '@tiptap/core';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
 import { editingExtensions } from './schema';
 import { moveDocumentItem } from './moveDocumentItem';
@@ -46,6 +46,16 @@ it('moves a complete question forward and backward in one list', () => {
   expect(moveDocumentItem(instance, 'a', { position: positions(instance).b,
     placement: 'before' })).toBe(true);
   expect(ids(instance)).toEqual([['a', 'b', 'c']]);
+});
+
+it('does not request scrolling when a question is moved', () => {
+  const instance = editor([{ type: 'bulletList', content: [
+    item('a', 'First'), item('b', 'Second'),
+  ] }]);
+  const dispatch = vi.spyOn(instance.view, 'dispatch');
+  expect(moveDocumentItem(instance, 'a', { position: positions(instance).b,
+    placement: 'after' })).toBe(true);
+  expect(dispatch.mock.calls.at(-1)?.[0].scrolledIntoView).toBe(false);
 });
 
 it('reorders headings and paragraphs as document items', () => {

@@ -70,6 +70,6 @@ export function moveDocumentItem(editor: Editor, sourceId: string, target: Docum
   const transaction = editor.state.tr.replaceWith(0, doc.content.size,
     groupItems(editor, items));
   transaction.doc.check();
-  editor.view.dispatch(transaction.scrollIntoView());
+  editor.view.dispatch(transaction);
   return true;
 }
