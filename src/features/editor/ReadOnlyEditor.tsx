@@ -52,7 +52,7 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
             { ...node.attrs, selected }));
         }} /></label>
       {editor.isEditable && <button type="button" className="question-drag-handle" draggable
-        aria-label={`移動項目 ${dragId}`}
+        title={`移動項目 ${dragId}`} aria-label={`移動項目 ${dragId}`}
         onDragStart={(event) => setDocumentItemDragData(event.dataTransfer, dragId)}
         onDragEnd={clearDocumentItemDropIndicator} />}
     </span>}

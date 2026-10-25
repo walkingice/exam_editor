@@ -24,13 +24,13 @@ export function ImageToolbar({ editor, onInsert }: {
   }
 
   return <div className="image-toolbar">
-    <label>插入圖片 <input type="file" accept="image/png,image/jpeg" disabled={busy}
+    <label title="插入圖片">插入圖片 <input type="file" accept="image/png,image/jpeg" disabled={busy}
       onChange={(event) => {
         const file = event.currentTarget.files?.[0];
         event.currentTarget.value = '';
         void selected(file);
       }} /></label>
-    <button type="button" disabled={!(editor.state.selection instanceof NodeSelection
+    <button type="button" title="刪除圖片" disabled={!(editor.state.selection instanceof NodeSelection
       && editor.state.selection.node.type.name === 'image')}
       onClick={() => editor.chain().focus().deleteSelection().run()}>刪除圖片</button>
     {busy && <span role="status">圖片儲存中…</span>}

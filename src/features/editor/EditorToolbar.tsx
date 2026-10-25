@@ -4,6 +4,19 @@ import { TableToolbar } from './TableToolbar';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
 
+function FormatIcon({ label }: { label: string }) {
+  const paths: Record<string, string> = {
+    粗體: 'M6 4h7a4 4 0 0 1 0 8H6m7 0a4 4 0 0 1 0 8H6V4',
+    斜體: 'M10 4h10M4 20h10M15 4 9 20',
+    底線: 'M6 4v7a6 6 0 0 0 12 0V4M4 21h16',
+  };
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={label === '粗體' ? 3 : 2}
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    <path d={paths[label]} />
+  </svg>;
+}
+
 export function EditorToolbar({ editor }: { editor: Editor }) {
   const [, update] = useState(0);
   useEffect(() => {
@@ -47,8 +60,9 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     {groups.map((group) => <div key={group.label} role="group" aria-label={group.label}
       className={`toolbar-group toolbar-columns-${group.columns}`}>
       {group.tools.map((tool) => <button key={tool.label} type="button"
-        aria-label={tool.label} aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>
-        {{ 左對齊: '靠左', 中對齊: '置中', 右對齊: '靠右' }[tool.label] ?? tool.label}
+        title={tool.label} aria-label={tool.label} aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>
+        {['粗體', '斜體', '底線'].includes(tool.label) ? <FormatIcon label={tool.label} />
+          : { 左對齊: '靠左', 中對齊: '置中', 右對齊: '靠右' }[tool.label] ?? tool.label}
       </button>)}
     </div>)}
     <TableToolbar editor={editor} />

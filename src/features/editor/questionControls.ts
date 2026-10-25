@@ -62,6 +62,7 @@ function dragHandle(view: EditorView, id: string, label: string): HTMLButtonElem
   handle.draggable = true;
   handle.disabled = !view.editable;
   handle.setAttribute('aria-label', label);
+  handle.title = label;
   handle.addEventListener('dragstart', (event) => {
     if (!view.editable) { event.preventDefault(); return; }
     setDocumentItemDragData(event.dataTransfer, id);

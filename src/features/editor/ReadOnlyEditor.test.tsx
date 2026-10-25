@@ -34,6 +34,23 @@ describe('read-only document', () => {
     expect(screen.getByText('Edited')).toBeInTheDocument();
   });
 
+  it('names every editor button on hover and renders formatting icons', async () => {
+    render(<ReadOnlyEditor projectId="first"
+      content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] })}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable />);
+    await screen.findByLabelText('試卷文件');
+    for (const button of screen.getAllByRole('button')) {
+      expect(button).toHaveAttribute('title', button.getAttribute('aria-label') ?? button.textContent);
+    }
+    for (const name of ['粗體', '斜體', '底線']) {
+      const button = screen.getByRole('button', { name });
+      expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+      expect(button).not.toHaveTextContent(name);
+      fireEvent.click(button);
+      expect(button).toHaveAttribute('aria-pressed', 'true');
+    }
+  });
+
   it('applies toolbar marks, headings, alignment and history to JSON', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
       content: [{ type: 'text', text: 'Question' }] }] });
