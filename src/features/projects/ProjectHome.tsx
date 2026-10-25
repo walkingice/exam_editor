@@ -109,11 +109,6 @@ export function ProjectHome({ repository, ownership, importer = importProject }:
       <p className="home-description">建立新試卷，或匯入既有的 DOCX 文件，接著就能開始編輯。</p>
     </header>
     <section className="home-actions" aria-label="建立或匯入試卷">
-      <button className="home-create" disabled={busy} onClick={() => void createProject()}>
-        <span className="action-icon" aria-hidden="true">＋</span>
-        <span><strong>建立空白試卷</strong><small>從一張乾淨的版面開始</small></span>
-        <span className="action-arrow" aria-hidden="true">→</span>
-      </button>
       <label className="home-import">
         <span className="action-icon import-icon" aria-hidden="true">↥</span>
         <span><strong>匯入 DOCX</strong><small>沿用現有文件，快速開始編輯</small></span>
@@ -124,6 +119,11 @@ export function ProjectHome({ repository, ownership, importer = importProject }:
         if (file) void importFile(file);
       }} />
       </label>
+      <button className="home-create" disabled={busy} onClick={() => void createProject()}>
+        <span className="action-icon" aria-hidden="true">＋</span>
+        <span><strong>建立空白試卷</strong><small>從一張乾淨的版面開始</small></span>
+        <span className="action-arrow" aria-hidden="true">→</span>
+      </button>
     </section>
     {(importStage || notice || error) && <div className="home-messages">
       {importStage && <p role="status">{importStage === 'converting' ? '正在轉換 DOCX…' : '正在儲存試卷…'}
