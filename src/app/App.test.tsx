@@ -50,14 +50,14 @@ describe('project navigation', () => {
     fireEvent.click(screen.getByRole('link', { name: '設定' }));
     expect(await screen.findByRole('heading', { name: 'AI 設定' })).toBeInTheDocument();
     expect(window.location.hash).toBe('#/settings');
-    const applyLink = screen.getByRole('link', { name: '申請金鑰' });
-    const helpLink = screen.getByRole('link', { name: '如何申請' });
+    const applyLink = screen.getByRole('link', { name: /申請金鑰/ });
+    const helpLink = screen.getByRole('link', { name: /如何申請/ });
     expect(applyLink).toHaveAttribute('href', 'https://aistudio.google.com/');
     expect(applyLink).toHaveAttribute('target', '_blank');
     expect(helpLink).toHaveAttribute('href', 'https://www.google.com/search?q=%E5%A6%82%E4%BD%95%E7%94%B3%E8%AB%8B+Gemini+API+Key');
     expect(helpLink).toHaveAttribute('target', '_blank');
     fireEvent.change(screen.getByLabelText('Gemini API key'), { target: { value: 'test-key' } });
-    fireEvent.click(screen.getByRole('button', { name: '儲存' }));
+    fireEvent.click(screen.getByRole('button', { name: '儲存設定' }));
     expect(window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)).toBe('test-key');
     fireEvent.click(await screen.findByRole('link', { name: '設定' }));
     await screen.findByRole('heading', { name: 'AI 設定' });
@@ -89,7 +89,7 @@ describe('project navigation', () => {
       headers: { 'x-goog-api-key': 'test-key' },
     });
     fireEvent.change(screen.getByRole('combobox', { name: 'Model' }), { target: { value: 'gemini-custom' } });
-    fireEvent.click(screen.getByRole('button', { name: '儲存' }));
+    fireEvent.click(screen.getByRole('button', { name: '儲存設定' }));
     expect(window.localStorage.getItem(GEMINI_MODEL_STORAGE_KEY)).toBe('gemini-custom');
   });
 

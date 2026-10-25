@@ -33,36 +33,51 @@ export function SettingsPage() {
 
   return <main className="settings-page">
     <header className="settings-page-header">
-      <a href="#/" aria-label="返回首頁">← 返回首頁</a>
-      <p className="home-eyebrow">SETTINGS</p>
-      <h1>設定</h1>
+      <a className="settings-back-link" href="#/" aria-label="返回首頁">← 返回首頁</a>
+      <div className="settings-page-intro">
+        <p className="home-eyebrow">WORKSPACE SETTINGS</p>
+        <h1>設定</h1>
+        <p>管理試卷編輯時使用的 AI 服務。</p>
+      </div>
     </header>
     <section className="settings-panel" aria-labelledby="settings-title">
-      <div className="settings-heading"><div><p className="home-eyebrow">AI SETTINGS</p>
-        <h2 id="settings-title">AI 設定</h2></div></div>
-      <label className="settings-label" htmlFor="gemini-api-key">Gemini API key</label>
-      <div className="settings-key-row">
-        <input id="gemini-api-key" type="text" autoComplete="off" value={geminiApiKey}
-          onChange={(event) => setGeminiApiKey(event.target.value)} placeholder="輸入 Gemini API key" />
-        <nav aria-label="Gemini API key 說明">
-          <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer">申請金鑰</a>
-          <a href="https://www.google.com/search?q=%E5%A6%82%E4%BD%95%E7%94%B3%E8%AB%8B+Gemini+API+Key" target="_blank" rel="noreferrer">如何申請</a>
-        </nav>
+      <div className="settings-section-heading">
+        <span className="settings-section-icon" aria-hidden="true">✦</span>
+        <div><h2 id="settings-title">AI 設定</h2>
+          <p>連接 Gemini，讓 AI 協助修改試卷內容。</p></div>
       </div>
-      <p className="settings-hint">金鑰會儲存在這個瀏覽器中。</p>
-      <label className="settings-label" htmlFor="gemini-model">Model</label>
-      <div className="settings-model-row">
-        <select id="gemini-model" value={geminiModel} onChange={(event) => setGeminiModel(event.target.value)}>
-          {availableModels.map((model) => <option key={model} value={model}>{model}{model === DEFAULT_GEMINI_MODELS[0] ? '（預設）' : ''}</option>)}
-        </select>
-        <button type="button" disabled={!geminiApiKey.trim() || modelsLoading} onClick={() => void reloadModels()}>
-          <span aria-hidden="true">⟳</span> {modelsLoading ? '載入中…' : 'Refresh'}
-        </button>
+      <div className="settings-field">
+        <div className="settings-field-description">
+          <label htmlFor="gemini-api-key">Gemini API key</label>
+          <p>金鑰會儲存在這個瀏覽器中。</p>
+        </div>
+        <div className="settings-field-control">
+          <input id="gemini-api-key" type="text" autoComplete="off" value={geminiApiKey}
+            onChange={(event) => setGeminiApiKey(event.target.value)} placeholder="輸入 Gemini API key" />
+          <nav aria-label="Gemini API key 說明">
+            <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer">申請金鑰 ↗</a>
+            <a href="https://www.google.com/search?q=%E5%A6%82%E4%BD%95%E7%94%B3%E8%AB%8B+Gemini+API+Key" target="_blank" rel="noreferrer">如何申請 ↗</a>
+          </nav>
+        </div>
+      </div>
+      <div className="settings-field">
+        <div className="settings-field-description">
+          <label htmlFor="gemini-model">Model</label>
+          <p>選擇產生內容時使用的模型。</p>
+        </div>
+        <div className="settings-field-control settings-model-control">
+          <select id="gemini-model" value={geminiModel} onChange={(event) => setGeminiModel(event.target.value)}>
+            {availableModels.map((model) => <option key={model} value={model}>{model}{model === DEFAULT_GEMINI_MODELS[0] ? '（預設）' : ''}</option>)}
+          </select>
+          <button type="button" disabled={!geminiApiKey.trim() || modelsLoading} onClick={() => void reloadModels()}>
+            <span aria-hidden="true">⟳</span> {modelsLoading ? '載入中…' : 'Refresh'}
+          </button>
+        </div>
       </div>
       {modelsError && <p className="settings-error" role="alert">{modelsError}</p>}
       <div className="settings-actions">
         <a href="#/">取消</a>
-        <button className="settings-save" type="button" onClick={saveSettings}>儲存</button>
+        <button className="settings-save" type="button" onClick={saveSettings}>儲存設定</button>
       </div>
     </section>
   </main>;
