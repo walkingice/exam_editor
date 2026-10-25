@@ -297,12 +297,14 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
     {status === 'ready' && bundle && <>
       <header className="workspace-header">
         <a className="workspace-home" href="#/" onClick={(event) => void leave(event)}>返回首頁</a>
-        <h1>{displayName}</h1>
-        <div role="tablist" aria-label="Workspace tabs" className="workspace-tabs">
-          <button role="tab" aria-selected={tab === 'content'} onClick={() => setTab('content')}>
-            試卷內容</button>
-          <button role="tab" aria-selected={tab === 'preview'} onClick={() => setTab('preview')}>
-            排版預覽</button>
+        <div className="workspace-header-content">
+          <h1>{displayName}</h1>
+          <div role="tablist" aria-label="Workspace tabs" className="workspace-tabs">
+            <button role="tab" aria-selected={tab === 'content'} onClick={() => setTab('content')}>
+              試卷內容</button>
+            <button role="tab" aria-selected={tab === 'preview'} onClick={() => setTab('preview')}>
+              排版預覽</button>
+          </div>
         </div>
       </header>
       {lease && <div><label>試卷名稱 <input value={name}

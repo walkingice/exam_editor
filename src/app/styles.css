@@ -106,7 +106,6 @@ li { margin: 10px 0; }
 .workspace-header {
   display: flex;
   align-items: center;
-  gap: 28px;
   position: sticky;
   top: 0;
   z-index: 3;
@@ -129,12 +128,21 @@ li { margin: 10px 0; }
   white-space: nowrap;
 }
 .workspace-home {
-  flex: 0 0 auto;
+  position: absolute;
+  left: 24px;
   color: #e3ebea;
   text-decoration: none;
   font-weight: 700;
 }
 .workspace-home:hover, .workspace-home:focus-visible { color: #fff; text-decoration: underline; }
+.workspace-header-content {
+  display: flex;
+  width: min(100%, 920px);
+  min-width: 0;
+  align-items: center;
+  gap: 28px;
+  margin: 0 auto;
+}
 .workspace-tabs { display: flex; align-self: stretch; gap: 22px; }
 .workspace-tabs button {
   position: relative;
@@ -162,12 +170,12 @@ li { margin: 10px 0; }
   :root { --workspace-header-height: 88px; }
   .workspace-header {
     flex-wrap: wrap;
-    gap: 8px 18px;
     margin-bottom: 20px;
     padding: 10px 20px 0;
   }
-  .workspace-home { order: 0; width: auto; padding-bottom: 0; }
-  .workspace-header h1 { order: 1; flex: 1 1 calc(100% - 110px); font-size: 1.1rem; }
+  .workspace-home { left: 20px; top: 16px; }
+  .workspace-header-content { flex-wrap: wrap; gap: 8px 18px; padding-top: 30px; }
+  .workspace-header h1 { order: 1; flex: 1 1 100%; font-size: 1.1rem; }
   .workspace-tabs { order: 2; height: 44px; }
 }
 .exam-document {
