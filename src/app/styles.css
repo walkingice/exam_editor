@@ -457,7 +457,15 @@ li { margin: 10px 0; }
   padding: 0 0 0 18px;
   list-style: none;
 }
-.preview-scroll { overflow-x: auto; padding: 16px 0; }
+.preview-layout { display: grid; grid-template-columns: 248px minmax(0, 1fr);
+  gap: 16px; align-items: start; }
+.preview-layout-readonly { display: block; }
+@media (min-width: 1288px) {
+  .preview-layout:not(.preview-layout-readonly) {
+    width: calc(100% + 264px); margin-left: -264px;
+  }
+}
+.preview-scroll { min-width: 0; overflow-x: auto; padding: 16px 0; }
 .preview-scroll .preview-paper + .preview-paper { margin-top: 20px; }
 .preview-paper { box-sizing: border-box; max-width: none; margin: 0 auto;
   background: #fff; box-shadow: 0 2px 12px #17233a24; }
@@ -473,8 +481,12 @@ li { margin: 10px 0; }
   text-orientation: mixed;
 }
 .page-settings {
-  margin: 20px 0;
-  padding: 20px;
+  position: sticky;
+  top: calc(var(--workspace-header-height) + 12px);
+  max-height: calc(100vh - var(--workspace-header-height) - 24px);
+  overflow-y: auto;
+  margin: 16px 0;
+  padding: 12px;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   background: #fff;
@@ -482,7 +494,7 @@ li { margin: 10px 0; }
 .page-settings h2 { margin: 0 0 16px; font-size: 1.1rem; }
 .page-settings-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 .settings-group {
@@ -519,16 +531,13 @@ li { margin: 10px 0; }
 .settings-summary [role="alert"] { color: #a32323; }
 @media (max-width: 700px) {
   .content-editor-layout { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .preview-layout { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .page-settings { position: static; max-height: none; }
   .content-editor-controls { z-index: 2; top: calc(var(--workspace-header-height) + 8px); max-height: 40vh; }
   .content-editor-controls .editor-toolbar { flex-direction: row; }
   .content-editor-controls .toolbar-group { flex: 1 1 132px; }
   .content-editor-controls .image-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
 }
-@media (max-width: 560px) {
-  .page-settings { padding: 14px; }
-  .page-settings-grid { grid-template-columns: minmax(0, 1fr); }
-}
-
 .preview-paper[data-columns="2"] .ProseMirror {
   column-count: 2;
   column-gap: 10mm;

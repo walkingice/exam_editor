@@ -263,7 +263,10 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   expect(screen.getAllByTestId('editor')).toHaveLength(2);
   expect(sourceEditor).toBeInTheDocument();
   expect(screen.getByRole('tabpanel', { name: '排版預覽' })).toBeInTheDocument();
-  expect(screen.getByRole('region', { name: '頁面設定' })).toBeInTheDocument();
+  const previewPanel = screen.getByRole('tabpanel', { name: '排版預覽' });
+  const settings = screen.getByRole('region', { name: '頁面設定' });
+  expect(settings.parentElement).toBe(previewPanel);
+  expect(settings.nextElementSibling).toHaveClass('preview-scroll');
   expect(screen.getByRole('button', { name: '列印 / PDF' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('tab', { name: '試卷內容' }));
   expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();

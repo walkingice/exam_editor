@@ -367,8 +367,6 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
         {printError && <><p role="alert">{printError}</p>
           <button onClick={() => void printExam()}>重試列印</button></>}
       </div>}
-      {tab === 'preview' && lease?.isActive && pageSettings && <PageSettingsForm settings={pageSettings}
-        onChange={changePageSettings} />}
       {lease && <p role="status">{{ saved: '已儲存', dirty: '尚未儲存',
         saving: '儲存中…', error: '儲存失敗' }[saveState]}</p>}
       {saveError && <><p role="alert">{saveError}</p>
@@ -393,7 +391,11 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
       {showAIAll && sourceEditor && <AIAllModal editor={sourceEditor}
         onClose={() => setShowAIAll(false)} />}
       {tab === 'preview' && previewContent && pageSettings && page &&
-        <div role="tabpanel" aria-label="排版預覽" className="preview-scroll">
+        <div role="tabpanel" aria-label="排版預覽"
+          className={lease?.isActive ? 'preview-layout' : 'preview-layout preview-layout-readonly'}>
+          {lease?.isActive && <PageSettingsForm settings={pageSettings}
+            onChange={changePageSettings} />}
+          <div className="preview-scroll">
           {formatError && <p role="alert">{formatError}</p>}
           {selectedNode && lease?.isActive && <PreviewFormatToolbar
             key={selectedPreviewId} type={selectedNode.type} attrs={selectedNode.attrs}
@@ -416,6 +418,7 @@ export function ProjectWorkspace({ projectId, repository, ownership, registerGua
               repository={repository} preview />
             </div>
           </div>)}
+          </div>
         </div>}
       {printSnapshot && <>
         <style>{createPrintCss(printSnapshot.settings)}</style>
