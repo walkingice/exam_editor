@@ -26,8 +26,12 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
   border.append(semantic);
   if (topLevel) {
     shell.classList.add('document-item-shell');
-    shell.append(itemControl(view, node.attrs.id, type === 'listItem'), border,
-      itemActions(view, node.attrs.id));
+    const host = document.createElement('div');
+    host.className = 'ai-item-panel-host';
+    host.dataset.aiItemId = node.attrs.id;
+    host.contentEditable = 'false';
+    border.append(itemActions(view, node.attrs.id), host);
+    shell.append(itemControl(view, node.attrs.id, type === 'listItem'), border);
     if (shell !== outer) {
       outer.classList.add('document-question-item');
       outer.append(shell);
@@ -56,5 +60,7 @@ export function itemNodeView(view: EditorView, node: ProseMirrorNode,
     updateAttrs(current);
     return true;
   }, stopEvent: (event) => !!(event.target instanceof Element
-    && event.target.closest('.document-item-control, .document-item-actions')) };
+    && event.target.closest('.document-item-control, .document-item-actions, .ai-item-panel')),
+  ignoreMutation: (mutation) => mutation.target instanceof Element
+    && !!mutation.target.closest('.ai-item-panel-host') };
 }

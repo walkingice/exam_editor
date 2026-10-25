@@ -104,13 +104,21 @@ const ExamHorizontalRule = HorizontalRule.extend({
       border.className = 'document-item-border';
       const rule = document.createElement('hr');
       border.append(rule);
-      dom.append(control, border, itemActions(editor.view, node.attrs.id));
+      const host = document.createElement('div');
+      host.className = 'ai-item-panel-host';
+      host.dataset.aiItemId = node.attrs.id;
+      host.contentEditable = 'false';
+      border.append(itemActions(editor.view, node.attrs.id), host);
+      dom.append(control, border);
       return { dom, update: (updatedNode) => {
         if (updatedNode.type !== node.type || updatedNode.attrs.id !== node.attrs.id) return false;
         const checkbox = dom.querySelector<HTMLInputElement>('input[type="checkbox"]');
         if (checkbox) checkbox.checked = updatedNode.attrs.selected !== false;
         return true;
-      } };
+      }, stopEvent: (event) => event.target instanceof Element
+        && !!event.target.closest('.document-item-actions, .ai-item-panel'),
+      ignoreMutation: (mutation) => mutation.target instanceof Element
+        && !!mutation.target.closest('.ai-item-panel-host') };
     };
   },
 });

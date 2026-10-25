@@ -5,6 +5,7 @@ import type { Editor } from '@tiptap/core';
 import type { Node } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { closeHistory } from '@tiptap/pm/history';
+import { createPortal } from 'react-dom';
 import { ProjectRepository } from '../../data/repository';
 import { AssetResolver, type AssetHandle } from '../../shared/assets/AssetResolver';
 import { AssetImage, editingExtensions, examExtensions } from './schema';
@@ -14,7 +15,7 @@ import { ResizableImage } from './ResizableImage';
 import { insertLocalImage } from './insertLocalImage';
 import { clearDocumentItemDropIndicator, deleteDocumentItem, refreshItemControls, setDocumentItemDragData } from './questionControls';
 import { itemNodeView } from './itemNodeView';
-import { AIItemModal } from './AIItemModal';
+import { AIItemPanel } from './AIItemPanel';
 import { GEMINI_API_KEY_STORAGE_KEY } from '../../shared/storageKeys';
 
 function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewProps & {
@@ -73,15 +74,16 @@ function AssetImageView({ node, resolver, editor, getPos, preview }: NodeViewPro
             { ...current.attrs, widthMm }));
         }} />
       : errorAssetId === assetId ? <span role="img" aria-label="缺少圖片">找不到圖片：{assetId}</span>
-        : <span>圖片載入中…</span>}</div>
-    {!preview && isDocumentItem && <span className="document-item-actions" contentEditable={false}>
+        : <span>圖片載入中…</span>}
+    {!preview && isDocumentItem && <><span className="document-item-actions" contentEditable={false}>
       <button type="button" title={`AI 項目 ${dragId}`} aria-label={`AI 項目 ${dragId}`}
         disabled={!editor.isEditable || !hasApiKey}
-        onClick={() => editor.view.dom.dispatchEvent(new CustomEvent('exam-ai-open',
+        onClick={() => editor.view.dom.dispatchEvent(new CustomEvent('exam-ai-toggle',
           { bubbles: true, detail: dragId }))}>✨</button>
       <button type="button" title={`刪除項目 ${dragId}`} aria-label={`刪除項目 ${dragId}`}
         onClick={() => deleteDocumentItem(editor.view, dragId)}>❌</button>
-    </span>}
+    </span><div className="ai-item-panel-host" data-ai-item-id={dragId} contentEditable={false} /></>}
+    </div>
   </NodeViewWrapper>;
 }
 
@@ -98,7 +100,8 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   const callbacks = useRef({ onChange, onEditor, canInsertImage });
   callbacks.current = { onChange, onEditor, canInsertImage };
   const active = useRef(false);
-  const [aiItemId, setAiItemId] = useState<string | null>(null);
+  const [expandedAiItems, setExpandedAiItems] = useState<string[]>([]);
+  const [, setEditorRevision] = useState(0);
   const ownedResolver = useMemo(() => new AssetResolver(
     projectId, (id, assetId) => repository.getAsset(id, assetId),
   ), [projectId, repository]);
@@ -136,10 +139,30 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
   useEffect(() => () => ownedResolver.dispose(), [ownedResolver]);
   useEffect(() => {
     if (!editor) return;
-    const open = (event: Event) => setAiItemId((event as CustomEvent<string>).detail);
+    const toggle = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail;
+      setExpandedAiItems((current) => current.includes(id)
+        ? current.filter((value) => value !== id) : [...current, id]);
+    };
     const dom = editor.view.dom;
-    dom.addEventListener('exam-ai-open', open);
-    return () => dom.removeEventListener('exam-ai-open', open);
+    dom.addEventListener('exam-ai-toggle', toggle);
+    return () => dom.removeEventListener('exam-ai-toggle', toggle);
+  }, [editor]);
+  useEffect(() => {
+    if (!editor) return;
+    const updatePanels = () => {
+      setEditorRevision((revision) => revision + 1);
+      setExpandedAiItems((current) => current.filter((id) => {
+        let exists = false;
+        editor.state.doc.descendants((node) => {
+          if (node.attrs.id === id) { exists = true; return false; }
+          return true;
+        });
+        return exists;
+      }));
+    };
+    editor.on('transaction', updatePanels);
+    return () => { editor.off('transaction', updatePanels); };
   }, [editor]);
 
   return <div className={editable && editor ? 'content-editor-layout' : undefined}>
@@ -154,7 +177,12 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
     <div aria-label="試卷文件" className="exam-document">
       <EditorContent editor={editor} />
     </div>
-    {editor && aiItemId && <AIItemModal editor={editor} itemId={aiItemId}
-      onClose={() => setAiItemId(null)} />}
+    {editor && expandedAiItems.map((id) => {
+      const host = Array.from(editor.view.dom.querySelectorAll<HTMLElement>('.ai-item-panel-host'))
+        .find((element) => element.dataset.aiItemId === id);
+      return host ? createPortal(<AIItemPanel key={id} editor={editor} itemId={id}
+        onClose={() => setExpandedAiItems((current) => current.filter((value) => value !== id))} />,
+      host, id) : null;
+    })}
   </div>;
 }

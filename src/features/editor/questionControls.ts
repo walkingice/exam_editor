@@ -80,7 +80,7 @@ export function itemActions(view: EditorView, id: string): HTMLElement {
   ai.title = `AI 項目 ${id}`;
   ai.setAttribute('aria-label', ai.title);
   ai.disabled = !view.editable || !window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)?.trim();
-  ai.addEventListener('click', () => view.dom.dispatchEvent(new CustomEvent('exam-ai-open',
+  ai.addEventListener('click', () => view.dom.dispatchEvent(new CustomEvent('exam-ai-toggle',
     { bubbles: true, detail: id })));
   const remove = document.createElement('button');
   remove.type = 'button';
@@ -101,7 +101,8 @@ export function refreshItemControls(view: EditorView): void {
     const id = item?.getAttribute('data-node-id');
     if (id && item) control.replaceWith(itemControl(view, id,
       item.classList.contains('document-question-item')));
-    const actions = shell?.querySelector<HTMLElement>(':scope > .document-item-actions');
+    const actions = shell?.querySelector<HTMLElement>(
+      ':scope > .document-item-border > .document-item-actions');
     if (id && actions) actions.replaceWith(itemActions(view, id));
   });
 }

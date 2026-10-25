@@ -38,7 +38,7 @@ function applyResult(editor: Editor, id: string, result: string): boolean {
   return true;
 }
 
-export function AIItemModal({ editor, itemId, onClose }: {
+export function AIItemPanel({ editor, itemId, onClose }: {
   editor: Editor; itemId: string; onClose: () => void;
 }) {
   const [userInput, setUserInput] = useState(() =>
@@ -53,6 +53,11 @@ export function AIItemModal({ editor, itemId, onClose }: {
     : item?.node.textBetween(0, item.node.content.size, '\n') ?? '';
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    const syncInput = (event: Event) => setUserInput((event as CustomEvent<string>).detail);
+    window.addEventListener('exam-ai-input', syncInput);
+    return () => window.removeEventListener('exam-ai-input', syncInput);
+  }, []);
 
   async function refresh() {
     if (request.current) return;
@@ -85,29 +90,27 @@ export function AIItemModal({ editor, itemId, onClose }: {
     }
   }
 
-  return <div className="settings-backdrop" role="presentation">
-    <section className="settings-modal ai-modal" role="dialog" aria-modal="true" aria-label="AI 修改項目"
+  return <section className="ai-item-panel" role="region" aria-label={`AI 修改項目 ${itemId}`}
       onKeyDown={(event) => { if (event.key === 'Escape') onClose(); }}>
-      <h2>AI 修改項目</h2>
-      <label htmlFor="ai-default-prompt">Default Prompt</label>
-      <textarea id="ai-default-prompt" value={DEFAULT_AI_PROMPT} readOnly rows={5} />
-      <label htmlFor="ai-user-input">User Input</label>
-      <textarea id="ai-user-input" ref={inputRef} value={userInput} rows={3} onChange={(event) => {
+      <label htmlFor={`ai-default-prompt-${itemId}`}>Default Prompt</label>
+      <textarea id={`ai-default-prompt-${itemId}`} value={DEFAULT_AI_PROMPT} readOnly rows={5} />
+      <label htmlFor={`ai-user-input-${itemId}`}>User Input</label>
+      <textarea id={`ai-user-input-${itemId}`} ref={inputRef} value={userInput} rows={3} onChange={(event) => {
         setUserInput(event.target.value);
         window.localStorage.setItem(AI_USER_INPUT_STORAGE_KEY, event.target.value);
+        window.dispatchEvent(new CustomEvent('exam-ai-input', { detail: event.target.value }));
       }} />
-      <label htmlFor="ai-content">Content</label>
-      <textarea id="ai-content" value={content} readOnly rows={4} />
-      <label htmlFor="ai-result">Result</label>
-      <textarea id="ai-result" value={result} readOnly rows={4} />
+      <label htmlFor={`ai-content-${itemId}`}>Content</label>
+      <textarea id={`ai-content-${itemId}`} value={content} readOnly rows={4} />
+      <label htmlFor={`ai-result-${itemId}`}>Result</label>
+      <textarea id={`ai-result-${itemId}`} value={result} readOnly rows={4} />
       {error && <p role="alert">{error}</p>}
-      <div className="ai-modal-actions">
+      <div className="ai-item-panel-actions">
         <button type="button" disabled={loading} onClick={() => void refresh()}>
           {loading ? '處理中…' : 'Refresh'}</button>
         <button type="button" disabled={!result || loading || !item || !editor.isEditable}
           onClick={() => { if (applyResult(editor, itemId, result)) onClose(); }}>Apply</button>
         <button type="button" onClick={onClose}>Cancel</button>
       </div>
-    </section>
-  </div>;
+    </section>;
 }
