@@ -484,7 +484,7 @@ describe('read-only document', () => {
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} preview />);
     await screen.findByText('First');
     expect(container.querySelector('.exam-page-break')).toBeInTheDocument();
-    expect(screen.queryByText('分隔頁')).not.toBeInTheDocument();
+    expect(container.querySelector('.exam-page-break')).toHaveAttribute('contenteditable', 'false');
   });
 
   it('keeps a table inside a question item valid for saving', async () => {

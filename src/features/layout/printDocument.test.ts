@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, it, vi } from 'vitest';
 import { DEFAULT_PAGE_SETTINGS } from '../../domain/types';
 import { countPrintImages, createPrintCss, waitForPrintAssets } from './printDocument';
@@ -67,6 +68,11 @@ it('starts a new printed page at each page break item', () => {
   expect(css).toContain('#exam-print-root .exam-page-break');
   expect(css).toMatch(/\.exam-page-break[^}]*break-after:\s*page/);
   expect(css).toMatch(/\.exam-page-break[^}]*visibility:\s*hidden/);
+});
+
+it('hides page break markers in the layout preview', () => {
+  const css = readFileSync('src/app/styles.css', 'utf8');
+  expect(css).toMatch(/\.preview-paper \.exam-page-break\s*\{[^}]*visibility:\s*hidden/);
 });
 
 
