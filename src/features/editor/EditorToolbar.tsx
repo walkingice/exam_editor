@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/core';
+import { redoNoScroll, undoNoScroll } from '@tiptap/pm/history';
 import { TableToolbar } from './TableToolbar';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
+
+function runHistory(editor: Editor, command: typeof undoNoScroll): void {
+  editor.view.focus();
+  command(editor.state, editor.view.dispatch);
+}
 
 function FormatIcon({ label }: { label: string }) {
   const paths: Record<string, string> = {
@@ -54,8 +60,8 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
       label: `${label}對齊`, active: () => editor.isActive({ textAlign: align }),
       run: () => editor.chain().focus().setTextAlign(align).run(),
     })),
-    { label: '復原', run: () => editor.chain().focus().undo().run() },
-    { label: '重做', run: () => editor.chain().focus().redo().run() },
+    { label: '復原', run: () => runHistory(editor, undoNoScroll) },
+    { label: '重做', run: () => runHistory(editor, redoNoScroll) },
   ];
 
   const groups = [

@@ -78,6 +78,23 @@ describe('read-only document', () => {
     expect(screen.getByText('Edited')).toBeInTheDocument();
   });
 
+  it('undoes and redoes without requesting a scroll', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('試卷文件');
+    editor!.commands.insertContent('Edited');
+    const dispatch = vi.spyOn(editor!.view, 'dispatch');
+    fireEvent.click(screen.getByRole('button', { name: '復原' }));
+    expect(editor!.getText()).toBe('');
+    expect(dispatch.mock.calls.at(-1)?.[0].scrolledIntoView).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: '重做' }));
+    expect(editor!.getText()).toBe('Edited');
+    expect(dispatch.mock.calls.at(-1)?.[0].scrolledIntoView).toBe(false);
+  });
+
   it('names every editor button on hover and renders formatting icons', async () => {
     render(<ReadOnlyEditor projectId="first"
       content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] })}
