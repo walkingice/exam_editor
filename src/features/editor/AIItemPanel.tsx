@@ -92,9 +92,8 @@ export function AIItemPanel({ editor, itemId, onClose }: {
 
   return <section className="ai-item-panel" role="region" aria-label={`AI 修改項目 ${itemId}`}
       onKeyDown={(event) => { if (event.key === 'Escape') onClose(); }}>
-      <label htmlFor={`ai-default-prompt-${itemId}`}>Default Prompt</label>
       <details id={`ai-default-prompt-${itemId}`} className="ai-default-prompt">
-        <summary>顯示 Default Prompt</summary>
+        <summary>顯示提示詞</summary>
         <div>{DEFAULT_AI_PROMPT}</div>
       </details>
       <label htmlFor={`ai-user-input-${itemId}`}>User Input</label>
