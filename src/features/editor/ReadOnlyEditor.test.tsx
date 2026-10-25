@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 describe('read-only document', () => {
-  it('deletes the selected item and leaves AI without an action', async () => {
+  it('deletes the selected item while AI is unavailable without a key', async () => {
     const content = normalizeDocument({ type: 'doc', content: [
       { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
       { type: 'bulletList', content: [{ type: 'listItem', content: [
@@ -36,7 +36,7 @@ describe('read-only document', () => {
     const questionId = content.content?.[1].content?.[0].attrs?.id;
     const ai = screen.getByRole('button', { name: `AI 項目 ${questionId}` });
     expect(ai).toHaveTextContent('✨');
-    fireEvent.click(ai);
+    expect(ai).toBeDisabled();
     expect(editor!.getJSON().content).toHaveLength(3);
     const dispatch = vi.spyOn(editor!.view, 'dispatch');
     fireEvent.click(screen.getByRole('button', { name: `刪除項目 ${questionId}` }));

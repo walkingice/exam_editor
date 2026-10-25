@@ -14,7 +14,7 @@ This document records the current AI settings and the intended integration path 
 
 ## Planned generation flow
 
-The 「試卷內容」 page will take a span of document text, combine it with a prompt, send it to the selected Gemini model, and put the generated text back into the same Project. The text extraction method, prompt template, insertion position, and review flow remain to be designed.
+On the 「試卷內容」 page, an item AI button is enabled when a saved API key exists. It opens a modal with the fixed Default Prompt, a reusable User Input saved immediately in browser localStorage, the item's Content, and an initially empty Result. Refresh sends those fields to the selected Gemini model through `generateContent`; another request cannot start while one is pending. Apply replaces the item's content through an editor transaction, while Cancel closes the modal without changing the document. A generated response is plain text, so applying it to a table or image replaces that item with a paragraph.
 
 The intended browser request follows the same direct REST pattern as model discovery:
 
