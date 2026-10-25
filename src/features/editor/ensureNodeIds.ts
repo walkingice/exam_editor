@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/core';
 
 const idTypes = new Set(['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
-  'codeBlock', 'horizontalRule']);
+  'codeBlock', 'horizontalRule', 'pageBreak']);
 
 export function ensureNodeIds(editor: Editor): boolean {
   const used = new Set<string>();

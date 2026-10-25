@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { redoNoScroll, undoNoScroll } from '@tiptap/pm/history';
 import { TableToolbar } from './TableToolbar';
+import { focusedItemIndex, insertPageBreak } from './insertPageBreak';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
 
@@ -28,7 +29,10 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   useEffect(() => {
     const refresh = () => update((value) => value + 1);
     editor.on('transaction', refresh);
-    return () => { editor.off('transaction', refresh); };
+    editor.on('focus', refresh);
+    editor.on('blur', refresh);
+    return () => { editor.off('transaction', refresh); editor.off('focus', refresh);
+      editor.off('blur', refresh); };
   }, [editor]);
 
   const tools: Tool[] = [
@@ -82,6 +86,12 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           : { 左對齊: '靠左', 中對齊: '置中', 右對齊: '靠右' }[tool.label] ?? tool.label}
       </button>)}
     </div>)}
+    <div role="group" aria-label="分隔頁" className="toolbar-group">
+      <button type="button" title="插入分隔頁" aria-label="插入分隔頁"
+        disabled={focusedItemIndex(editor) === null}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => insertPageBreak(editor)}>插入分隔頁</button>
+    </div>
     <TableToolbar editor={editor} />
   </div>;
 }

@@ -1,4 +1,4 @@
-import { Extension, getSchema, wrappingInputRule } from '@tiptap/core';
+import { Extension, Node, getSchema, wrappingInputRule } from '@tiptap/core';
 import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
@@ -17,7 +17,7 @@ const ExamAttributes = Extension.create({
     return [
       {
         types: ['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
-          'codeBlock', 'horizontalRule'],
+          'codeBlock', 'horizontalRule', 'pageBreak'],
         attributes: {
           id: {
             default: null,
@@ -28,7 +28,7 @@ const ExamAttributes = Extension.create({
       },
       {
         types: ['paragraph', 'heading', 'listItem', 'table', 'image', 'blockquote',
-          'codeBlock', 'horizontalRule'],
+          'codeBlock', 'horizontalRule', 'pageBreak'],
         attributes: {
           selected: {
             default: null,
@@ -123,9 +123,38 @@ const ExamHorizontalRule = HorizontalRule.extend({
   },
 });
 
+const PageBreak = Node.create({
+  name: 'pageBreak', group: 'block', atom: true, selectable: true,
+  parseHTML: () => [{ tag: 'div[data-exam-page-break]' }],
+  renderHTML: ({ HTMLAttributes }) => ['div', { ...HTMLAttributes,
+    'data-exam-page-break': '', class: 'exam-page-break', contenteditable: 'false' }, '分隔頁'],
+  addNodeView() {
+    return ({ node, editor }) => {
+      const dom = document.createElement('div');
+      dom.className = 'document-item-shell exam-page-break';
+      dom.dataset.nodeId = node.attrs.id;
+      dom.setAttribute('contenteditable', 'false');
+      const border = document.createElement('div');
+      border.className = 'document-item-border';
+      const label = document.createElement('span');
+      label.textContent = '分隔頁';
+      border.append(label, itemActions(editor.view, node.attrs.id));
+      dom.append(itemControl(editor.view, node.attrs.id), border);
+      return { dom, update: (current) => {
+        if (current.type !== node.type || current.attrs.id !== node.attrs.id) return false;
+        const checkbox = dom.querySelector<HTMLInputElement>('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = current.attrs.selected !== false;
+        return true;
+      }, stopEvent: (event) => event.target instanceof Element
+        && !!event.target.closest('.document-item-control, .document-item-actions') };
+    };
+  },
+});
+
 export const examExtensions = [
   StarterKit,
   ExamAttributes,
+  PageBreak,
   AssetImage,
   Table,
   TableRow,
@@ -159,6 +188,7 @@ export const editingExtensions = [
   CodeBlock,
   ExamHorizontalRule,
   ExamAttributes,
+  PageBreak,
   AssetImage,
   Table,
   TableRow,

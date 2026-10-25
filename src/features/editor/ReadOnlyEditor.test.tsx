@@ -454,6 +454,26 @@ describe('read-only document', () => {
     expect(screen.queryByRole('table')).toBeNull();
   });
 
+  it('inserts a read-only page break after the focused item', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'Second' }] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('First');
+    const button = screen.getByRole('button', { name: '插入分隔頁' });
+    expect(button).toBeDisabled();
+    act(() => { editor!.commands.setTextSelection(1); editor!.view.focus(); });
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+    expect(editor!.getJSON().content?.map((node) => node.type))
+      .toEqual(['paragraph', 'pageBreak', 'paragraph']);
+    expect(screen.getByText('分隔頁').closest('[contenteditable="false"]')).not.toBeNull();
+  });
+
   it('keeps a table inside a question item valid for saving', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'bulletList',
       content: [{ type: 'listItem', content: [{ type: 'paragraph',
