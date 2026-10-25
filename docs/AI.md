@@ -4,7 +4,7 @@ This document records the current AI settings and the intended integration path 
 
 ## Current settings
 
-- The home page Settings Modal accepts a user supplied Gemini API key and a model choice. Both values are saved only when the user presses 「儲存」.
+- The home page gear links to the `#/settings` page, which accepts a user supplied Gemini API key and a model choice. Both values are saved only when the user presses 「儲存」.
 - Storage keys are defined in `src/shared/storageKeys.ts`: `mentor_exam_editor_api_key` and `mentor_exam_editor_model`. The API key is stored as plain text in browser `localStorage`; it is not encrypted. The key input is visible text.
 - The initial model choices are `gemini-3.5-flash-lite` (default) and `gemini-3.8-flash`. These are UI defaults, not a guarantee that the API key can access them.
 - 「⟳ Refresh」 is enabled when the input contains a nonempty API key. It uses the current input value, including changes not yet saved, and does not save the key or model choice.

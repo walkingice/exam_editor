@@ -47,8 +47,9 @@ describe('project navigation', () => {
   it('saves the Gemini API key in browser settings and links to setup help', async () => {
     render(<App projects={repository} writes={ownership} />);
     await screen.findByRole('button', { name: /建立空白試卷/ });
-    fireEvent.click(screen.getByRole('button', { name: '設定' }));
-    expect(screen.getByRole('dialog', { name: 'AI 設定' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: '設定' }));
+    expect(await screen.findByRole('heading', { name: 'AI 設定' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/settings');
     const applyLink = screen.getByRole('link', { name: '申請金鑰' });
     const helpLink = screen.getByRole('link', { name: '如何申請' });
     expect(applyLink).toHaveAttribute('href', 'https://aistudio.google.com/');
@@ -58,10 +59,13 @@ describe('project navigation', () => {
     fireEvent.change(screen.getByLabelText('Gemini API key'), { target: { value: 'test-key' } });
     fireEvent.click(screen.getByRole('button', { name: '儲存' }));
     expect(window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)).toBe('test-key');
-    fireEvent.click(screen.getByRole('button', { name: '設定' }));
+    fireEvent.click(await screen.findByRole('link', { name: '設定' }));
+    await screen.findByRole('heading', { name: 'AI 設定' });
     expect(screen.getByLabelText('Gemini API key')).toHaveValue('test-key');
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Gemini API key'), { target: { value: 'unsaved' } });
+    fireEvent.click(screen.getByRole('link', { name: '取消' }));
+    expect(await screen.findByRole('link', { name: '設定' })).toBeInTheDocument();
+    expect(window.localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)).toBe('test-key');
   });
 
   it('loads Gemini models that support content generation and saves the selection', async () => {
@@ -74,7 +78,8 @@ describe('project navigation', () => {
     } as Response);
     render(<App projects={repository} writes={ownership} />);
     await screen.findByRole('button', { name: /建立空白試卷/ });
-    fireEvent.click(screen.getByRole('button', { name: '設定' }));
+    fireEvent.click(screen.getByRole('link', { name: '設定' }));
+    await screen.findByRole('heading', { name: 'AI 設定' });
     expect(screen.getByRole('combobox', { name: 'Model' })).toHaveValue('gemini-3.5-flash-lite');
     fireEvent.change(screen.getByLabelText('Gemini API key'), { target: { value: 'test-key' } });
     fireEvent.click(screen.getByRole('button', { name: /Refresh/ }));
@@ -86,6 +91,16 @@ describe('project navigation', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Model' }), { target: { value: 'gemini-custom' } });
     fireEvent.click(screen.getByRole('button', { name: '儲存' }));
     expect(window.localStorage.getItem(GEMINI_MODEL_STORAGE_KEY)).toBe('gemini-custom');
+  });
+
+  it('opens settings directly without confusing a project named settings', async () => {
+    window.location.hash = '#/settings';
+    const view = render(<App projects={repository} writes={ownership} />);
+    expect(await screen.findByRole('heading', { name: 'AI 設定' })).toBeInTheDocument();
+    view.unmount();
+    window.location.hash = '#/projects/settings';
+    render(<App projects={repository} writes={ownership} />);
+    expect(await screen.findByText('找不到這份試卷。')).toBeInTheDocument();
   });
 
   it('creates a complete project, reopens it, and deletes it', async () => {
