@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { normalizeDocument } from '../../domain/document';
@@ -6,6 +6,7 @@ import type { ProjectRepository } from '../../data/repository';
 import type { Editor, JSONContent } from '@tiptap/core';
 import { ReadOnlyEditor } from './ReadOnlyEditor';
 import { ensureNodeIds } from './ensureNodeIds';
+import { RECENT_FONTS_STORAGE_KEY } from '../../shared/storageKeys';
 
 const createDescriptor = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
 const revokeDescriptor = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL');
@@ -17,6 +18,8 @@ afterEach(() => {
   if (revokeDescriptor) Object.defineProperty(URL, 'revokeObjectURL', revokeDescriptor);
   else Reflect.deleteProperty(URL, 'revokeObjectURL');
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  window.localStorage.removeItem(RECENT_FONTS_STORAGE_KEY);
 });
 
 describe('read-only document', () => {
@@ -195,6 +198,95 @@ describe('read-only document', () => {
     fireEvent.click(screen.getByRole('button', { name: '清除格式' }));
     expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
     expect(editor!.getJSON().content?.[1].content?.[0].marks).toHaveLength(2);
+  });
+
+  it('loads local font families on request and moves used fonts to the top', async () => {
+    vi.stubGlobal('queryLocalFonts', vi.fn().mockResolvedValue([
+      { family: 'Example Serif' }, { family: 'Example Sans' },
+      { family: 'Example Serif' }, { family: 'Arial; color: red' },
+    ]));
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first"
+      content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+        content: [{ type: 'text', text: 'Question' }] }] })}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    fireEvent.click(screen.getByRole('button', { name: '偵測本機字體' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('已載入 2 個本機字體');
+    const font = screen.getByRole('combobox', { name: '字體' });
+    expect(font.querySelectorAll('optgroup[label="本機字體"] option')).toHaveLength(2);
+    editor!.commands.setTextSelection({ from: 1, to: 9 });
+    fireEvent.change(font, { target: { value: 'Example Serif' } });
+    expect(font.querySelector('optgroup[label="最近使用"] option')).toHaveTextContent('Example Serif');
+    expect(font.querySelectorAll('option[value="Example Serif"]')).toHaveLength(1);
+    expect(JSON.parse(window.localStorage.getItem(RECENT_FONTS_STORAGE_KEY)!))
+      .toEqual(['Example Serif']);
+  });
+
+  it('keeps default fonts when local font access is unavailable', async () => {
+    render(<ReadOnlyEditor projectId="first"
+      content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] })}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable />);
+    await screen.findByLabelText('試卷文件');
+    fireEvent.click(screen.getByRole('button', { name: '偵測本機字體' }));
+    expect(screen.getByRole('status')).toHaveTextContent('此瀏覽器不支援偵測本機字體');
+    expect(screen.getByRole('combobox', { name: '字體' })).toHaveTextContent('Noto Sans TC');
+  });
+
+  it('keeps fallback fonts after permission denial', async () => {
+    vi.stubGlobal('queryLocalFonts', vi.fn().mockRejectedValue(new DOMException('Denied', 'NotAllowedError')));
+    render(<ReadOnlyEditor projectId="first"
+      content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] })}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} editable />);
+    await screen.findByLabelText('試卷文件');
+    fireEvent.click(screen.getByRole('button', { name: '偵測本機字體' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('無法讀取本機字體');
+    expect(screen.getByRole('combobox', { name: '字體' })).toHaveTextContent('Noto Sans TC');
+  });
+
+  it('restores the focused line after a local font permission prompt', async () => {
+    let editor: Editor | undefined;
+    vi.stubGlobal('queryLocalFonts', vi.fn().mockImplementation(async () => {
+      editor!.view.dom.blur();
+      return [{ family: 'Example Serif' }];
+    }));
+    render(<ReadOnlyEditor projectId="first"
+      content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
+        content: [{ type: 'text', text: 'Question' }] }] })}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    editor!.commands.setTextSelection(2);
+    act(() => { editor!.view.focus(); });
+    fireEvent.click(screen.getByRole('button', { name: '偵測本機字體' }));
+    await waitFor(() => expect(editor!.isFocused).toBe(true));
+    fireEvent.change(screen.getByRole('combobox', { name: '字體' }),
+      { target: { value: 'Example Serif' } });
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toMatchObject([
+      { type: 'fontFamily', attrs: { fontFamily: 'Example Serif' } },
+    ]);
+  });
+
+  it('does not steal focus after a pending local font request', async () => {
+    let resolveFonts!: (fonts: Array<{ family: string }>) => void;
+    vi.stubGlobal('queryLocalFonts', vi.fn().mockReturnValue(new Promise((resolve) => {
+      resolveFonts = resolve;
+    })));
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first"
+      content={normalizeDocument({ type: 'doc', content: [{ type: 'paragraph' }] })}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByLabelText('試卷文件');
+    act(() => { editor!.view.focus(); });
+    fireEvent.click(screen.getByRole('button', { name: '偵測本機字體' }));
+    const outside = document.createElement('input');
+    document.body.append(outside);
+    outside.focus();
+    await act(async () => { resolveFonts([{ family: 'Example Serif' }]); });
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
   });
 
   it('sets the list style on each source item from toolbar commands', async () => {

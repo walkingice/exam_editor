@@ -344,6 +344,9 @@ li { margin: 10px 0; }
   padding: 5px 2px;
   white-space: nowrap;
 }
+.toolbar-font-settings label { display: grid; gap: 4px; min-width: 0; }
+.toolbar-font-settings select { width: 100%; min-width: 0; }
+.toolbar-font-settings [role="status"] { font-size: .78rem; color: #526176; }
 .content-editor-controls .table-toolbar {
   border-top: 1px solid #d7dee8;
   padding-top: 8px;

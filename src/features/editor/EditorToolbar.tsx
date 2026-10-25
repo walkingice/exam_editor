@@ -3,7 +3,8 @@ import type { Editor } from '@tiptap/core';
 import { redoNoScroll, undoNoScroll } from '@tiptap/pm/history';
 import { TableToolbar } from './TableToolbar';
 import { focusedItemIndex, insertPageBreak } from './insertPageBreak';
-import { fontFamilies, fontSizes } from './fontStyles';
+import { fontSizes, validFontFamily } from './fontStyles';
+import { fontOptions, readRecentFonts, rememberFont } from './fontCatalog';
 
 type Tool = { label: string; active?: () => boolean; run: () => void };
 type TextRange = { from: number; to: number };
@@ -23,11 +24,12 @@ function focusedLineRange(editor: Editor): TextRange | null {
 }
 
 function applyTextStyle(editor: Editor, mark: 'fontFamily' | 'fontSize', value: string,
-  captured: TextRange | null): void {
+  captured: TextRange | null): boolean {
   const range = captured ?? styleRange(editor);
-  if (!range || range.from === range.to) return;
+  if (!range || range.from === range.to) return false;
   editor.view.dispatch(editor.state.tr.addMark(range.from, range.to,
     editor.schema.marks[mark].create({ [mark]: value })));
+  return true;
 }
 
 function activeListStyle(editor: Editor): string | null {
@@ -70,6 +72,10 @@ export function EditorToolbar({ editor, showHistory = true }: {
   const capturedRange = useRef<TextRange | null>(null);
   const focusedLine = useRef<TextRange | null>(null);
   const toolbar = useRef<HTMLDivElement>(null);
+  const [installedFonts, setInstalledFonts] = useState<string[] | null>(null);
+  const [recentFonts, setRecentFonts] = useState(readRecentFonts);
+  const [fontStatus, setFontStatus] = useState('');
+  const [loadingFonts, setLoadingFonts] = useState(false);
   useEffect(() => {
     const refresh = () => update((value) => value + 1);
     const onBlur = ({ event }: { event: FocusEvent }) => {
@@ -98,9 +104,35 @@ export function EditorToolbar({ editor, showHistory = true }: {
   const setStyle = (mark: 'fontFamily' | 'fontSize', value: string) => {
     const range = capturedRange.current ?? (toolbar.current?.contains(document.activeElement)
       ? focusedLine.current : null);
-    applyTextStyle(editor, mark, value, range);
+    if (applyTextStyle(editor, mark, value, range) && mark === 'fontFamily') {
+      setRecentFonts(rememberFont(value));
+    }
     capturedRange.current = null;
   };
+  const detectFonts = async () => {
+    const restoreEditorFocus = editor.isFocused;
+    const query = (window as Window & {
+      queryLocalFonts?: () => Promise<Array<{ family: string }>>;
+    }).queryLocalFonts;
+    if (!query) { setFontStatus('此瀏覽器不支援偵測本機字體'); return; }
+    setLoadingFonts(true);
+    try {
+      const faces = await query.call(window);
+      const families = [...new Set(faces.map((face) => face.family).filter(validFontFamily))];
+      setInstalledFonts(families);
+      setFontStatus(`已載入 ${families.length} 個本機字體`);
+    } catch {
+      setFontStatus('無法讀取本機字體，請檢查瀏覽器權限');
+    } finally {
+      setLoadingFonts(false);
+      if (restoreEditorFocus && !editor.isDestroyed
+        && (document.activeElement === document.body || document.activeElement === editor.view.dom)) {
+        editor.view.focus();
+      }
+    }
+  };
+  const currentFont = editor.getAttributes('fontFamily').fontFamily ?? '';
+  const availableFonts = fontOptions(installedFonts, recentFonts, currentFont);
 
   const tools: Tool[] = [
     ...([1, 2, 3] as const).map((level) => ({
@@ -147,13 +179,22 @@ export function EditorToolbar({ editor, showHistory = true }: {
     }}>
     {groups.map((group) => <Fragment key={group.label}>
       {group.label === '清除格式' && <div role="group" aria-label="字體設定"
-        className="toolbar-group toolbar-columns-1">
-        <label>字體 <select aria-label="字體" value={editor.getAttributes('fontFamily').fontFamily ?? ''}
+        className="toolbar-group toolbar-columns-1 toolbar-font-settings">
+        <label>字體 <select aria-label="字體" value={currentFont}
           onPointerDown={captureRange}
           onChange={(event) => setStyle('fontFamily', event.target.value)}>
           <option value="" disabled>選擇字體</option>
-          {fontFamilies.map((font) => <option key={font} value={font}>{font}</option>)}
+          {availableFonts.recent.length > 0 && <optgroup label="最近使用">
+            {availableFonts.recent.map((font) => <option key={font} value={font}>{font}</option>)}
+          </optgroup>}
+          <optgroup label={installedFonts ? '本機字體' : '預設字體'}>
+            {availableFonts.others.map((font) => <option key={font} value={font}>{font}</option>)}
+          </optgroup>
         </select></label>
+        <button type="button" onMouseDown={(event) => event.preventDefault()}
+          onClick={() => { void detectFonts(); }} disabled={loadingFonts}
+          title="偵測本機字體" aria-label="偵測本機字體">偵測本機字體</button>
+        {fontStatus && <span role="status">{fontStatus}</span>}
         <label>字體大小 <select aria-label="字體大小"
           value={editor.getAttributes('fontSize').fontSize ?? ''}
           onPointerDown={captureRange}
