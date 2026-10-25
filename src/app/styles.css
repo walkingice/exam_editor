@@ -171,6 +171,13 @@ li { margin: 10px 0; }
   background: #d9e3df;
   content: "";
 }
+.workspace-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin: -12px 0 16px;
+}
 @media (max-width: 640px) {
   :root { --workspace-header-height: 88px; }
   .workspace-header {

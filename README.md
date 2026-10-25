@@ -86,7 +86,7 @@ server，以及失敗時保留 trace／screenshot。`test-results/` 與
 匯入警告保存在目前 browser session，關閉 browser 後不會保留；請在匯入後立即校對。
 Word 原始版面、原始分頁不保證保留。公式、文字方塊、圖形、浮動物件可能遺失或改變順序；
 匯入後請對照原稿。六類合成 DOCX 測試資料及預期結果見 [docs/fixtures.md](docs/fixtures.md)。
-兩個 Tab 均可按「匯出 DOCX」，下載目前內容與設定的 `project-name.docx`，
+在「排版預覽」Tab 右上方可按「匯出 DOCX」，下載目前內容與設定的 `project-name.docx`；
 包含尚未自動儲存的修改；唯讀分頁匯出目前已載入版本。產生期間可取消下載，
 失敗可重試；取消不會中止已開始的壓縮運算。表格等降級會列於匯出提醒。
 檔名不合法字元會替換為底線。DOCX 保留可編輯文字、圖片與表格，但不包含

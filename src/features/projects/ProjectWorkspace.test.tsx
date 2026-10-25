@@ -195,9 +195,13 @@ it('saves page settings, reports failures, and restores them after reopening', a
   await screen.findByRole('heading', { name: 'first' });
   expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '匯出 DOCX' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
   await screen.findByLabelText('紙張');
   expect(screen.getByRole('button', { name: '列印 / PDF' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '匯出 DOCX' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '匯出 DOCX' }).closest('.workspace-actions'))
+    .toBe(screen.getByRole('button', { name: '列印 / PDF' }).closest('.workspace-actions'));
   fireEvent.change(screen.getByLabelText('紙張'), { target: { value: 'A4' } });
   await act(async () => { await vi.waitFor(() => expect(save).toHaveBeenCalledOnce()); });
   expect(await screen.findByText('儲存失敗')).toBeInTheDocument();
@@ -229,6 +233,7 @@ it('shows selected output while keeping the source editor mounted across tabs', 
   const sourceEditor = screen.getByTestId('editor');
   expect(screen.queryByRole('region', { name: '頁面設定' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '列印 / PDF' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '匯出 DOCX' })).not.toBeInTheDocument();
   const editor = { getJSON: () => current.document.content } as Editor;
   editorProps.current.at(-1)?.onEditor?.(editor);
   fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
