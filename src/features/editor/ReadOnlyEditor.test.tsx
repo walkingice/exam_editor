@@ -146,8 +146,10 @@ describe('read-only document', () => {
     fireEvent.click(screen.getByRole('button', { name: '編號清單' }));
     expect(editor!.getJSON().content?.[0].type).toBe('bulletList');
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.listStyle).toBe('ordered');
+    expect(screen.getByRole('button', { name: '編號清單' })).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: '項目符號清單' }));
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.listStyle).toBe('unordered');
+    expect(screen.getByRole('button', { name: '項目符號清單' })).toHaveAttribute('aria-pressed', 'true');
     expect(editor!.schema.nodes.orderedList).toBeUndefined();
     expect(ensureNodeIds(editor!)).toBe(true);
     expect((editor!.getJSON() as JSONContent).content?.[0].content?.[0].attrs?.selected).toBe(true);
@@ -179,6 +181,29 @@ describe('read-only document', () => {
     act(() => { editor!.commands.setTextSelection(positions.get('Second')!); });
     expect(ordered).toHaveAttribute('aria-pressed', 'false');
     expect(unordered).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('highlights an unstyled top-level item as an ordered list', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'Intro' }] },
+      { type: 'bulletList', content: [{ type: 'listItem', content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Question' }] },
+      ] }] },
+    ] });
+    let editor: Editor | undefined;
+    render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
+      editable onEditor={(value) => { editor = value; }} />);
+    await screen.findByText('Question');
+    const positions = new Map<string, number>();
+    editor!.state.doc.descendants((node, pos) => {
+      if (node.isText) positions.set(node.text!, pos);
+    });
+    const ordered = screen.getByRole('button', { name: '編號清單' });
+    act(() => { editor!.commands.setTextSelection(positions.get('Question')!); });
+    expect(ordered).toHaveAttribute('aria-pressed', 'true');
+    act(() => { editor!.commands.setTextSelection(positions.get('Intro')!); });
+    expect(ordered).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('persists top-level question selection with history and stable IDs', async () => {

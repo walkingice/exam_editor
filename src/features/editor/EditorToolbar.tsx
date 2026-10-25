@@ -7,9 +7,18 @@ import { focusedItemIndex, insertPageBreak } from './insertPageBreak';
 type Tool = { label: string; active?: () => boolean; run: () => void };
 
 function activeListStyle(editor: Editor): string | null {
-  if (!editor.isActive('bulletList')) return null;
-  return editor.getAttributes('listItem').listStyle
-    ?? editor.getAttributes('bulletList').listStyle;
+  const { $from } = editor.state.selection;
+  let itemStyle: string | null = null;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type.name === 'listItem' && itemStyle === null) {
+      itemStyle = node.attrs.listStyle;
+    }
+    if (node.type.name === 'bulletList') {
+      return itemStyle ?? node.attrs.listStyle ?? (depth === 1 ? 'ordered' : 'unordered');
+    }
+  }
+  return null;
 }
 
 function runHistory(editor: Editor, command: typeof undoNoScroll): void {
