@@ -286,18 +286,19 @@ li { margin: 10px 0; }
   counter-increment: none;
   counter-set: content-item 0;
 }
-.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"]::before,
-.content-panel .exam-document .ProseMirror > ul[data-list-style="unordered"] > li:not([data-list-style="ordered"])::before {
-  content: '*';
-}
-.content-panel .exam-document .ProseMirror > ul > li.document-question-item::before {
+.content-panel .exam-document .ProseMirror > ul > li.document-question-item > .document-item-shell::before {
   content: counter(content-item) '.';
   position: absolute;
+  z-index: 1;
   top: 12px;
   left: 62px;
   width: 32px;
   text-align: right;
   pointer-events: none;
+}
+.content-panel .exam-document .ProseMirror > ul > li[data-list-style="unordered"] > .document-item-shell::before,
+.content-panel .exam-document .ProseMirror > ul[data-list-style="unordered"] > li:not([data-list-style="ordered"]) > .document-item-shell::before {
+  content: '*';
 }
 .document-drop-indicator {
   position: fixed;
