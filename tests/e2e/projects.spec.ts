@@ -24,6 +24,7 @@ test('creates, reloads, reopens, and deletes a project', async ({ page }) => {
 test('persists page settings after reloading the workspace', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '建立空白試卷' }).click();
+  await page.getByRole('tab', { name: '排版預覽' }).click();
   await page.getByLabel('紙張').selectOption('A4');
   await page.getByLabel('方向').selectOption('landscape');
   await page.getByLabel('左邊距 (mm)').fill('20');
@@ -31,6 +32,7 @@ test('persists page settings after reloading the workspace', async ({ page }) =>
   await expect(page.getByRole('status')).toContainText('尚未儲存');
   await expect(page.getByRole('status')).toContainText('已儲存');
   await page.reload();
+  await page.getByRole('tab', { name: '排版預覽' }).click();
   await expect(page.getByLabel('紙張')).toHaveValue('A4');
   await expect(page.getByLabel('方向')).toHaveValue('landscape');
   await expect(page.getByLabel('左邊距 (mm)')).toHaveValue('20');

@@ -288,6 +288,7 @@ it('exports the latest editor content before its debounced save', async () => {
     content: [{ type: 'text', text: 'Latest unsaved edit' }] }] });
   const editor = { getJSON: () => content } as Editor;
   editorProps.current.at(-1)?.onEditor?.(editor);
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
   fireEvent.click(screen.getByRole('button', { name: '匯出 DOCX' }));
   await waitFor(() => expect(createDocxDownload).toHaveBeenCalledOnce());
   expect(vi.mocked(createDocxDownload).mock.calls[0][0]).toEqual(content);
@@ -304,6 +305,7 @@ it('exports a readonly tab loaded version without requesting write access again'
   const ownership = { acquireLatest: vi.fn(async () => null) } as unknown as ProjectOwnership;
   render(<ProjectWorkspace projectId="first" repository={repository} ownership={ownership} />);
   await screen.findByRole('heading', { name: 'first' });
+  fireEvent.click(screen.getByRole('tab', { name: '排版預覽' }));
   fireEvent.click(screen.getByRole('button', { name: '匯出 DOCX' }));
   await waitFor(() => expect(downloadBlob).toHaveBeenCalledOnce());
   expect(vi.mocked(createDocxDownload).mock.calls[0][0]).toEqual(current.document.content);
