@@ -66,6 +66,7 @@ it('starts a new printed page at each page break item', () => {
   const css = createPrintCss(DEFAULT_PAGE_SETTINGS);
   expect(css).toContain('#exam-print-root .exam-page-break');
   expect(css).toMatch(/\.exam-page-break[^}]*break-after:\s*page/);
+  expect(css).toMatch(/\.exam-page-break[^}]*visibility:\s*hidden/);
 });
 
 

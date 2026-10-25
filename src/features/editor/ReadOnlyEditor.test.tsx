@@ -474,6 +474,19 @@ describe('read-only document', () => {
     expect(screen.getByText('分隔頁').closest('[contenteditable="false"]')).not.toBeNull();
   });
 
+  it('renders a page break marker without its label in preview', async () => {
+    const content = normalizeDocument({ type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'First' }] },
+      { type: 'pageBreak' },
+      { type: 'paragraph', content: [{ type: 'text', text: 'Second' }] },
+    ] });
+    const { container } = render(<ReadOnlyEditor projectId="first" content={content}
+      repository={{ getAsset: vi.fn() } as unknown as ProjectRepository} preview />);
+    await screen.findByText('First');
+    expect(container.querySelector('.exam-page-break')).toBeInTheDocument();
+    expect(screen.queryByText('分隔頁')).not.toBeInTheDocument();
+  });
+
   it('keeps a table inside a question item valid for saving', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'bulletList',
       content: [{ type: 'listItem', content: [{ type: 'paragraph',

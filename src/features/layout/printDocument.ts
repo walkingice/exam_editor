@@ -23,7 +23,9 @@ export function createPrintCss(settings: PageSettings): string {
     + `column-rule: ${settings.columns === 2 ? '1px solid #777' : 'none'}; } `
     + '#exam-print-root .ProseMirror > h1, #exam-print-root .ProseMirror > h2 { column-span: all; } '
     + '#exam-print-root .exam-page-break { break-after: page !important; '
-    + 'page-break-after: always !important; column-span: all; visibility: hidden !important; } '
+    + 'page-break-after: always !important; column-span: all; visibility: hidden !important; '
+    + 'height: 0 !important; margin: 0 !important; padding: 0 !important; '
+    + 'border: 0 !important; overflow: hidden !important; } '
     + '#exam-print-root li, #exam-print-root .exam-image { break-inside: avoid; } '
     + '#exam-print-root img { max-width: 100%; height: auto; } '
     + '#exam-print-root table { max-width: 100%; border-collapse: collapse; } '

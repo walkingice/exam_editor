@@ -111,6 +111,16 @@ export function ReadOnlyEditor({ projectId, content, repository, editable = fals
       addNodeView() {
         return ReactNodeViewRenderer((props) => <AssetImageView {...props} resolver={resolver} preview={preview} />);
       },
+    }) : preview && extension.name === 'pageBreak' ? (extension as Node).extend({
+      addNodeView() {
+        return ({ node }) => {
+          const dom = document.createElement('div');
+          dom.className = 'exam-page-break';
+          dom.dataset.nodeId = node.attrs.id;
+          dom.setAttribute('contenteditable', 'false');
+          return { dom };
+        };
+      },
     }) : !preview && ['paragraph', 'heading', 'listItem', 'table', 'blockquote', 'codeBlock']
       .includes(extension.name) ? (extension as Node).extend({
         addNodeView() {

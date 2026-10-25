@@ -340,7 +340,8 @@ li { margin: 10px 0; }
 .content-panel .exam-document .ProseMirror > .document-item-shell:last-child { margin-bottom: 0 !important; }
 .content-panel .exam-page-break .document-item-border { background: #eef3f8; color: #43536a; }
 .preview-paper .exam-page-break { break-after: page; page-break-after: always;
-  column-span: all; border-bottom: 2px dashed #8a9bb0; color: #526176; text-align: center; }
+  column-span: all; visibility: hidden; height: 0; margin: 0; padding: 0;
+  border: 0; overflow: hidden; }
 .content-panel .exam-document .ProseMirror ul {
   counter-reset: content-item;
 }
