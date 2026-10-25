@@ -112,28 +112,30 @@ describe('read-only document', () => {
     }
   });
 
-  it('applies toolbar marks, headings, alignment and history to JSON', async () => {
+  it('clears inline marks only from the selection and supports history', async () => {
     const content = normalizeDocument({ type: 'doc', content: [{ type: 'paragraph',
-      content: [{ type: 'text', text: 'Question' }] }] });
+      content: [{ type: 'text', text: 'Question', marks: [{ type: 'bold' }, { type: 'italic' }] }] }] });
     let editor: Editor | undefined;
     render(<ReadOnlyEditor projectId="first" content={content}
       repository={{ getAsset: vi.fn() } as unknown as ProjectRepository}
       editable onEditor={(value) => { editor = value; }} />);
     await screen.findByText('Question');
     expect(screen.getByRole('group', { name: '分隔頁' })).toHaveClass('toolbar-page-break');
-    editor!.commands.setTextSelection({ from: 1, to: 9 });
-    fireEvent.click(screen.getByRole('button', { name: '粗體' }));
-    expect(editor!.getJSON().content?.[0].content?.[0].marks?.[0].type).toBe('bold');
+    expect(screen.queryByRole('button', { name: /對齊/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '標題 2' }));
-    fireEvent.click(screen.getByRole('button', { name: '中對齊' }));
-    expect(editor!.getJSON().content?.[0]).toMatchObject({
-      type: 'heading', attrs: { level: 2, textAlign: 'center' },
-    });
-    expect(screen.getByRole('button', { name: '標題 2' })).toHaveAttribute('aria-pressed', 'true');
+    expect(editor!.getJSON().content?.[0]).toMatchObject({ type: 'heading', attrs: { level: 2 } });
+    editor!.commands.setTextSelection({ from: 1, to: 5 });
+    fireEvent.click(screen.getByRole('button', { name: '清除格式' }));
+    expect(editor!.getJSON().content?.[0]).toMatchObject({ type: 'heading', attrs: { level: 2 } });
+    expect(editor!.getJSON().content?.[0].content).toMatchObject([
+      { text: 'Ques' },
+      { text: 'tion', marks: [{ type: 'bold' }, { type: 'italic' }] },
+    ]);
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
     fireEvent.click(screen.getByRole('button', { name: '復原' }));
-    expect(editor!.getJSON().content?.[0].attrs?.textAlign).not.toBe('center');
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toHaveLength(2);
     fireEvent.click(screen.getByRole('button', { name: '重做' }));
-    expect(editor!.getJSON().content?.[0].attrs?.textAlign).toBe('center');
+    expect(editor!.getJSON().content?.[0].content?.[0].marks).toBeUndefined();
   });
 
   it('sets the list style on each source item from toolbar commands', async () => {

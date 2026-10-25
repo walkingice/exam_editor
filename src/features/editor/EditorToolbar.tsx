@@ -76,10 +76,7 @@ export function EditorToolbar({ editor, showHistory = true }: {
         editor.chain().focus().updateAttributes('listItem', { listStyle: style }).run();
       },
     })),
-    ...([['左', 'left'], ['中', 'center'], ['右', 'right']] as const).map(([label, align]) => ({
-      label: `${label}對齊`, active: () => editor.isActive({ textAlign: align }),
-      run: () => editor.chain().focus().setTextAlign(align).run(),
-    })),
+    { label: '清除格式', run: () => editor.chain().focus().unsetAllMarks().run() },
     { label: '復原', run: () => runHistory(editor, undoNoScroll) },
     { label: '重做', run: () => runHistory(editor, redoNoScroll) },
   ];
@@ -88,8 +85,8 @@ export function EditorToolbar({ editor, showHistory = true }: {
     { label: '段落樣式', tools: tools.slice(0, 4), columns: 2 },
     { label: '文字樣式', tools: tools.slice(4, 7), columns: 3 },
     { label: '清單', tools: tools.slice(7, 9), columns: 2 },
-    { label: '文字對齊', tools: tools.slice(9, 12), columns: 3 },
-    ...(showHistory ? [{ label: '編輯記錄', tools: tools.slice(12), columns: 2 }] : []),
+    { label: '清除格式', tools: tools.slice(9, 10), columns: 1 },
+    ...(showHistory ? [{ label: '編輯記錄', tools: tools.slice(10), columns: 2 }] : []),
   ];
 
   return <div role="toolbar" aria-label="文字編輯工具列" className="editor-toolbar">
@@ -99,7 +96,7 @@ export function EditorToolbar({ editor, showHistory = true }: {
         title={tool.label} aria-label={tool.label} aria-pressed={tool.active?.() ?? undefined} onClick={tool.run}>
         {tool.label === '編號清單' ? '1.' : tool.label === '項目符號清單' ? '*'
           : ['粗體', '斜體', '底線'].includes(tool.label) ? <FormatIcon label={tool.label} />
-          : { 左對齊: '靠左', 中對齊: '置中', 右對齊: '靠右' }[tool.label] ?? tool.label}
+          : tool.label}
       </button>)}
     </div>)}
     <div role="group" aria-label="分隔頁" className="toolbar-group toolbar-page-break">
