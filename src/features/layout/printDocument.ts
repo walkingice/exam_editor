@@ -21,6 +21,7 @@ export function createPrintCss(settings: PageSettings): string {
     + '#exam-print-root .document-item-control, #exam-print-root .question-drag-handle { display: none !important; } '
     + `#exam-print-root .ProseMirror { column-count: ${settings.columns ?? 1}; column-gap: 10mm; `
     + `column-rule: ${settings.columns === 2 ? '1px solid #777' : 'none'}; } `
+    + '#exam-print-root .ProseMirror h1, #exam-print-root .ProseMirror h2 { font-size: 16pt; } '
     + '#exam-print-root .ProseMirror > h1, #exam-print-root .ProseMirror > h2 { column-span: all; } '
     + '#exam-print-root .exam-page-break { break-after: page !important; '
     + 'page-break-after: always !important; column-span: all; visibility: hidden !important; '

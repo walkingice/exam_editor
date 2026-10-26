@@ -233,6 +233,9 @@ li { margin: 10px 0; }
   border: 1px solid #dce5db;
   border-radius: 14px;
 }
+.exam-document .ProseMirror h1, .exam-document .ProseMirror h2 {
+  font-size: 16pt;
+}
 .project-workspace .content-editor-controls, .project-workspace .page-settings {
   border-color: #dce5db;
   border-radius: 14px;
